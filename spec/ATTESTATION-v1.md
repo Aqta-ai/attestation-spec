@@ -172,7 +172,7 @@ compact canonical form of §6):
   "model": "gpt-4o",
   "outcome": "ALLOWED",
   "policy_applied": ["budget_guard", "loop_guard"],
-  "cost_prevented_eur": 0.0,
+  "cost_prevented_eur": 0,
   "timestamp": "2026-04-23T10:15:30.123456+00:00",
   "public_key": "gUoUhIvptKAoLTnry3VrDtOQEWggGQveLrHFVrfNqmE"
 }
@@ -190,7 +190,7 @@ Signed receipt (same payload with signature appended):
   "model": "gpt-4o",
   "outcome": "ALLOWED",
   "policy_applied": ["budget_guard", "loop_guard"],
-  "cost_prevented_eur": 0.0,
+  "cost_prevented_eur": 0,
   "timestamp": "2026-04-23T10:15:30.123456+00:00",
   "public_key": "gUoUhIvptKAoLTnry3VrDtOQEWggGQveLrHFVrfNqmE",
   "signature": "<64-byte Ed25519 sig, base64url, no padding>"
