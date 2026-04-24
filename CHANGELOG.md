@@ -11,7 +11,61 @@ own versioning contract described in [CONFORMANCE.md](./CONFORMANCE.md).
 
 Nothing yet.
 
-## [1.0.0] - 2026-04-24
+---
+
+## Verifier-library releases
+
+The Python and TypeScript reference verifiers have their own patch
+release line. Spec `v1.0.0` is unaffected by these patches; only the
+verifier libraries are versioned.
+
+### `aqta-verify-receipt` 1.0.2 (PyPI 2026-04-25)
+
+**Why:** External review flagged two real documentation gaps in 1.0.1:
+the `fetch_published_public_key()` helper could be misused in a way
+that re-introduces vendor-server trust, and the `strict_fields`
+forward-compatibility behaviour was not explicitly documented. Both
+were doc fixes only; no behaviour change in either verifier.
+
+#### Added
+
+- Loud "PIN THE RESULT" warning on `fetch_published_public_key()` in
+  both the Python docstring and the TypeScript JSDoc, plus a `⚠️`
+  callout block in both READMEs.
+- Forward-compatibility section in both READMEs documenting how
+  `strict_fields=True` interacts with future minor versions of the
+  spec, with explicit guidance on when to set it to `False`.
+- Test-vectors section in both package READMEs linking the
+  conformance suite at `test-vectors/` so PyPI and npm visitors can
+  find the known-good and known-bad receipts directly.
+- Badge row on the Python and TypeScript package READMEs (PyPI
+  version, Python versions, CI status, licence; npm version, CI,
+  licence). First impression for visitors landing on the package
+  pages.
+
+### `aqta-verify-receipt` 1.0.1 (PyPI and npm 2026-04-24)
+
+**Why:** Initial 1.0.0 release linked to a private internal
+repository (`aqta-app`) which returns 404 for external users.
+Republished with all package-metadata URLs pointing to the public
+[`Aqta-ai/attestation-spec`](https://github.com/Aqta-ai/attestation-spec)
+repository.
+
+#### Changed
+
+- All `Project-URL` entries in `pyproject.toml` and `repository`
+  in `package.json` now point at the public spec repository.
+- README links updated to the public repository.
+
+### `aqta-verify-receipt` 1.0.0 (PyPI 2026-04-23, superseded)
+
+Initial publish. Superseded within hours by 1.0.1 due to the broken
+links above. Users SHOULD upgrade to at least 1.0.1, ideally 1.0.2 or
+later.
+
+---
+
+## [1.0.0] - 2026-04-24 (spec)
 
 Initial public release of the AqtaCore attestation specification and
 reference verifier libraries.

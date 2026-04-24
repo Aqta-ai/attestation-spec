@@ -1,0 +1,59 @@
+name: Release to npm
+
+# Publishes packages/verify-receipt to npm when a version tag is pushed.
+# Uses npm provenance via OIDC: signed Sigstore attestation linking the
+# published artefact to this repository and this workflow run.
+#
+# To enable this workflow:
+#   1. Ensure the npm package is owned by the `aqtaai` user (or a trusted
+#      organisation).
+#   2. Confirm 2FA is set to "Authentication only" on that account, OR
+#      use a granular access token with bypass-2FA-when-publishing AND
+#      with the package scope set. Save the token as the GitHub secret
+#      NPM_TOKEN.
+#   3. Push a tag matching `tsverify-v*`.
+#
+# Once npm Trusted Publishing graduates from beta, this workflow can drop
+# the NPM_TOKEN secret entirely and rely on OIDC alone, matching the
+# PyPI flow above.
+#
+# Example:
+#   git tag tsverify-v1.0.3 && git push origin tsverify-v1.0.3
+
+on:
+  push:
+    tags:
+      - "tsverify-v*"
+  workflow_dispatch:
+
+jobs:
+  publish:
+    name: Publish to npm
+    runs-on: ubuntu-latest
+    environment: npm
+    permissions:
+      contents: read
+      id-token: write   # for npm provenance attestation
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Install and build
+        working-directory: packages/verify-receipt
+        run: |
+          npm ci
+          npm run build
+
+      - name: Test
+        working-directory: packages/verify-receipt
+        run: node --test dist/index.test.js
+
+      - name: Publish to npm with provenance
+        working-directory: packages/verify-receipt
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --provenance --access public
