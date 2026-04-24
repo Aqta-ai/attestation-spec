@@ -1,0 +1,50 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "aqta-verify-receipt"
+version = "1.0.1"
+description = "Independent verifier for AqtaCore attestation receipts. Verifies the Ed25519 signature on an attestation receipt without trusting any third-party server. Reference implementation of ATTESTATION-v1."
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "Apache-2.0" }
+authors = [{ name = "Aqta Technologies Ltd" }]
+keywords = [
+    "aqta",
+    "ai-governance",
+    "attestation",
+    "ed25519",
+    "zero-trust",
+    "eu-ai-act",
+    "dora",
+    "compliance",
+    "receipt-verification",
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Legal Industry",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Security :: Cryptography",
+]
+dependencies = [
+    "cryptography>=42.0.0",
+]
+
+[project.urls]
+Homepage = "https://app.aqta.ai/security"
+Repository = "https://github.com/Aqta-ai/attestation-spec"
+Documentation = "https://github.com/Aqta-ai/attestation-spec/blob/main/spec/ATTESTATION-v1.md"
+Issues = "https://github.com/Aqta-ai/attestation-spec/issues"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+aqta_verify_receipt = ["py.typed"]

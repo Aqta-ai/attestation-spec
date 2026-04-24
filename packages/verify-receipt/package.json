@@ -1,0 +1,53 @@
+{
+  "name": "aqta-verify-receipt",
+  "version": "1.0.1",
+  "description": "Independent verifier for AqtaCore attestation receipts. Verifies the Ed25519 signature on an attestation receipt without trusting any third-party server. Reference implementation of ATTESTATION-v1.",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist/",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "test": "node --test dist/index.test.js",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "aqta",
+    "ai-governance",
+    "attestation",
+    "ed25519",
+    "zero-trust",
+    "eu-ai-act",
+    "dora",
+    "compliance",
+    "receipt-verification"
+  ],
+  "author": "Aqta Technologies Ltd",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Aqta-ai/attestation-spec.git",
+    "directory": "packages/verify-receipt"
+  },
+  "homepage": "https://github.com/Aqta-ai/attestation-spec",
+  "bugs": {
+    "url": "https://github.com/Aqta-ai/attestation-spec/issues"
+  },
+  "dependencies": {
+    "tweetnacl": "^1.0.3",
+    "tweetnacl-util": "^0.15.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.3.0"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

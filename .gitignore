@@ -1,0 +1,10 @@
+node_modules/
+dist/
+build/
+*.egg-info/
+src/*.egg-info/
+__pycache__/
+*.pyc
+.pytest_cache/
+.DS_Store
+*.log
