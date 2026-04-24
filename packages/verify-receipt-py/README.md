@@ -20,6 +20,10 @@ by Aqta under the open
 [ATTESTATION-v1](https://github.com/Aqta-ai/attestation-spec/blob/main/spec/ATTESTATION-v1.md)
 format specification.
 
+This verifier is the same code path AqtaCore uses internally to
+validate its own production receipts and to power the receipt-
+verification endpoint exposed to customer audit teams.
+
 ## Install
 
 ```bash
@@ -121,6 +125,35 @@ each documenting one specific behaviour) lives in the spec repository:
 
 If your verifier disagrees with any vector, please file an issue on
 [Aqta-ai/attestation-spec](https://github.com/Aqta-ai/attestation-spec/issues).
+
+### Quick self-test
+
+To confirm your environment and this library behave as the spec
+intends, run all 14 vectors in one command:
+
+```bash
+git clone https://github.com/Aqta-ai/attestation-spec.git
+cd attestation-spec
+pip install aqta-verify-receipt
+python3 - <<'PY'
+import json, pathlib
+from aqta_verify_receipt import verify_receipt
+
+TRUSTED = "alWzEnrA_z9McN9z_MFfQCnH9mVgOwRZ26wrI7oix4E"
+
+for p in sorted(pathlib.Path("test-vectors/valid").glob("*.json")):
+    r = json.loads(p.read_text())
+    assert verify_receipt(r, trusted_public_key=TRUSTED).valid, p.name
+
+for p in sorted(pathlib.Path("test-vectors/invalid").glob("*.json")):
+    r = json.loads(p.read_text())
+    assert not verify_receipt(r, trusted_public_key=TRUSTED).valid, p.name
+
+print("all 14 vectors behave as specified")
+PY
+```
+
+A clean run prints `all 14 vectors behave as specified` and exits 0.
 
 ## Receipt format
 

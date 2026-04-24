@@ -19,6 +19,10 @@ by Aqta under the open
 [ATTESTATION-v1](https://github.com/Aqta-ai/attestation-spec/blob/main/spec/ATTESTATION-v1.md)
 format specification.
 
+This verifier is the same code path AqtaCore uses internally to
+validate its own production receipts and to power the receipt-
+verification endpoint exposed to customer audit teams.
+
 ## Install
 
 ```bash
@@ -122,6 +126,36 @@ each documenting one specific behaviour) lives in the spec repository:
 
 If your verifier disagrees with any vector, please file an issue on
 [Aqta-ai/attestation-spec](https://github.com/Aqta-ai/attestation-spec/issues).
+
+### Quick self-test
+
+To confirm your environment and this library behave as the spec
+intends, run all 14 vectors in one command after installing:
+
+```bash
+git clone https://github.com/Aqta-ai/attestation-spec.git
+cd attestation-spec
+npm install aqta-verify-receipt
+node - <<'JS'
+const fs = require('node:fs');
+const path = require('node:path');
+const { verifyReceipt } = require('aqta-verify-receipt');
+
+const TRUSTED = 'alWzEnrA_z9McN9z_MFfQCnH9mVgOwRZ26wrI7oix4E';
+
+for (const sub of ['valid', 'invalid']) {
+  const shouldPass = sub === 'valid';
+  for (const name of fs.readdirSync(path.join('test-vectors', sub)).sort()) {
+    const r = JSON.parse(fs.readFileSync(path.join('test-vectors', sub, name), 'utf8'));
+    const { valid } = verifyReceipt(r, { trustedPublicKey: TRUSTED });
+    if (valid !== shouldPass) throw new Error(`${sub}/${name} behaved wrong`);
+  }
+}
+console.log('all 14 vectors behave as specified');
+JS
+```
+
+A clean run prints `all 14 vectors behave as specified` and exits 0.
 
 ## Receipt format
 
