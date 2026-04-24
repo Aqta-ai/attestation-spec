@@ -143,8 +143,24 @@ def fetch_published_public_key(
     Fetch the issuer's published public key and return a trimmed base64url
     string ready to pass as ``trusted_public_key`` to :func:`verify_receipt`.
 
-    Callers SHOULD pin this value once retrieved rather than re-fetching
-    on every verification.
+    .. warning::
+        PIN THE RESULT. This helper performs a live HTTPS fetch. Calling it
+        on every verification collapses the trust model back to "trust the
+        issuer's server right now", which is exactly what the attestation
+        format is designed to avoid.
+
+        The correct pattern is:
+
+        1. Call this function once on first use.
+        2. Persist the returned string (configuration file, database, KMS,
+           environment variable, secret manager).
+        3. Pass the persisted value as ``trusted_public_key`` to
+           :func:`verify_receipt` on every subsequent verification.
+        4. Rotate only when you receive a documented key-rotation notice
+           via a channel you already trust.
+
+        Using this helper in a verification loop without pinning the first
+        result is a misuse.
     """
     with urlopen(url, timeout=timeout) as resp:  # nosec B310 (HTTPS URL)
         if resp.status != 200:

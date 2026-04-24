@@ -212,8 +212,21 @@ export function verifyReceipt(
  * Fetch the AqtaCore public key from the published URL and return it as a
  * base64url string ready to pass to `verifyReceipt` as `trustedPublicKey`.
  *
- * Callers SHOULD pin this value once retrieved, rather than re-fetching on
- * every verification.
+ * **PIN THE RESULT.** This helper performs a live HTTPS fetch. Calling it
+ * inside a verification loop collapses the trust model back to "trust the
+ * issuer's server right now", which is exactly what the attestation format
+ * is designed to avoid.
+ *
+ * Correct usage:
+ *   1. Call this once on first use.
+ *   2. Persist the returned string (configuration file, database, KMS,
+ *      environment variable, secret manager).
+ *   3. Pass the persisted value as `trustedPublicKey` on every subsequent
+ *      verification.
+ *   4. Rotate only in response to a documented key-rotation notice
+ *      received via a channel you already trust.
+ *
+ * Re-fetching the key on every verification is a misuse.
  */
 export async function fetchPublishedPublicKey(
   url = 'https://app.aqta.ai/security/pubkey.txt'

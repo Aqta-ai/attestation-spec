@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "aqta-verify-receipt"
-version = "1.0.1"
+version = "1.0.2"
 description = "Independent verifier for AqtaCore attestation receipts. Verifies the Ed25519 signature on an attestation receipt without trusting any third-party server. Reference implementation of ATTESTATION-v1."
 readme = "README.md"
 requires-python = ">=3.9"

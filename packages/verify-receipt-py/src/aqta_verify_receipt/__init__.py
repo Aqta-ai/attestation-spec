@@ -29,4 +29,4 @@ from .verifier import (
 )
 
 __all__ = ["verify_receipt", "fetch_published_public_key", "VerifyResult"]
-__version__ = "1.0.1"
+__version__ = "1.0.2"
