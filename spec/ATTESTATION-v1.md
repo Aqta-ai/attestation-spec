@@ -241,8 +241,107 @@ this repository covers only the format requirements of §4–§6.
 
 All reference implementations are licensed under Apache 2.0.
 
-## 12. Change Log
+## 12. Post-Quantum Migration
 
+ATTESTATION-v1 is **not** post-quantum secure. This section documents the
+migration plan rather than the current state, so implementers and auditors
+can size the residual risk.
+
+### 12.1 What survives a CRQC
+
+A cryptographically-relevant quantum computer (CRQC) capable of running
+Shor's algorithm at scale breaks every elliptic-curve-based primitive in
+this specification:
+
+- **Ed25519** signatures (§6) become forgeable. An attacker who has captured
+  any historical issuer public key can produce signatures that verify
+  against it.
+- **Schnorr proofs on BN254 G1** and **Groth16 proofs on BN254 alt_bn128**
+  (referenced in §9 as out-of-band extensions) lose soundness for the same
+  reason.
+
+The following primitives remain second-preimage- and collision-resistant
+against quantum attacks at a reduced but still tractable security level
+(Grover's algorithm halves the effective bit length):
+
+- **SHA-256** canonical-payload digest (§6) retains ~128-bit second-preimage
+  security. The receipt-chain hash defined in v2 (§9) inherits this
+  property.
+- **AES-256** (used by issuers for at-rest receipt storage; not part of the
+  wire format) retains ~128-bit security.
+
+A receipt **chain** based on SHA-256 therefore preserves historical
+integrity even after CRQCs arrive: tampering with any past receipt still
+breaks every later chain hash, regardless of signature forgery capability.
+
+### 12.2 v2 migration target
+
+ATTESTATION-v2 will introduce a **hybrid signing** scheme that produces
+two signatures over the canonical payload of §6:
+
+1. **Classical signature**: Ed25519 (RFC 8032) — preserved unchanged so
+   v1-era verifiers continue to accept v2 receipts as long as they ignore
+   the additional field per the strict-mode escape hatch in §7.
+2. **Post-quantum signature**: ML-DSA-65 (NIST FIPS 204, formerly
+   CRYSTALS-Dilithium). Signature length ~3.3 KB, public key ~2 KB.
+
+A v2 receipt is considered valid iff **both** signatures verify. This
+hybrid approach matches NIST SP 800-208 transition guidance and the
+recommendations of the IETF PQUIP working group.
+
+The choice of ML-DSA over alternatives:
+
+- **ML-DSA-65** (NIST FIPS 204): Lattice-based, NIST primary signature
+  standard since 2024-08, ~3.3 KB signature. Selected.
+- **SLH-DSA** (NIST FIPS 205, formerly SPHINCS+): Hash-based, conservative
+  but produces ~30 KB signatures. Reserved as a defence-in-depth hedge if
+  ML-DSA is later weakened.
+- **Falcon-512**: Smaller signatures (~700 B), but known floating-point
+  side-channel issues complicate constant-time implementation. Rejected for
+  v2.
+
+### 12.3 Timeline criteria
+
+Migration to ATTESTATION-v2 is gated on, in order:
+
+1. **NIST FIPS 204 reaches "approved for federal use" status** in NIST
+   SP 800-208 transition guidance. *(Already met as of 2024-08.)*
+2. **A reference ML-DSA implementation exists in both Python and JavaScript**
+   under permissive licences and has been independently audited. *(In
+   progress; `pq-crystals/dilithium` and `nokia/oqs-provider` are tracked.)*
+3. **At least one customer regulatory framework cites post-quantum
+   readiness as a procurement requirement.** *(Not yet observed; ANSSI and
+   BSI guidance for 2026-2030 is the trigger expected to flip this.)*
+
+When all three are met, AqtaCore commits to publishing ATTESTATION-v2 with
+hybrid signing within 90 days, and to running the issuer in dual-sign mode
+for the entire active retention window of any customer regulated under
+DORA, MiFID II, or EU AI Act long-retention obligations.
+
+### 12.4 Threat model today
+
+For any deployment using ATTESTATION-v1, the residual risk is:
+
+- **No risk to receipt confidentiality.** v1 receipts contain no plaintext
+  prompt or response data. There is nothing for a quantum attacker to
+  decrypt later.
+- **Forgery risk in 2030+.** A CRQC available in the 2030s could forge
+  receipts that appear to come from an issuer key that was active before
+  migration. Audit-log retention requirements of 5–10 years (DORA, MiFID II)
+  intersect this window. Issuers with such retention obligations SHOULD
+  begin hybrid-signing well before NIST estimates suggest a CRQC is
+  imminent — typically interpreted as 5 years' lead time.
+- **Chain integrity preserved.** Per §13.1, the SHA-256 receipt chain
+  remains a quantum-resilient tamper-evidence anchor. Auditors verifying
+  pre-migration receipts after a CRQC arrives can still rely on chain
+  integrity to bound the set of possibly-forged receipts to those signed
+  with a known-compromised key.
+
+## 13. Change Log
+
+- **v1.0.1 (2026-04-26):** Added §13 (Post-Quantum Migration) documenting
+  the v2 hybrid-signing target (ML-DSA-65 + Ed25519). No wire-format
+  changes; existing v1.0 receipts and verifiers remain conformant.
 - **v1.0 (2026-04-23):** Initial public specification.
 
 ---
