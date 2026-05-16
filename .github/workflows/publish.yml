@@ -1,0 +1,61 @@
+name: Publish to npm
+
+# Triggers on:
+#   - GitHub Release publish (the canonical path: `npm version patch`
+#     followed by `git push --follow-tags` and a Release on GitHub)
+#   - workflow_dispatch (manual backfill / republish-after-yank)
+#
+# The package lives at packages/verify-receipt; every step that touches
+# npm is scoped to that working directory.
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+# OIDC trusted publishing: GitHub mints a short-lived JWT, npm verifies
+# it against the Trusted Publisher configuration on
+# https://www.npmjs.com/package/aqta-verify-receipt/access.
+# No long-lived NPM_TOKEN secret is required.
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/verify-receipt
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Node 20 with npm registry
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build TypeScript -> dist/
+        run: npm run build
+
+      - name: Test (Ed25519 reference verifier)
+        run: npm test
+
+      - name: Verify version matches the release tag
+        if: github.event_name == 'release'
+        run: |
+          PKG_VERSION=$(node -p "require('./package.json').version")
+          # Release tags look like v1.0.2 or verify-receipt-v1.0.2; accept either
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          TAG_VERSION="${TAG_VERSION#verify-receipt-v}"
+          if [ "$PKG_VERSION" != "$TAG_VERSION" ]; then
+            echo "::error::package.json version ($PKG_VERSION) does not match release tag ($TAG_VERSION)"
+            exit 1
+          fi
+
+      - name: Publish to npm with provenance
+        run: npm publish --provenance --access public
