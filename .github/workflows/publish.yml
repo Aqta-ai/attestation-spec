@@ -49,9 +49,12 @@ jobs:
         if: github.event_name == 'release'
         run: |
           PKG_VERSION=$(node -p "require('./package.json').version")
-          # Release tags look like v1.0.2 or verify-receipt-v1.0.2; accept either
-          TAG_VERSION="${GITHUB_REF_NAME#v}"
-          TAG_VERSION="${TAG_VERSION#verify-receipt-v}"
+          # Release tags look like v1.0.2 or verify-receipt-v1.0.2; accept either.
+          # IMPORTANT: strip the longer prefix first — otherwise `${...#v}`
+          # eats the leading "v" of "verify-receipt-v" and the next strip
+          # silently no-ops, leaving us with "erify-receipt-v1.0.2".
+          TAG_VERSION="${GITHUB_REF_NAME#verify-receipt-v}"
+          TAG_VERSION="${TAG_VERSION#v}"
           if [ "$PKG_VERSION" != "$TAG_VERSION" ]; then
             echo "::error::package.json version ($PKG_VERSION) does not match release tag ($TAG_VERSION)"
             exit 1
