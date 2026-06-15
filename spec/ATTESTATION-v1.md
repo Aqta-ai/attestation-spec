@@ -36,8 +36,8 @@ It does not cover:
 
 - Chaining of receipts into a tamper-evident log. That is a separate
   extension under development; see §9.
-- Zero-knowledge proofs over receipts. A companion document specifies
-  Schnorr and Groth16 extensions.
+- Zero-knowledge proofs over receipts. A companion specification for the
+  Schnorr and Groth16 extensions is planned.
 - Transport (HTTP, Kafka, S3 export). Receipts are transport-agnostic.
 
 ## 3. Terminology
@@ -203,9 +203,9 @@ Signed receipt (same payload with signature appended):
   A v2 extension will add `prev_attestation_id` and a chained hash so any
   modification of a historical receipt is detectable. Implementers SHOULD
   design their storage layer with this in mind.
-- **Zero-knowledge extensions.** A separate specification covers attaching a
-  Schnorr (BN254 G1) proof of knowledge of the enforcement decision or a
-  Groth16 proof that the decision was taken over a hidden input.
+- **Zero-knowledge extensions.** A separate specification is planned to cover
+  attaching a Schnorr (BN254 G1) proof of knowledge of the enforcement
+  decision or a Groth16 proof that the decision was taken over a hidden input.
 - **Selective disclosure.** A future extension may allow redacting fields
   while preserving signature validity, via a hash-committed substructure.
 
@@ -230,7 +230,7 @@ Signed receipt (same payload with signature appended):
 | Language | Package | Source |
 |----------|---------|--------|
 | Python (verify) | `aqta-verify-receipt` (PyPI) | [packages/verify-receipt-py](../packages/verify-receipt-py) |
-| TypeScript / Node (verify) | `aqta-verify-receipt` (npm, pending publish) | [packages/verify-receipt](../packages/verify-receipt) |
+| TypeScript / Node (verify) | `aqta-verify-receipt` (npm: published, v1.0.2) | [packages/verify-receipt](../packages/verify-receipt) |
 | Python (minimal reference issuer) | stand-alone example | [examples/reference-issuer.py](../examples/reference-issuer.py) |
 
 A conformant production issuer additionally manages the private signing key
@@ -331,7 +331,7 @@ For any deployment using ATTESTATION-v1, the residual risk is:
   intersect this window. Issuers with such retention obligations SHOULD
   begin hybrid-signing well before NIST estimates suggest a CRQC is
   imminent — typically interpreted as 5 years' lead time.
-- **Chain integrity preserved.** Per §13.1, the SHA-256 receipt chain
+- **Chain integrity preserved.** Per §12.1, the SHA-256 receipt chain
   remains a quantum-resilient tamper-evidence anchor. Auditors verifying
   pre-migration receipts after a CRQC arrives can still rely on chain
   integrity to bound the set of possibly-forged receipts to those signed
@@ -339,7 +339,7 @@ For any deployment using ATTESTATION-v1, the residual risk is:
 
 ## 13. Change Log
 
-- **v1.0.1 (2026-04-26):** Added §13 (Post-Quantum Migration) documenting
+- **v1.0.1 (2026-04-26):** Added §12 (Post-Quantum Migration) documenting
   the v2 hybrid-signing target (ML-DSA-65 + Ed25519). No wire-format
   changes; existing v1.0 receipts and verifiers remain conformant.
 - **v1.0 (2026-04-23):** Initial public specification.
