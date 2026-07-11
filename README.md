@@ -69,6 +69,9 @@ AqtaCore's servers.
 - 🛡 **[THREAT-MODEL.md](./THREAT-MODEL.md)**: a self-authored
   adversarial analysis of this spec and our own issuer, including the
   trust assumptions we cannot remove at this layer.
+- 📑 **[WHAT-RECEIPTS-PROVE.md](./WHAT-RECEIPTS-PROVE.md)**: where
+  gateway-level receipts sit in the hardware-enabled verification stack
+  (flexHEG, Attestable Audits), and the gaps between the layers.
 
 ## Why it is published
 
