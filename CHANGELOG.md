@@ -104,7 +104,8 @@ reference verifier libraries.
   verifier. See spec §6 and the integer-coercion helper in the
   reference issuer.
 - The published public key for the canonical AqtaCore managed service
-  issuer is available at https://app.aqta.ai/security/pubkey.txt. Third
+  issuer is available at https://api.aqta.ai/v1/attestation/public-key
+  (mirrored as raw base64 at https://app.aqta.ai/security/pubkey.txt). Third
   parties running their own issuer publish their own key at a stable
   URL of their choice.
 

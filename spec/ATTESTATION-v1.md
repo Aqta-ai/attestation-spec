@@ -136,8 +136,10 @@ bump the receipt `v` version.
 A verifier performing receipt verification MUST:
 
 1. Retrieve the issuer's trusted public key out of band. The reference issuer
-   publishes its public key at `https://app.aqta.ai/security/pubkey.txt`. A
-   verifier MAY pin the key or compare against a published key list.
+   publishes its public key at `https://api.aqta.ai/v1/attestation/public-key`
+   (a JSON object with `public_key` and `key_id`; the raw key is mirrored at
+   `https://app.aqta.ai/security/pubkey.txt`). A verifier MAY pin the key or
+   compare against a published key list.
 2. Confirm that the `public_key` field in the receipt matches the trusted
    public key byte for byte. (The receipt is self-declaring; pinning prevents
    substitution of the issuer's identity.)
