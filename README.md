@@ -64,6 +64,11 @@ AqtaCore's servers.
   documenting a specific behaviour.
 - 📏 **[CONFORMANCE.md](./CONFORMANCE.md)**: what it takes for an
   independent implementation to claim ATTESTATION-v1 conformance.
+- 🔍 **[VERIFY-WALKTHROUGH.md](./VERIFY-WALKTHROUGH.md)**: verify a
+  receipt in five minutes with only the published artefacts.
+- 🛡 **[THREAT-MODEL.md](./THREAT-MODEL.md)**: a self-authored
+  adversarial analysis of this spec and our own issuer, including the
+  trust assumptions we cannot remove at this layer.
 
 ## Why it is published
 
