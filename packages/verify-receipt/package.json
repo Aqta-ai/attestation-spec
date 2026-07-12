@@ -1,6 +1,6 @@
 {
   "name": "aqta-verify-receipt",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Independent verifier for AqtaCore attestation receipts. Verifies the Ed25519 signature on an attestation receipt without trusting any third-party server. Reference implementation of ATTESTATION-v1.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -16,14 +16,13 @@
   },
   "keywords": [
     "aqta",
-    "ai-governance",
     "attestation",
     "ed25519",
     "zero-trust",
-    "eu-ai-act",
-    "dora",
-    "compliance",
-    "receipt-verification"
+    "receipt-verification",
+    "tamper-evident",
+    "offline-verification",
+    "ai-receipts"
   ],
   "author": "Aqta Technologies Ltd",
   "license": "Apache-2.0",
@@ -49,5 +48,8 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "bin": {
+    "aqta-verify-receipt": "./dist/cli.js"
   }
 }
