@@ -40,6 +40,7 @@ informative:
   RFC9052:
   RFC9943:
   RFC7942:
+  I-D.farley-acta-signed-receipts:
   FIPS204:
     title: "Module-Lattice-Based Digital Signature Standard"
     author:
@@ -524,6 +525,29 @@ for actions taken by or on behalf of AI agents, a setting in which
 the Artifact about which Statements are made is an action or a
 decision rather than a software artefact. It claims no conformance
 to {{RFC9943}} and requests no registry action.
+
+## Related Independent Work {#related}
+
+{{I-D.farley-acta-signed-receipts}} independently specifies
+Ed25519-signed, offline-verifiable decision receipts for
+machine-to-machine access control, attesting whether a caller was
+permitted to invoke a tool or capability, with tool invocation via
+the Model Context Protocol as its motivating deployment. The two
+formats share design instincts: detached offline verification
+against a published key, canonical serialisation before signing,
+and refusal to make the issuer's availability part of the trust
+path.
+
+They attest different subjects. An acta receipt's subject is an
+access-control verdict at a tool boundary: whether this caller may
+take this action. The subject of the receipt defined here is the
+mediated LLM inference call itself: what was requested of which
+model, bound by request hash, and how the gateway's policy
+enforcement disposed of it before the model produced tokens. In a
+deployment containing both an agent's tool invocations and its
+underlying model calls, the two formats are complementary layers of
+evidence rather than substitutes, and a complete audit trail for an
+agentic system plausibly carries both.
 
 # Format Evolution {#evolution}
 
