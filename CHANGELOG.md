@@ -9,7 +9,16 @@ own versioning contract described in [CONFORMANCE.md](./CONFORMANCE.md).
 
 ## [Unreleased]
 
-Nothing yet.
+### Fixed
+
+- Root README no longer claims TypeScript npm publication is pending.
+  `aqta-verify-receipt` is published on both PyPI and npm (registry latest
+  1.0.2; in-repo packages are staged at 1.0.3 pending the next registry
+  publish).
+- README reframed around the enforcement wedge (gateway allow/block before
+  the model runs), with an ordinary-logs comparison, live browser verifier
+  link, and an honest "relationship to open standards" section (SCITT /
+  COSE / W3C VC / in-toto adjacent, not conforming).
 
 ---
 
@@ -77,7 +86,7 @@ reference verifier libraries.
 - **Python reference verifier** [`packages/verify-receipt-py`](./packages/verify-receipt-py):
   Apache 2.0, published to PyPI as `aqta-verify-receipt`.
 - **TypeScript reference verifier** [`packages/verify-receipt`](./packages/verify-receipt):
-  Apache 2.0, published source available here pending npm publication.
+  Apache 2.0, published to npm as `aqta-verify-receipt`.
 - **Reference issuer** [`examples/reference-issuer.py`](./examples/reference-issuer.py):
   minimal stand-alone issuer covering format and signing only, used
   for test-vector generation and the cross-implementation interop test.

@@ -1,110 +1,108 @@
-# AqtaCore Attestation Specification
+# ATTESTATION-v1
 
-> The open specification and reference verifier libraries for **AqtaCore
-> attestation receipts**: cryptographic proof that an AI enforcement
-> decision actually ran.
+<p align="center">
+  <strong>Don't just log the model call. Prove the enforcement ran.</strong><br/>
+  <sub>Open format and reference verifiers for AI enforcement receipts. Ed25519. Offline-verifiable. Independent of the issuer's servers.</sub>
+</p>
 
-[![CI](https://github.com/Aqta-ai/attestation-spec/actions/workflows/test.yml/badge.svg)](https://github.com/Aqta-ai/attestation-spec/actions/workflows/test.yml)
-[![PyPI](https://img.shields.io/pypi/v/aqta-verify-receipt.svg)](https://pypi.org/project/aqta-verify-receipt/)
-[![Spec CC-BY-4.0](https://img.shields.io/badge/spec-CC--BY--4.0-lightgrey.svg)](./spec/ATTESTATION-v1.md)
-[![Code Apache-2.0](https://img.shields.io/badge/code-Apache--2.0-blue.svg)](./LICENSE)
+<p align="center">
+  <a href="https://github.com/Aqta-ai/attestation-spec/actions/workflows/test.yml"><img src="https://img.shields.io/github/actions/workflow/status/Aqta-ai/attestation-spec/test.yml?branch=main&label=CI" alt="CI"></a>
+  <a href="https://pypi.org/project/aqta-verify-receipt/"><img src="https://img.shields.io/pypi/v/aqta-verify-receipt.svg" alt="PyPI"></a>
+  <a href="https://www.npmjs.com/package/aqta-verify-receipt"><img src="https://img.shields.io/npm/v/aqta-verify-receipt.svg" alt="npm"></a>
+  <a href="./spec/ATTESTATION-v1.md"><img src="https://img.shields.io/badge/spec-CC--BY--4.0-lightgrey.svg" alt="Spec CC-BY-4.0"></a>
+  <a href="./LICENSE"><img src="https://img.shields.io/badge/code-Apache--2.0-blue.svg" alt="Code Apache-2.0"></a>
+</p>
+
+<p align="center">
+  <a href="https://aqta.ai/verify"><strong>▶ Check a receipt in the browser</strong></a>
+  · <a href="./VERIFY-WALKTHROUGH.md">5-minute offline walkthrough</a>
+  · <a href="./THREAT-MODEL.md">Threat model</a>
+</p>
 
 ## What this is
 
-AqtaCore is a managed service that sits between enterprise AI applications
-and the model providers. Every enforcement decision AqtaCore makes returns
-a **signed receipt**: Ed25519, hash-chained on export, independently
-verifiable.
+This repository is the open specification and reference verifier libraries for
+**enforcement attestation receipts**: cryptographic proof that an AI gateway
+decided whether a model call was allowed to run.
 
-This repository is **not** the AqtaCore service. It is the open spec, two
-reference verifier libraries, a stand-alone reference issuer, and a
-conformance test suite so that any third party can verify a receipt, or
-build their own compliant issuer or verifier.
+It is **not** the managed gateway service. It is the format, two reference
+verifiers, a stand-alone reference issuer, and a conformance suite so a third
+party can verify a receipt, or build their own conformant issuer or verifier,
+without trusting the issuer's servers.
 
-## The trust model in one picture
+## Ordinary logs vs enforcement receipts
+
+| Ordinary logs | ATTESTATION-v1 receipts |
+|---|---|
+| Issuer says it happened | Anyone can verify the signature offline |
+| Mutable after the fact | Signature breaks on tamper |
+| No independent check | Check against a published public key |
+| Trust the log host | No call to the issuer required |
+
+Use logs for observability. Use a receipt when you need evidence of the
+enforcement decision.
+
+What a valid receipt proves, and what it does **not** prove, is stated in
+[THREAT-MODEL.md](./THREAT-MODEL.md) and [WHAT-RECEIPTS-PROVE.md](./WHAT-RECEIPTS-PROVE.md).
+Short version: a signature proves what the gateway *said*, not what the
+provider's compute *did*.
+
+## Where this sits
 
 ```
 ┌──────────────┐      ┌──────────────┐      ┌──────────────┐
-│  Enterprise  │      │   AqtaCore   │      │     LLM      │
-│     app      │─────▶│   gateway    │─────▶│   provider   │
-└──────────────┘      └──────┬───────┘      └──────────────┘
-                             │
-                             │  Ed25519-signed
-                             │    attestation
+│  Enterprise  │      │   Gateway    │      │     LLM      │
+│     app      │─────▶│  (enforces   │─────▶│   provider   │
+└──────────────┘      │   policy)    │      └──────────────┘
+                      └──────┬───────┘
+                             │  Ed25519-signed receipt
                              ▼
                       ┌──────────────┐      ┌──────────────┐
-                      │   Receipt    │      │   Auditor    │
-                      │   (inline    │─────▶│     or       │
-                      │  w/ response)│      │  regulator   │
-                      └──────────────┘      └──────┬───────┘
-                                                   │
-                                    verify locally with
-                                    aqta-verify-receipt and
-                                    the published public key
-                                    (no contact with AqtaCore)
+                      │   Receipt    │─────▶│   Auditor    │
+                      │  (inline w/  │      │  verifies    │
+                      │   response)  │      │  locally     │
+                      └──────────────┘      └──────────────┘
 ```
 
-Every receipt is self-describing. The auditor never has to trust
-AqtaCore's servers.
+The receipt binds `request_hash`, `model`, `outcome`
+(`ALLOWED` / `BLOCKED` / `SUPPRESSED`), and `policy_applied` under the
+issuer's key. Adjacent work often attests **agent tool calls**; this format
+attests the **gateway enforcement decision** before the model runs.
 
-## Contents
-
-- 📄 **[ATTESTATION-v1](./spec/ATTESTATION-v1.md)**: the open
-  specification for the receipt format, CC-BY-4.0.
-- 🐍 **[packages/verify-receipt-py](./packages/verify-receipt-py)**:
-  reference Python verifier, Apache 2.0, on
-  [PyPI](https://pypi.org/project/aqta-verify-receipt/).
-- 🟦 **[packages/verify-receipt](./packages/verify-receipt)**: reference
-  TypeScript verifier, Apache 2.0, npm publication pending.
-- 🧪 **[examples/reference-issuer.py](./examples/reference-issuer.py)**:
-  stand-alone minimal issuer, used for test-vector generation and the
-  cross-implementation interop test.
-- 📋 **[test-vectors/](./test-vectors)**: deterministic conformance
-  vectors for third-party verifiers; six valid, eight invalid, each
-  documenting a specific behaviour.
-- 📏 **[CONFORMANCE.md](./CONFORMANCE.md)**: what it takes for an
-  independent implementation to claim ATTESTATION-v1 conformance.
-- 🔍 **[VERIFY-WALKTHROUGH.md](./VERIFY-WALKTHROUGH.md)**: verify a
-  receipt in five minutes with only the published artefacts.
-- 🛡 **[THREAT-MODEL.md](./THREAT-MODEL.md)**: a self-authored
-  adversarial analysis of this spec and our own issuer, including the
-  trust assumptions we cannot remove at this layer.
-- 📑 **[WHAT-RECEIPTS-PROVE.md](./WHAT-RECEIPTS-PROVE.md)**: where
-  gateway-level receipts sit in the hardware-enabled verification stack
-  (flexHEG, Attestable Audits), and the gaps between the layers.
-
-## Why it is published
-
-Regulators, auditors, and internal compliance teams who rely on AqtaCore
-receipts need to be able to verify them **without trusting AqtaCore's
-servers**. An auditor who could not independently verify a receipt would
-not trust a vendor-stamped receipt in the first place.
-
-Publishing the spec and the verifiers is the credibility floor for the
-product.
-
-## Verify a receipt in 30 seconds
+## Verify in 30 seconds
 
 ```bash
 pip install aqta-verify-receipt
+# or: npm install aqta-verify-receipt
 ```
 
 ```python
 from aqta_verify_receipt import verify_receipt, fetch_published_public_key
 
-trusted = fetch_published_public_key()   # pin once
+trusted = fetch_published_public_key()   # fetch once, then pin
 result = verify_receipt(receipt, trusted_public_key=trusted)
 
-print(result.valid)   # → True if the signature is genuine
+print(result.valid)
 ```
 
-The TypeScript verifier mirrors this API (pending npm publication; clone
-from this repo and build locally in the meantime).
+Pin the key. Re-fetching on every verification collapses the trust model back
+to "trust the issuer's server right now". See the package READMEs.
+
+Browser: [aqta.ai/verify](https://aqta.ai/verify). CLI walkthrough:
+[VERIFY-WALKTHROUGH.md](./VERIFY-WALKTHROUGH.md).
+
+## Contents
+
+- 📄 **[ATTESTATION-v1](./spec/ATTESTATION-v1.md)** — receipt format (CC-BY-4.0). Status: draft for public review.
+- 🐍 **[packages/verify-receipt-py](./packages/verify-receipt-py)** — Python verifier on [PyPI](https://pypi.org/project/aqta-verify-receipt/).
+- 🟦 **[packages/verify-receipt](./packages/verify-receipt)** — TypeScript verifier on [npm](https://www.npmjs.com/package/aqta-verify-receipt).
+- 🧪 **[examples/reference-issuer.py](./examples/reference-issuer.py)** — minimal stand-alone issuer for vectors and interop.
+- 📋 **[test-vectors/](./test-vectors)** — six valid, eight invalid receipts.
+- 📏 **[CONFORMANCE.md](./CONFORMANCE.md)** — issuer and verifier conformance.
+- 🛡 **[THREAT-MODEL.md](./THREAT-MODEL.md)** — trust assumptions and attacks.
+- 📑 **[WHAT-RECEIPTS-PROVE.md](./WHAT-RECEIPTS-PROVE.md)** — gateway layer vs hardware attestation.
 
 ## Conformance
-
-Any issuer or verifier claiming ATTESTATION-v1 conformance must pass the
-cross-implementation interop test:
 
 ```bash
 cd packages/verify-receipt
@@ -113,25 +111,44 @@ cd ../..
 node scripts/make-interop-fixture.mjs
 ```
 
-This generates a receipt with the reference issuer (Python) and verifies
-it with the reference verifier (TypeScript). If both sides agree on the
-canonical payload, signing, and verification rules, the test exits 0.
+Python issuer signs; TypeScript verifier accepts. Independent implementations
+must also pass every vector in [`test-vectors/`](./test-vectors/). See
+[CONFORMANCE.md](./CONFORMANCE.md).
 
-Independent verifiers should additionally pass every vector in
-[`test-vectors/`](./test-vectors/). See [CONFORMANCE.md](./CONFORMANCE.md)
-for the full requirements.
+## Relationship to open standards
+
+ATTESTATION-v1 is a purpose-built JSON + Ed25519 envelope for gateway
+enforcement receipts. It is **adjacent to, not conforming to**:
+
+| Standard | Relationship |
+|---|---|
+| **SCITT** / **COSE** | Same problem family (signed statements about artifacts). Different envelope; no COSE_Sign1 or SCITT Receipt claim set in v1. |
+| **W3C Verifiable Credentials** | Same "portable signed claim" idea. v1 is not a VC data model. |
+| **in-toto / SLSA** | Supply-chain attestation of builds. This format attests inference-time enforcement, not build provenance. |
+| **Sigstore / DSSE** | Rekor-style transparency is a stronger omission defence than v1's per-receipt signatures. Anchoring to an append-only log is planned work, not shipped in v1. |
+
+We publish this so auditors can verify without us, and so other issuers can
+implement the same format. We do not claim this is an IETF standard or a drop-in
+for SCITT.
+
+## Why it is published
+
+Auditors who rely on enforcement receipts need to verify them without trusting
+the issuer's servers. A vendor-only stamp is not evidence. Publishing the spec
+and the verifiers is the credibility floor.
 
 ## Licences
 
-- **Specification** (`spec/`): Creative Commons Attribution 4.0
-  International (CC-BY-4.0).
-- **Code** (`packages/`, `examples/`, `scripts/`, `test-vectors/`):
-  Apache License 2.0.
+- **Specification** (`spec/`): Creative Commons Attribution 4.0 International (CC-BY-4.0).
+- **Code** (`packages/`, `examples/`, `scripts/`, `test-vectors/`): Apache License 2.0.
+
+See [LICENSE](./LICENSE).
 
 ## Learn more
 
-- **AqtaCore managed service:** https://app.aqta.ai
-- **Security and published public key:** https://app.aqta.ai/security
-- **Disclosure policy:** [SECURITY.md](./SECURITY.md)
-- **Change history:** [CHANGELOG.md](./CHANGELOG.md)
-- **How to contribute:** [CONTRIBUTING.md](./CONTRIBUTING.md)
+- Browser verifier: https://aqta.ai/verify
+- Published production key: https://api.aqta.ai/v1/attestation/public-key
+- Managed issuer (optional): https://app.aqta.ai
+- Disclosure policy: [SECURITY.md](./SECURITY.md)
+- Change history: [CHANGELOG.md](./CHANGELOG.md)
+- How to contribute: [CONTRIBUTING.md](./CONTRIBUTING.md)
