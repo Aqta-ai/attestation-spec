@@ -9,21 +9,28 @@ own versioning contract described in [CONFORMANCE.md](./CONFORMANCE.md).
 
 ## [Unreleased]
 
+### Changed
+
+- Public docs: stable wire-format framing; install from the registry release
+  (currently 1.0.2). Source on `main` may include unreleased CLI tooling
+  versioned 1.0.3 in package manifests until the next tagged publish.
+- Spec wording: "enforcement gateway" instead of "governance gateway".
+- Dual-licence layout: Apache-2.0 root `LICENSE`; CC-BY-4.0 for `spec/` in
+  `LICENSE-SPEC`.
+- Package READMEs aligned with enforcement wedge; both pubkey URLs documented.
+- CI runs the 14 test vectors on Python and TypeScript.
+- Community health: `CODE_OF_CONDUCT.md`, issue/PR templates, examples README.
+- Wiki disabled; GitHub Release for tag `v1.0.0` (package Latest remains
+  `verify-receipt-v1.0.2`).
+
 ### Fixed
 
 - Root README no longer claims TypeScript npm publication is pending.
-  `aqta-verify-receipt` is published on both PyPI and npm (registry latest
-  1.0.2). This tree stages **1.0.3** consistently across `package.json`,
-  `package-lock.json`, `pyproject.toml`, and `__version__` (CLI entrypoints
-  added after 1.0.2). Tag and publish when ready; until then, install from
-  the registry for the released API.
+  `aqta-verify-receipt` is published on both PyPI and npm.
 - README reframed around the enforcement wedge (gateway allow/block before
   the model runs), with an ordinary-logs comparison, live browser verifier
   link, and an honest "relationship to open standards" section (SCITT /
   COSE / W3C VC / in-toto adjacent, not conforming).
-- Spec wording: "enforcement gateway" instead of "governance gateway".
-  Dual-licence layout clarified for GitHub licence detection (Apache-2.0
-  root `LICENSE`; CC-BY-4.0 for `spec/` in `LICENSE-SPEC`).
 
 ---
 

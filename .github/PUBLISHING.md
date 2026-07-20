@@ -1,14 +1,17 @@
 # Publishing setup
 
-This document covers how to release new versions of the verifier
-libraries from this repository, and how to fix the two credibility gaps
-flagged in early reviews:
+How to release new versions of the verifier libraries from this repository
+using **trusted publishing via GitHub Actions OIDC** (Sigstore provenance,
+no long-lived registry tokens in GitHub secrets).
 
-1. Personal PyPI / npm account ownership (low institutional trust).
-2. No supply-chain provenance on releases.
+Canonical workflows:
 
-Both are fixed by setting up **trusted publishing via GitHub Actions
-OIDC**, which is a one-time configuration step.
+- PyPI: [`.github/workflows/release-pypi.yml`](./workflows/release-pypi.yml) on tags `pyverify-v*`
+- npm: [`.github/workflows/release-npm.yml`](./workflows/release-npm.yml) on tags `tsverify-v*`
+
+[`publish.yml`](./workflows/publish.yml) is a secondary npm path that triggers
+on a GitHub Release publish. Prefer the tag workflows above unless you are
+backfilling a Release-driven publish.
 
 ---
 

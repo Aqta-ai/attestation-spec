@@ -40,10 +40,11 @@ dependencies = [
 aqta-verify-receipt = "aqta_verify_receipt.__main__:main"
 
 [project.urls]
-Homepage = "https://app.aqta.ai/security"
+Homepage = "https://aqta.ai/verify"
 Repository = "https://github.com/Aqta-ai/attestation-spec"
 Documentation = "https://github.com/Aqta-ai/attestation-spec/blob/main/spec/ATTESTATION-v1.md"
 Issues = "https://github.com/Aqta-ai/attestation-spec/issues"
+"Public Key" = "https://api.aqta.ai/v1/attestation/public-key"
 
 [tool.setuptools.packages.find]
 where = ["src"]

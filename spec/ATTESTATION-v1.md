@@ -1,11 +1,11 @@
 # AqtaCore Attestation Receipt Format, Version 1
 
-**Status:** Draft for public review.
+**Status:** Stable wire format v1.0. Editorial revisions do not change on-the-wire bytes.
 **Version:** 1.0
 **Last updated:** 2026-04-26
-**Last reviewed:** 2026-07-20 (editorial; no wire-format change)
+**Last reviewed:** 2026-07-20
 **Reference issuer:** [examples/reference-issuer.py](../examples/reference-issuer.py)
-**Reference verifiers:** [`aqta-verify-receipt`](https://pypi.org/project/aqta-verify-receipt/) (PyPI), [`aqta-verify-receipt`](./packages/verify-receipt) (npm). Registry latest is 1.0.2; this tree stages 1.0.3 (CLI) pending the next publish.
+**Reference verifiers:** [`aqta-verify-receipt`](https://pypi.org/project/aqta-verify-receipt/) on PyPI and npm (install the registry release). Source on `main` may include unreleased tooling such as the CLI.
 
 ---
 
@@ -240,7 +240,7 @@ A conformant production issuer additionally manages the private signing key
 in a secure enclave, enforces policy before signing, and persists receipts
 to a tamper-evident log. The [AqtaCore](https://app.aqta.ai) managed service
 is the canonical production issuer; the stand-alone reference issuer in
-this repository covers only the format requirements of §4–§6.
+this repository covers only the format requirements of §4 to §6.
 
 All reference implementations are licensed under Apache 2.0.
 
@@ -282,7 +282,7 @@ breaks every later chain hash, regardless of signature forgery capability.
 ATTESTATION-v2 will introduce a **hybrid signing** scheme that produces
 two signatures over the canonical payload of §6:
 
-1. **Classical signature**: Ed25519 (RFC 8032) — preserved unchanged so
+1. **Classical signature**: Ed25519 (RFC 8032), preserved unchanged so
    v1-era verifiers continue to accept v2 receipts as long as they ignore
    the additional field per the strict-mode escape hatch in §7.
 2. **Post-quantum signature**: ML-DSA-65 (NIST FIPS 204, formerly
@@ -330,10 +330,10 @@ For any deployment using ATTESTATION-v1, the residual risk is:
   decrypt later.
 - **Forgery risk in 2030+.** A CRQC available in the 2030s could forge
   receipts that appear to come from an issuer key that was active before
-  migration. Audit-log retention requirements of 5–10 years (DORA, MiFID II)
+  migration. Audit-log retention requirements of 5 to 10 years (DORA, MiFID II)
   intersect this window. Issuers with such retention obligations SHOULD
   begin hybrid-signing well before NIST estimates suggest a CRQC is
-  imminent — typically interpreted as 5 years' lead time.
+  imminent, typically interpreted as 5 years' lead time.
 - **Chain integrity preserved.** Per §12.1, the SHA-256 receipt chain
   remains a quantum-resilient tamper-evidence anchor. Auditors verifying
   pre-migration receipts after a CRQC arrives can still rely on chain
@@ -342,8 +342,9 @@ For any deployment using ATTESTATION-v1, the residual risk is:
 
 ## 13. Change Log
 
-- **v1.0.1 editorial review (2026-07-20):** Replaced "governance gateway"
-  wording with "enforcement gateway". No wire-format change.
+- **Editorial (2026-07-20):** Replaced "governance gateway"
+  wording with "enforcement gateway". Clarified stable wire-format status.
+  No wire-format change.
 - **v1.0.1 (2026-04-26):** Added §12 (Post-Quantum Migration) documenting
   the v2 hybrid-signing target (ML-DSA-65 + Ed25519). No wire-format
   changes; existing v1.0 receipts and verifiers remain conformant.
