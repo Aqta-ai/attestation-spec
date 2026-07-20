@@ -139,10 +139,12 @@ and the verifiers is the credibility floor.
 
 ## Licences
 
-- **Specification** (`spec/`): Creative Commons Attribution 4.0 International (CC-BY-4.0).
-- **Code** (`packages/`, `examples/`, `scripts/`, `test-vectors/`): Apache License 2.0.
+- **Code** (`packages/`, `examples/`, `scripts/`, `test-vectors/`): [Apache License 2.0](./LICENSE).
+- **Specification** (`spec/`): [Creative Commons Attribution 4.0 International (CC-BY-4.0)](./LICENSE-SPEC).
 
-See [LICENSE](./LICENSE).
+GitHub's licence badge reports Apache-2.0 for the repository root. The
+specification remains CC-BY-4.0 so other issuers can adopt the format without
+software-licence friction.
 
 ## Learn more
 

@@ -13,12 +13,17 @@ own versioning contract described in [CONFORMANCE.md](./CONFORMANCE.md).
 
 - Root README no longer claims TypeScript npm publication is pending.
   `aqta-verify-receipt` is published on both PyPI and npm (registry latest
-  1.0.2; in-repo packages are staged at 1.0.3 pending the next registry
-  publish).
+  1.0.2). This tree stages **1.0.3** consistently across `package.json`,
+  `package-lock.json`, `pyproject.toml`, and `__version__` (CLI entrypoints
+  added after 1.0.2). Tag and publish when ready; until then, install from
+  the registry for the released API.
 - README reframed around the enforcement wedge (gateway allow/block before
   the model runs), with an ordinary-logs comparison, live browser verifier
   link, and an honest "relationship to open standards" section (SCITT /
   COSE / W3C VC / in-toto adjacent, not conforming).
+- Spec wording: "enforcement gateway" instead of "governance gateway".
+  Dual-licence layout clarified for GitHub licence detection (Apache-2.0
+  root `LICENSE`; CC-BY-4.0 for `spec/` in `LICENSE-SPEC`).
 
 ---
 
@@ -102,7 +107,7 @@ reference verifier libraries.
 - **GitHub Actions CI**: runs the Python verifier tests against
   Python 3.9 through 3.12, the TypeScript verifier tests, and the
   cross-implementation interop test on every push and pull request.
-- **Governance docs**: [CONTRIBUTING.md](./CONTRIBUTING.md),
+- **Project docs**: [CONTRIBUTING.md](./CONTRIBUTING.md),
   [SECURITY.md](./SECURITY.md), [CONFORMANCE.md](./CONFORMANCE.md).
 
 ### Notes for implementers

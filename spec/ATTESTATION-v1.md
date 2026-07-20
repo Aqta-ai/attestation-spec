@@ -2,16 +2,17 @@
 
 **Status:** Draft for public review.
 **Version:** 1.0
-**Last updated:** 2026-04-23
+**Last updated:** 2026-04-26
+**Last reviewed:** 2026-07-20 (editorial; no wire-format change)
 **Reference issuer:** [examples/reference-issuer.py](../examples/reference-issuer.py)
-**Reference verifiers:** [`aqta-verify-receipt`](https://pypi.org/project/aqta-verify-receipt/) (PyPI), [`aqta-verify-receipt`](./packages/verify-receipt) (npm).
+**Reference verifiers:** [`aqta-verify-receipt`](https://pypi.org/project/aqta-verify-receipt/) (PyPI), [`aqta-verify-receipt`](./packages/verify-receipt) (npm). Registry latest is 1.0.2; this tree stages 1.0.3 (CLI) pending the next publish.
 
 ---
 
 ## 1. Purpose
 
 This document specifies the on-the-wire format of **enforcement attestation
-receipts** produced by an AI-governance gateway when it decides whether and
+receipts** produced by an AI enforcement gateway when it decides whether and
 how a large-language-model call is permitted. A receipt binds the gateway's
 enforcement decision to a specific request under a published public key. Any
 third party holding the public key can verify a receipt **without trusting the
@@ -45,7 +46,7 @@ It does not cover:
 The key words "MUST", "MUST NOT", "SHOULD", "SHOULD NOT", and "MAY" in this
 document are to be interpreted as described in BCP 14 (RFC 2119, RFC 8174).
 
-- **Issuer.** The governance gateway that produces a receipt.
+- **Issuer.** The enforcement gateway that produces a receipt.
 - **Subject.** The organisation (`org_id`) on whose behalf enforcement ran.
 - **Verifier.** Any party that checks a receipt's signature against the
   issuer's published public key.
@@ -232,7 +233,7 @@ Signed receipt (same payload with signature appended):
 | Language | Package | Source |
 |----------|---------|--------|
 | Python (verify) | `aqta-verify-receipt` (PyPI) | [packages/verify-receipt-py](../packages/verify-receipt-py) |
-| TypeScript / Node (verify) | `aqta-verify-receipt` (npm: published, v1.0.2) | [packages/verify-receipt](../packages/verify-receipt) |
+| TypeScript / Node (verify) | `aqta-verify-receipt` (npm; see registry for latest) | [packages/verify-receipt](../packages/verify-receipt) |
 | Python (minimal reference issuer) | stand-alone example | [examples/reference-issuer.py](../examples/reference-issuer.py) |
 
 A conformant production issuer additionally manages the private signing key
@@ -341,6 +342,8 @@ For any deployment using ATTESTATION-v1, the residual risk is:
 
 ## 13. Change Log
 
+- **v1.0.1 editorial review (2026-07-20):** Replaced "governance gateway"
+  wording with "enforcement gateway". No wire-format change.
 - **v1.0.1 (2026-04-26):** Added §12 (Post-Quantum Migration) documenting
   the v2 hybrid-signing target (ML-DSA-65 + Ed25519). No wire-format
   changes; existing v1.0 receipts and verifiers remain conformant.
