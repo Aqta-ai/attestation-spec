@@ -5,20 +5,21 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "aqta-verify-receipt"
 version = "1.0.3"
-description = "Independent verifier for AqtaCore attestation receipts. Verifies the Ed25519 signature on an attestation receipt without trusting any third-party server. Reference implementation of ATTESTATION-v1."
+description = "Offline CLI and library for Seal ATTESTATION-v1 receipts. Ed25519 check of a signed model call; no account, no Aqta server required."
 readme = "README.md"
 requires-python = ">=3.9"
 license = { text = "Apache-2.0" }
 authors = [{ name = "Aqta Technologies Ltd" }]
 keywords = [
+    "seal",
     "aqta",
-    "attestation",
+    "attestation-v1",
     "ed25519",
-    "zero-trust",
-    "receipt-verification",
-    "tamper-evident",
     "offline-verification",
     "ai-receipts",
+    "model-call",
+    "tamper-evident",
+    "cli",
 ]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
