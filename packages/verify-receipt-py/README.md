@@ -12,17 +12,15 @@ servers**.
 
 ## Why this exists
 
-AqtaCore returns a signed receipt with every AI enforcement decision.
-Regulators, auditors, and internal compliance teams need to verify
-those receipts independently, without trusting the issuer. This
-package is the reference implementation of that verifier, maintained
-by Aqta under the open
+AqtaCore returns a signed receipt with every AI enforcement decision
+(`ALLOWED` / `BLOCKED` / `SUPPRESSED`). Auditors and implementers need to
+verify those receipts independently, without trusting the issuer. This
+package is the reference implementation of that verifier under the open
 [ATTESTATION-v1](https://github.com/Aqta-ai/attestation-spec/blob/main/spec/ATTESTATION-v1.md)
-format specification.
+format.
 
-This verifier is the same code path AqtaCore uses internally to
-validate its own production receipts and to power the receipt-
-verification endpoint exposed to customer audit teams.
+Use ordinary logs for observability. Use a receipt when you need evidence
+of the enforcement decision that anyone can check offline.
 
 ## Install
 
@@ -85,9 +83,11 @@ Returns a `VerifyResult` with fields `valid: bool` and
 
 ### `fetch_published_public_key(url=..., *, timeout=10.0) → str`
 
-Fetches the AqtaCore public key from
-`https://app.aqta.ai/security/pubkey.txt`. Pass a custom URL for
-self-hosted issuers. **Pin the result; see the warning above.**
+Fetches the AqtaCore public key. Default URL is the raw key mirror
+`https://app.aqta.ai/security/pubkey.txt`. The JSON endpoint
+`https://api.aqta.ai/v1/attestation/public-key` publishes the same key with
+metadata (`key_id`, algorithm). Pass a custom URL for self-hosted issuers.
+**Pin the result; see the warning above.**
 
 ## Forward compatibility
 
@@ -111,8 +111,8 @@ ATTESTATION-v1 versioning policy:
 - **Major** versions (vN.0, N ≥ 2): breaking changes; upgrade
   required.
 
-Set `strict_fields=False` only if your compliance team has reviewed
-the forward-compatibility trade-off.
+Set `strict_fields=False` only after your security or audit reviewers have
+accepted the forward-compatibility trade-off.
 
 ## Test vectors
 

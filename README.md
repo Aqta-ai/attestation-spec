@@ -93,27 +93,31 @@ Browser: [aqta.ai/verify](https://aqta.ai/verify). CLI walkthrough:
 
 ## Contents
 
-- 📄 **[ATTESTATION-v1](./spec/ATTESTATION-v1.md)** — receipt format (CC-BY-4.0). Status: draft for public review.
-- 🐍 **[packages/verify-receipt-py](./packages/verify-receipt-py)** — Python verifier on [PyPI](https://pypi.org/project/aqta-verify-receipt/).
-- 🟦 **[packages/verify-receipt](./packages/verify-receipt)** — TypeScript verifier on [npm](https://www.npmjs.com/package/aqta-verify-receipt).
-- 🧪 **[examples/reference-issuer.py](./examples/reference-issuer.py)** — minimal stand-alone issuer for vectors and interop.
-- 📋 **[test-vectors/](./test-vectors)** — six valid, eight invalid receipts.
-- 📏 **[CONFORMANCE.md](./CONFORMANCE.md)** — issuer and verifier conformance.
-- 🛡 **[THREAT-MODEL.md](./THREAT-MODEL.md)** — trust assumptions and attacks.
-- 📑 **[WHAT-RECEIPTS-PROVE.md](./WHAT-RECEIPTS-PROVE.md)** — gateway layer vs hardware attestation.
+- 📄 **[ATTESTATION-v1](./spec/ATTESTATION-v1.md)**: receipt format (CC-BY-4.0). Stable wire format v1.0.
+- 🐍 **[packages/verify-receipt-py](./packages/verify-receipt-py)**: Python verifier on [PyPI](https://pypi.org/project/aqta-verify-receipt/).
+- 🟦 **[packages/verify-receipt](./packages/verify-receipt)**: TypeScript verifier on [npm](https://www.npmjs.com/package/aqta-verify-receipt).
+- 🧪 **[examples/](./examples)**: minimal stand-alone issuer and sample receipt.
+- 📋 **[test-vectors/](./test-vectors)**: six valid, eight invalid receipts.
+- 📏 **[CONFORMANCE.md](./CONFORMANCE.md)**: issuer and verifier conformance.
+- 🛡 **[THREAT-MODEL.md](./THREAT-MODEL.md)**: trust assumptions and attacks.
+- 📑 **[WHAT-RECEIPTS-PROVE.md](./WHAT-RECEIPTS-PROVE.md)**: gateway layer vs hardware attestation.
 
 ## Conformance
 
 ```bash
-cd packages/verify-receipt
-npm install && npm run build
-cd ../..
+# Python unit tests
+pip install -e packages/verify-receipt-py && pip install pytest
+pytest packages/verify-receipt-py/tests/ -q
+
+# TypeScript unit tests
+cd packages/verify-receipt && npm ci && npm run build && npm test && cd ../..
+
+# Cross-implementation: Python issuer, TypeScript verifier
 node scripts/make-interop-fixture.mjs
 ```
 
-Python issuer signs; TypeScript verifier accepts. Independent implementations
-must also pass every vector in [`test-vectors/`](./test-vectors/). See
-[CONFORMANCE.md](./CONFORMANCE.md).
+Independent implementations must also pass every vector in
+[`test-vectors/`](./test-vectors/). See [CONFORMANCE.md](./CONFORMANCE.md).
 
 ## Relationship to open standards
 

@@ -3,6 +3,14 @@
 Thank you for your interest in contributing to the AqtaCore attestation
 specification and its reference verifier libraries.
 
+## Read first
+
+- [VERIFY-WALKTHROUGH.md](./VERIFY-WALKTHROUGH.md): offline verify in five minutes
+- [THREAT-MODEL.md](./THREAT-MODEL.md): what a receipt proves and does not prove
+- [WHAT-RECEIPTS-PROVE.md](./WHAT-RECEIPTS-PROVE.md): gateway layer vs hardware attestation
+- [CONFORMANCE.md](./CONFORMANCE.md): issuer and verifier expectations
+- [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md)
+
 ## Scope
 
 This repository accepts contributions in three areas.
@@ -85,10 +93,9 @@ By contributing, you agree that:
 
 ## Code of conduct
 
-Be professional and technical. This is an open standards repository
-intended for use by regulated-industry auditors, compliance teams, and
-developers implementing the format. Discussions should stay focused on
-the spec and its reference implementations.
+See [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md). This is an open standards
+repository for auditors and developers implementing the format. Keep
+discussion focused on the spec and its reference implementations.
 
 ## Security issues
 
