@@ -1,11 +1,22 @@
 {
   "name": "aqta-verify-receipt",
   "version": "1.0.3",
-  "description": "Independent verifier for AqtaCore attestation receipts. Verifies the Ed25519 signature on an attestation receipt without trusting any third-party server. Reference implementation of ATTESTATION-v1.",
+  "description": "Offline CLI and library for Seal ATTESTATION-v1 receipts. Ed25519 check of a signed model call; no account, no Aqta server required.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "bin": {
+    "aqta-verify-receipt": "bin/aqta-verify-receipt.js"
+  },
   "files": [
-    "dist/",
+    "bin/",
+    "dist/cli.js",
+    "dist/cli.js.map",
+    "dist/cli.d.ts",
+    "dist/cli.d.ts.map",
+    "dist/index.js",
+    "dist/index.js.map",
+    "dist/index.d.ts",
+    "dist/index.d.ts.map",
     "README.md",
     "LICENSE"
   ],
@@ -15,14 +26,15 @@
     "prepublishOnly": "npm run build"
   },
   "keywords": [
+    "seal",
     "aqta",
-    "attestation",
+    "attestation-v1",
     "ed25519",
-    "zero-trust",
-    "receipt-verification",
-    "tamper-evident",
     "offline-verification",
-    "ai-receipts"
+    "ai-receipts",
+    "model-call",
+    "tamper-evident",
+    "cli"
   ],
   "author": "Aqta Technologies Ltd",
   "license": "Apache-2.0",
@@ -31,7 +43,7 @@
     "url": "https://github.com/Aqta-ai/attestation-spec.git",
     "directory": "packages/verify-receipt"
   },
-  "homepage": "https://github.com/Aqta-ai/attestation-spec",
+  "homepage": "https://aqta.ai/verify",
   "bugs": {
     "url": "https://github.com/Aqta-ai/attestation-spec/issues"
   },
@@ -48,8 +60,5 @@
   },
   "publishConfig": {
     "access": "public"
-  },
-  "bin": {
-    "aqta-verify-receipt": "./dist/cli.js"
   }
 }

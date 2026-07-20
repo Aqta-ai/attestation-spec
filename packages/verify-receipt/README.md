@@ -1,172 +1,115 @@
 # aqta-verify-receipt
 
 [![npm](https://img.shields.io/npm/v/aqta-verify-receipt.svg)](https://www.npmjs.com/package/aqta-verify-receipt)
-[![CI](https://github.com/Aqta-ai/attestation-spec/actions/workflows/test.yml/badge.svg)](https://github.com/Aqta-ai/attestation-spec/actions/workflows/test.yml)
-[![Licence](https://img.shields.io/badge/licence-Apache--2.0-blue.svg)](https://github.com/Aqta-ai/attestation-spec/blob/main/LICENSE)
+[![PyPI](https://img.shields.io/pypi/v/aqta-verify-receipt.svg)](https://pypi.org/project/aqta-verify-receipt/)
+[![Licence](https://img.shields.io/badge/licence-Apache--2.0-blue.svg)](LICENSE)
 
-Independent verifier for [AqtaCore](https://app.aqta.ai) attestation
-receipts. Checks the Ed25519 signature on an enforcement-attestation
-receipt using only the published public key: **no dependency on Aqta's
-servers**.
+Offline verifier for **Seal** receipts ([ATTESTATION-v1](https://github.com/Aqta-ai/attestation-spec/blob/main/spec/ATTESTATION-v1.md)).
 
-## Why this exists
+Seal signs the model call at runtime. This package checks that signature
+without contacting Aqta. No account. Exit code only if you want it quiet.
 
-AqtaCore returns a signed receipt with every AI enforcement decision
-(`ALLOWED` / `BLOCKED` / `SUPPRESSED`). Auditors and implementers need to
-verify those receipts independently, without trusting the issuer. This
-package is the reference implementation of that verifier under the open
-[ATTESTATION-v1](https://github.com/Aqta-ai/attestation-spec/blob/main/spec/ATTESTATION-v1.md)
-format.
+Same algorithm on npm and PyPI. Reference implementation, not a platform SDK.
 
-Use ordinary logs for observability. Use a receipt when you need evidence
-of the enforcement decision that anyone can check offline.
+## 30-second check
+
+```bash
+# download a receipt JSON, then:
+npx aqta-verify-receipt@1.0.3 receipt.json \
+  --key gUoUhIvptKAoLTnry3VrDtOQEWggGQveLrHFVrfNqmE
+```
+
+Or pipe a public share link body:
+
+```bash
+curl -sS https://api.aqta.ai/r/YOUR_RECEIPT_ID | npx aqta-verify-receipt@1.0.3 - \
+  --key gUoUhIvptKAoLTnry3VrDtOQEWggGQveLrHFVrfNqmE
+```
+
+`ok` + exit `0` means the Ed25519 signature verifies against the pinned key.
+`fail` + exit `1` means it does not. Exit `2` is usage or IO.
+
+Production public key (also at
+[`/v1/attestation/public-key`](https://api.aqta.ai/v1/attestation/public-key),
+key id `aqta-att-0a18c7c16bc18a12`):
+
+```
+gUoUhIvptKAoLTnry3VrDtOQEWggGQveLrHFVrfNqmE
+```
+
+Pin that string. Do not re-fetch it inside a verify loop.
 
 ## Install
 
 ```bash
 npm install aqta-verify-receipt
+# or one-shot:
+npx aqta-verify-receipt receipt.json --key <pinned>
 ```
 
-Two dependencies: `tweetnacl` and `tweetnacl-util`, for constant-time
-Ed25519 verification.
+Two runtime deps: `tweetnacl`, `tweetnacl-util`.
 
-## Usage
+## Library
 
 ```ts
 import { verifyReceipt, fetchPublishedPublicKey } from 'aqta-verify-receipt';
 
-// ONE-TIME, on first use of this library in your environment.
+// Once per environment: fetch, then pin somewhere you control.
 const trustedPublicKey = await fetchPublishedPublicKey();
-saveToConfig(trustedPublicKey);   // file, database, KMS, secret manager
 
-// EVERY VERIFICATION: load the pinned value, do not re-fetch.
-const pinned = loadFromConfig();
-const result = verifyReceipt(receipt, { trustedPublicKey: pinned });
-
-if (!result.valid) {
-  throw new Error(`Receipt invalid: ${result.reason}`);
-}
+const result = verifyReceipt(receipt, { trustedPublicKey });
+if (!result.valid) throw new Error(result.reason);
 ```
 
-## ⚠️ Pin the public key. Do not re-fetch on every call.
+### Pin the key
 
-`fetchPublishedPublicKey()` performs a live HTTPS fetch. Calling it
-inside a verification loop collapses the trust model back to "trust the
-issuer's server right now", which is exactly what this format is
-designed to avoid.
+`fetchPublishedPublicKey()` is for first-time setup. Calling it on every
+verify collapses trust back to "trust the issuer's server right now".
 
-**The correct pattern is:**
+1. Fetch once.
+2. Persist (config, KMS, secret store).
+3. Pass `trustedPublicKey` on every call.
+4. Rotate only on a documented key-rotation notice.
 
-1. Fetch once, on first use.
-2. Persist the result (configuration, database, KMS, secret manager).
-3. Pass the persisted value as `trustedPublicKey` on every verification
-   thereafter.
-4. Rotate only when you receive a documented key-rotation notice via a
-   channel you already trust.
+## CLI
 
-Re-fetching the key on every verification is a misuse.
+```
+aqta-verify-receipt <file|-> [--key <base64url>] [--no-strict] [-q]
+```
+
+| Flag | Meaning |
+|------|---------|
+| `--key` | Pin issuer identity (counsel-grade). Without it, only integrity vs the embedded key is checked. |
+| `--no-strict` | Allow unknown top-level fields |
+| `-q` | Silent; exit code only |
 
 ## API
 
 ### `verifyReceipt(receipt, options?) → { valid, reason? }`
 
-Verifies an attestation receipt against the declared (or pinned)
-public key.
-
-Options:
-- `trustedPublicKey`: base64url public key. If set, the receipt's
-  `public_key` field must match byte for byte. **Strongly recommended
-  for production.**
-- `strictFields` (default `true`): any unknown top-level field causes
-  rejection, per ATTESTATION-v1 §4. See "Forward compatibility" below.
-
-Returns `{ valid: boolean, reason?: string }`. **Never throws.**
+Never throws. Default `strictFields: true` rejects unknown top-level fields
+(ATTESTATION-v1 §4).
 
 ### `fetchPublishedPublicKey(url?) → Promise<string>`
 
-Fetches the AqtaCore public key. Default URL is the raw key mirror
-`https://app.aqta.ai/security/pubkey.txt`. The JSON endpoint
-`https://api.aqta.ai/v1/attestation/public-key` publishes the same key with
-metadata (`key_id`, algorithm). Pass a custom URL for self-hosted issuers.
-**Pin the result; see the warning above.**
-
-## Forward compatibility
-
-`strictFields: true` (the default) rejects any receipt containing a
-field not defined in the version of the spec this library was built
-against. This is the correct behaviour for a security-critical
-verifier: a receipt containing an unknown field may carry
-attacker-controlled metadata that downstream systems should not treat
-as signed evidence.
-
-ATTESTATION-v1 versioning policy:
-
-- **Patch** versions of the spec (v1.0.x): clarifications only, no
-  field changes. Your verifier keeps working.
-- **Minor** versions of the spec (v1.x.0): may add new optional
-  fields. A v1.0-era verifier will reject v1.1 receipts under
-  `strictFields: true`. Upgrade the verifier, or set
-  `strictFields: false` to let forward receipts through the signature
-  check. Cryptographic verification still holds in both cases; only
-  the structural-allowlist check is relaxed.
-- **Major** versions (vN.0, N ≥ 2): breaking changes; upgrade
-  required.
-
-Set `strictFields: false` only after your security or audit reviewers have
-accepted the forward-compatibility trade-off.
+Default: `https://app.aqta.ai/security/pubkey.txt`. Same material as
+`https://api.aqta.ai/v1/attestation/public-key`.
 
 ## Test vectors
 
-A conformance suite for this library (6 valid + 8 invalid receipts,
-each documenting one specific behaviour) lives in the spec repository:
+Conformance suite (6 valid + 8 invalid):
+[`test-vectors/`](https://github.com/Aqta-ai/attestation-spec/tree/main/test-vectors).
 
-- Vectors: [`test-vectors/`](https://github.com/Aqta-ai/attestation-spec/tree/main/test-vectors)
-- Reproducible generator:
-  [`test-vectors/generate.py`](https://github.com/Aqta-ai/attestation-spec/blob/main/test-vectors/generate.py)
+## What this is not
 
-If your verifier disagrees with any vector, please file an issue on
-[Aqta-ai/attestation-spec](https://github.com/Aqta-ai/attestation-spec/issues).
+Not a governance dashboard. Not a cost router. Not a chain explorer.
+A small verifier for one signed model-call receipt.
 
-### Quick self-test
+## Security
 
-To confirm your environment and this library behave as the spec
-intends, run all 14 vectors in one command after installing:
-
-```bash
-git clone https://github.com/Aqta-ai/attestation-spec.git
-cd attestation-spec
-npm install aqta-verify-receipt
-node - <<'JS'
-const fs = require('node:fs');
-const path = require('node:path');
-const { verifyReceipt } = require('aqta-verify-receipt');
-
-const TRUSTED = 'alWzEnrA_z9McN9z_MFfQCnH9mVgOwRZ26wrI7oix4E';
-
-for (const sub of ['valid', 'invalid']) {
-  const shouldPass = sub === 'valid';
-  for (const name of fs.readdirSync(path.join('test-vectors', sub)).sort()) {
-    const r = JSON.parse(fs.readFileSync(path.join('test-vectors', sub, name), 'utf8'));
-    const { valid } = verifyReceipt(r, { trustedPublicKey: TRUSTED });
-    if (valid !== shouldPass) throw new Error(`${sub}/${name} behaved wrong`);
-  }
-}
-console.log('all 14 vectors behave as specified');
-JS
-```
-
-A clean run prints `all 14 vectors behave as specified` and exits 0.
-
-## Receipt format
-
-See [ATTESTATION-v1](https://github.com/Aqta-ai/attestation-spec/blob/main/spec/ATTESTATION-v1.md).
-
-## Security issues
-
-Please do not open public GitHub issues for cryptographic
-vulnerabilities. See
-[SECURITY.md](https://github.com/Aqta-ai/attestation-spec/blob/main/SECURITY.md).
+Cryptographic issues: see [SECURITY.md](../../SECURITY.md). Prefer
+security@aqta.ai over public issues for key or signature bugs.
 
 ## Licence
 
-Apache-2.0.
+Apache-2.0. Aqta Technologies Limited.
