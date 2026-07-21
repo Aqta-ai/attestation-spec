@@ -1,7 +1,7 @@
 /**
  * aqta-verify-receipt
  *
- * Independent verifier for AqtaCore attestation receipts (ATTESTATION-v1).
+ * Independent verifier for Seal attestation receipts (ATTESTATION-v1).
  * Verifies the Ed25519 signature on a receipt using only the published
  * public key: no dependency on any third-party server.
  *
@@ -29,14 +29,20 @@ export interface AttestationReceipt {
 
 export interface VerifyOptions {
   /**
-   * The trusted public key (base64url, no padding). If supplied, the receipt
-   * is rejected unless its `public_key` field matches byte-for-byte. This
-   * prevents an attacker from substituting a different key.
+   * Trusted issuer public key (base64url, no padding). Required for a
+   * counsel-grade check: the receipt must carry this key and verify under it.
    *
-   * If omitted, the receipt is verified against whatever public key it
-   * declares. This is lower trust but useful for offline / one-shot checks.
+   * Omit only with `allowUntrustedEmbeddedKey: true` for integrity-only
+   * checks against whatever key the receipt embeds (anyone can self-sign).
    */
   trustedPublicKey?: string;
+
+  /**
+   * If true, verify against the receipt's embedded `public_key` without
+   * pinning an issuer. Result includes `keySource: "untrusted"`. Default
+   * false: without `trustedPublicKey`, verification fails.
+   */
+  allowUntrustedEmbeddedKey?: boolean;
 
   /**
    * If true, unknown top-level fields in the receipt cause rejection. Default
@@ -46,9 +52,13 @@ export interface VerifyOptions {
   strictFields?: boolean;
 }
 
+export type KeySource = 'pinned' | 'untrusted';
+
 export interface VerifyResult {
   valid: boolean;
   reason?: string;
+  /** Present when `valid` is true. */
+  keySource?: KeySource;
 }
 
 const ALLOWED_OUTCOMES: ReadonlySet<string> = new Set([
@@ -118,13 +128,16 @@ function canonicalValue(v: unknown): string {
 }
 
 /**
- * Verify an AqtaCore attestation receipt.
+ * Verify a Seal attestation receipt.
+ *
+ * Pinning is required by default. A self-signed receipt must not return
+ * `valid: true` unless `allowUntrustedEmbeddedKey` is set.
  *
  * @param receipt  The full receipt object (including `signature`).
- * @param options  Optional verification constraints.
- * @returns        `{ valid: true }` if the signature is valid under the
- *                 declared (and optionally pinned) public key; otherwise
- *                 `{ valid: false, reason: string }`.
+ * @param options  Verification constraints.
+ * @returns        `{ valid: true, keySource }` if the signature is valid under
+ *                 the pinned (or explicitly allowed embedded) public key;
+ *                 otherwise `{ valid: false, reason: string }`.
  *
  * @example
  *   const result = verifyReceipt(receipt, {
@@ -169,11 +182,19 @@ export function verifyReceipt(
     return { valid: false, reason: 'request_hash must be 64 lowercase hex chars' };
   }
 
+  const pinned = options.trustedPublicKey;
+  const allowUntrusted = options.allowUntrustedEmbeddedKey === true;
+
+  if (pinned === undefined && !allowUntrusted) {
+    return {
+      valid: false,
+      reason:
+        'trustedPublicKey required (pass allowUntrustedEmbeddedKey for integrity-only)',
+    };
+  }
+
   // Public-key pinning
-  if (
-    options.trustedPublicKey !== undefined &&
-    options.trustedPublicKey !== r.public_key
-  ) {
+  if (pinned !== undefined && pinned !== r.public_key) {
     return {
       valid: false,
       reason: 'public_key does not match trusted key',
@@ -202,14 +223,20 @@ export function verifyReceipt(
       return { valid: false, reason: 'public key length != 32 bytes' };
     }
     const ok = nacl.sign.detached.verify(canonical, sig, pub);
-    return ok ? { valid: true } : { valid: false, reason: 'signature check failed' };
+    if (!ok) {
+      return { valid: false, reason: 'signature check failed' };
+    }
+    return {
+      valid: true,
+      keySource: pinned !== undefined ? 'pinned' : 'untrusted',
+    };
   } catch (e) {
     return { valid: false, reason: `signature decode error: ${String(e)}` };
   }
 }
 
 /**
- * Fetch the AqtaCore public key from the published URL and return it as a
+ * Fetch the Seal public key from the published URL and return it as a
  * base64url string ready to pass to `verifyReceipt` as `trustedPublicKey`.
  *
  * **PIN THE RESULT.** This helper performs a live HTTPS fetch. Calling it

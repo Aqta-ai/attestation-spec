@@ -11,9 +11,17 @@ own versioning contract described in [CONFORMANCE.md](./CONFORMANCE.md).
 
 ### Changed
 
-- Public docs: stable wire-format framing; install from the registry release
-  (currently 1.0.2). Source on `main` may include unreleased CLI tooling
-  versioned 1.0.3 in package manifests until the next tagged publish.
+- **Breaking (verifier 1.0.4):** `verify_receipt` / `verifyReceipt` require a
+  pinned trusted public key by default. A self-signed receipt no longer
+  returns `valid: true` unless
+  `allow_untrusted_embedded_key` / `allowUntrustedEmbeddedKey` is set
+  (returns `key_source` / `keySource: "untrusted"`). CLI requires `--key`
+  or `--integrity-only`.
+- Public docs: install from the registry release (**1.0.4** on npm and
+  PyPI). Pinning required by default.
+- Spec: title and issuer references use **Seal** (not AqtaCore). §7 requires
+  out-of-band key pinning for counsel-grade verification; integrity-only is
+  optional and must be labelled untrusted. No wire-format change.
 - Spec wording: "enforcement gateway" instead of "governance gateway".
 - Dual-licence layout: Apache-2.0 root `LICENSE`; CC-BY-4.0 for `spec/` in
   `LICENSE-SPEC`.
@@ -88,7 +96,7 @@ later.
 
 ## [1.0.0] - 2026-04-24 (spec)
 
-Initial public release of the AqtaCore attestation specification and
+Initial public release of the Seal attestation specification and
 reference verifier libraries.
 
 ### Added
@@ -124,7 +132,7 @@ reference verifier libraries.
   and the one most likely to break cross-language interop for a new
   verifier. See spec §6 and the integer-coercion helper in the
   reference issuer.
-- The published public key for the canonical AqtaCore managed service
+- The published public key for the canonical Seal managed service
   issuer is available at https://api.aqta.ai/v1/attestation/public-key
   (mirrored as raw base64 at https://app.aqta.ai/security/pubkey.txt). Third
   parties running their own issuer publish their own key at a stable

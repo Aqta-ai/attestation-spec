@@ -2,7 +2,7 @@
 aqta-verify-receipt
 ===================
 
-Independent verifier for AqtaCore attestation receipts (ATTESTATION-v1).
+Independent verifier for Seal attestation receipts (ATTESTATION-v1).
 
 Verifies the Ed25519 signature on an AI-enforcement attestation receipt using
 only the issuer's published public key: no dependency on Aqta's servers.
@@ -29,4 +29,4 @@ from .verifier import (
 )
 
 __all__ = ["verify_receipt", "fetch_published_public_key", "VerifyResult"]
-__version__ = "1.0.3"
+__version__ = "1.0.4"

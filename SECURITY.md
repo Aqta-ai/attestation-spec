@@ -2,7 +2,7 @@
 
 ## Reporting a vulnerability
 
-Thank you for taking the time to report a security issue in the AqtaCore
+Thank you for taking the time to report a security issue in the Seal
 attestation specification or the reference verifier libraries in this
 repository.
 
@@ -40,7 +40,7 @@ remediation plan within ten working days for confirmed issues.
 
 ### What is out of scope
 
-- The security of the AqtaCore managed service itself. Those reports
+- The security of the Seal managed service itself. Those reports
   belong on the service's own disclosure channel at
   https://app.aqta.ai/security.
 - Vulnerabilities in the upstream `cryptography` (Python) or `tweetnacl`

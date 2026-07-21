@@ -1,11 +1,11 @@
-# AqtaCore Attestation Receipt Format, Version 1
+# Seal Attestation Receipt Format, Version 1
 
 **Status:** Stable wire format v1.0. Editorial revisions do not change on-the-wire bytes.
 **Version:** 1.0
 **Last updated:** 2026-04-26
-**Last reviewed:** 2026-07-20
+**Last reviewed:** 2026-07-21
 **Reference issuer:** [examples/reference-issuer.py](../examples/reference-issuer.py)
-**Reference verifiers:** [`aqta-verify-receipt`](https://pypi.org/project/aqta-verify-receipt/) on PyPI and npm (install the registry release). Source on `main` may include unreleased tooling such as the CLI.
+**Reference verifiers:** [`aqta-verify-receipt`](https://pypi.org/project/aqta-verify-receipt/) on PyPI and npm (**v1.0.4+**; pinning required by default).
 
 ---
 
@@ -134,21 +134,35 @@ bump the receipt `v` version.
 
 ## 7. Verification
 
+Counsel-grade verification answers "did this issuer sign this receipt?", not
+merely "is this receipt internally consistent?". A receipt embeds its own
+`public_key`; verifying against that embedded key alone only proves someone
+who held some key signed it. Anyone can self-sign a forged receipt.
+
 A verifier performing receipt verification MUST:
 
-1. Retrieve the issuer's trusted public key out of band. The reference issuer
-   publishes its public key at `https://api.aqta.ai/v1/attestation/public-key`
-   (a JSON object with `public_key` and `key_id`; the raw key is mirrored at
-   `https://app.aqta.ai/security/pubkey.txt`). A verifier MAY pin the key or
-   compare against a published key list.
-2. Confirm that the `public_key` field in the receipt matches the trusted
-   public key byte for byte. (The receipt is self-declaring; pinning prevents
-   substitution of the issuer's identity.)
+1. Obtain the issuer's trusted public key **out of band** and pin it (config,
+   KMS, secret store, or a published key list the verifier controls). The
+   reference Seal issuer publishes its public key at
+   `https://api.aqta.ai/v1/attestation/public-key` (a JSON object with
+   `public_key` and `key_id`; the raw key is mirrored at
+   `https://app.aqta.ai/security/pubkey.txt`). Fetching the key is for
+   first-time setup or documented rotation only; a verify loop MUST NOT
+   re-fetch the key on every check.
+2. Confirm that the `public_key` field in the receipt matches the pinned
+   trusted public key byte for byte. Reject on mismatch.
 3. Decode the `signature` field from base64url to 64 bytes.
 4. Compute the canonical payload bytes (§6).
 5. Verify the Ed25519 signature against the canonical payload using the
-   public key. A constant-time verification routine MUST be used.
+   pinned public key. A constant-time verification routine MUST be used.
 6. Reject the receipt if any of the above steps fail.
+
+A verifier MAY offer an **integrity-only** mode that checks the signature
+against the embedded `public_key` without a pin (useful for debugging). That
+mode MUST NOT be the default, and a successful integrity-only check MUST be
+labelled as untrusted (for example `keySource: "untrusted"`). The reference
+verifiers (`aqta-verify-receipt` v1.0.4+) require a pinned key unless the
+caller explicitly opts into integrity-only.
 
 Verifiers SHOULD also perform the following semantic checks, though they are
 outside the cryptographic verification contract:
@@ -238,7 +252,7 @@ Signed receipt (same payload with signature appended):
 
 A conformant production issuer additionally manages the private signing key
 in a secure enclave, enforces policy before signing, and persists receipts
-to a tamper-evident log. The [AqtaCore](https://app.aqta.ai) managed service
+to a tamper-evident log. The [Seal](https://app.aqta.ai) managed service
 is the canonical production issuer; the stand-alone reference issuer in
 this repository covers only the format requirements of §4 to §6.
 
@@ -316,7 +330,7 @@ Migration to ATTESTATION-v2 is gated on, in order:
    readiness as a procurement requirement.** *(Not yet observed; ANSSI and
    BSI guidance for 2026-2030 is the trigger expected to flip this.)*
 
-When all three are met, AqtaCore commits to publishing ATTESTATION-v2 with
+When all three are met, Seal commits to publishing ATTESTATION-v2 with
 hybrid signing within 90 days, and to running the issuer in dual-sign mode
 for the entire active retention window of any customer regulated under
 DORA, MiFID II, or EU AI Act long-retention obligations.
@@ -342,6 +356,11 @@ For any deployment using ATTESTATION-v1, the residual risk is:
 
 ## 13. Change Log
 
+- **Editorial (2026-07-21):** Product name **Seal** (was AqtaCore on public
+  surfaces). §7 now requires out-of-band key pinning for counsel-grade
+  verification; integrity-only (embedded key) is optional, non-default, and
+  must be labelled untrusted. Aligns the spec with reference verifiers
+  v1.0.4+. No wire-format change.
 - **Editorial (2026-07-20):** Replaced "governance gateway"
   wording with "enforcement gateway". Clarified stable wire-format status.
   No wire-format change.

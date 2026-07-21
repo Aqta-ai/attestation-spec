@@ -5,9 +5,9 @@
  * Offline check of an ATTESTATION-v1 receipt. No account. No network by
  * default. Exit 0 if the signature verifies, 1 if not, 2 on usage/IO errors.
  *
- *   npx aqta-verify-receipt receipt.json
  *   npx aqta-verify-receipt receipt.json --key <base64url-ed25519-key>
- *   curl -sS https://api.aqta.ai/r/REC_ID | npx aqta-verify-receipt -
+ *   curl -sS https://api.aqta.ai/r/REC_ID | npx aqta-verify-receipt - --key <key>
+ *   npx aqta-verify-receipt receipt.json --integrity-only
  */
 import { readFileSync } from 'fs';
 import { verifyReceipt, AttestationReceipt } from './index';
@@ -16,15 +16,17 @@ const PUB_KEY_HINT =
   'https://api.aqta.ai/v1/attestation/public-key';
 
 function usage(): never {
-  console.error(`aqta-verify-receipt — offline check for ATTESTATION-v1 (Seal)
+  console.error(`aqta-verify-receipt - offline check for ATTESTATION-v1 (Seal)
 
 Usage:
-  aqta-verify-receipt <receipt.json | -> [--key <base64url>] [--no-strict] [-q]
+  aqta-verify-receipt <receipt.json | -> --key <base64url> [--no-strict] [-q]
+  aqta-verify-receipt <receipt.json | -> --integrity-only [--no-strict] [-q]
 
 Options:
-  --key <key>   pin the issuer public key (recommended for counsel checks)
-  --no-strict   allow unknown top-level fields
-  -q, --quiet   exit code only
+  --key <key>        pin the issuer public key (required for counsel-grade)
+  --integrity-only   check signature vs embedded key only (anyone can self-sign)
+  --no-strict        allow unknown top-level fields
+  -q, --quiet        exit code only
 
 Pin the production key once from ${PUB_KEY_HINT}
 (field public_key). Do not re-fetch on every verify.
@@ -38,6 +40,7 @@ function main(): void {
 
   let file = '';
   let trustedKey: string | undefined;
+  let integrityOnly = false;
   let strict = true;
   let quiet = false;
   for (let i = 0; i < args.length; i++) {
@@ -45,6 +48,8 @@ function main(): void {
     if (a === '--key') {
       trustedKey = args[++i];
       if (!trustedKey) usage();
+    } else if (a === '--integrity-only') {
+      integrityOnly = true;
     } else if (a === '--no-strict') {
       strict = false;
     } else if (a === '--quiet' || a === '-q') {
@@ -56,6 +61,16 @@ function main(): void {
     }
   }
   if (!file) usage();
+  if (!trustedKey && !integrityOnly) {
+    console.error(
+      'aqta-verify-receipt: pass --key <pinned> (or --integrity-only for embedded-key checks)'
+    );
+    process.exit(2);
+  }
+  if (trustedKey && integrityOnly) {
+    console.error('aqta-verify-receipt: use --key or --integrity-only, not both');
+    process.exit(2);
+  }
 
   let raw: string;
   try {
@@ -74,7 +89,8 @@ function main(): void {
   }
 
   const result = verifyReceipt(receipt, {
-    trustedPublicKey: trustedKey ?? receipt.public_key,
+    trustedPublicKey: trustedKey,
+    allowUntrustedEmbeddedKey: integrityOnly,
     strictFields: strict,
   });
 
@@ -82,9 +98,10 @@ function main(): void {
     const id = typeof receipt.attestation_id === 'string' ? receipt.attestation_id : '?';
     const outcome = typeof receipt.outcome === 'string' ? receipt.outcome : '?';
     if (result.valid) {
-      const trust = trustedKey
-        ? 'pinned key'
-        : 'embedded key (integrity only; pass --key to bind issuer identity)';
+      const trust =
+        result.keySource === 'pinned'
+          ? 'pinned key'
+          : 'untrusted embedded key (integrity only)';
       console.log(`ok  ${outcome}  ${id}  ${trust}`);
     } else {
       console.log(`fail  ${result.reason ?? 'verification failed'}  ${id}`);

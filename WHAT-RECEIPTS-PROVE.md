@@ -1,6 +1,6 @@
 # What gateway-level receipts can and cannot prove
 
-An Aqta Research note. We operate AqtaCore, a production gateway whose request path signs
+An Aqta Research note. We operate Seal, a production gateway whose request path signs
 an ATTESTATION-v1 receipt for each call it allows through; refusals are audit-logged rather
 than receipt-signed, and per-request production issuance begins when upstream provider keys
 are provisioned. This note places that layer precisely in the verification stack described
