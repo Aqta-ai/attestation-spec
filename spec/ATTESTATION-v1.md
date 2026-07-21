@@ -65,7 +65,7 @@ A receipt is a single JSON object with exactly the following top-level fields:
 | `model`              | string  | yes      | Provider-qualified model identifier, e.g. `gpt-4o`, `claude-3-5-sonnet`. |
 | `outcome`            | string  | yes      | One of the values listed in §5. |
 | `policy_applied`     | array   | yes      | Sorted JSON array of ASCII policy identifiers, e.g. `["budget_guard","loop_guard"]`. MUST be sorted lexicographically. |
-| `cost_prevented_eur` | number  | yes      | Non-negative decimal, 6 digits of precision. `0` if not applicable. |
+| `cost_prevented_eur` | number  | yes      | Issuer accounting estimate of spend avoided by a BLOCKED or SUPPRESSED outcome, in EUR. Non-negative, 6 digits of precision. MUST be `0` when not computed. Covered by the signature for wire stability; not an audit finding and not evidence of savings for a third party. |
 | `timestamp`          | string  | yes      | ISO 8601 datetime with explicit timezone offset (`Z` for UTC). |
 | `public_key`         | string  | yes      | Base64url-encoded raw 32-byte Ed25519 public key of the issuer (no padding). |
 | `signature`          | string  | yes      | Base64url-encoded 64-byte Ed25519 signature (no padding). Omitted from the canonical payload (§6). |
@@ -360,7 +360,8 @@ For any deployment using ATTESTATION-v1, the residual risk is:
   surfaces). §7 now requires out-of-band key pinning for counsel-grade
   verification; integrity-only (embedded key) is optional, non-default, and
   must be labelled untrusted. Aligns the spec with reference verifiers
-  v1.0.4+. No wire-format change.
+  v1.0.4+. Clarified `cost_prevented_eur` as issuer accounting (use `0` when
+  not computed; not a third-party savings claim). No wire-format change.
 - **Editorial (2026-07-20):** Replaced "governance gateway"
   wording with "enforcement gateway". Clarified stable wire-format status.
   No wire-format change.
