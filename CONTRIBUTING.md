@@ -91,6 +91,10 @@ By contributing, you agree that:
   (CC-BY-4.0), so that implementers in any ecosystem may adopt the
   format without concern for software-licence compatibility.
 
+Downstream users of the specification must give appropriate credit to
+**Aqta Technologies Ltd** (see [LICENSE-SPEC](./LICENSE-SPEC) and
+[CITATION.cff](./CITATION.cff)).
+
 ## Code of conduct
 
 See [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md). This is an open standards

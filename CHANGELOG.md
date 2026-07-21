@@ -7,7 +7,7 @@ and this repository adheres to [Semantic Versioning](https://semver.org/spec/v2.
 at the repository-release level. The ATTESTATION format itself has its
 own versioning contract described in [CONFORMANCE.md](./CONFORMANCE.md).
 
-## [Unreleased]
+## [1.0.4] - 2026-07-21 (verifiers + docs)
 
 ### Changed
 
@@ -17,11 +17,13 @@ own versioning contract described in [CONFORMANCE.md](./CONFORMANCE.md).
   `allow_untrusted_embedded_key` / `allowUntrustedEmbeddedKey` is set
   (returns `key_source` / `keySource: "untrusted"`). CLI requires `--key`
   or `--integrity-only`.
-- Public docs: install from the registry release (**1.0.4** on npm and
-  PyPI). Pinning required by default.
+- Published on **npm and PyPI** as `aqta-verify-receipt` **1.0.4**.
 - Spec: title and issuer references use **Seal** (not AqtaCore). §7 requires
   out-of-band key pinning for counsel-grade verification; integrity-only is
   optional and must be labelled untrusted. No wire-format change.
+- Root README simplified (diagram removed). Attribution and
+  [CITATION.cff](./CITATION.cff) added so downstream users credit
+  Aqta Technologies Ltd under CC-BY-4.0 / Apache-2.0.
 - Spec wording: "enforcement gateway" instead of "governance gateway".
 - Dual-licence layout: Apache-2.0 root `LICENSE`; CC-BY-4.0 for `spec/` in
   `LICENSE-SPEC`.
@@ -29,7 +31,7 @@ own versioning contract described in [CONFORMANCE.md](./CONFORMANCE.md).
 - CI runs the 14 test vectors on Python and TypeScript.
 - Community health: `CODE_OF_CONDUCT.md`, issue/PR templates, examples README.
 - Wiki disabled; GitHub Release for tag `v1.0.0` (package Latest remains
-  `verify-receipt-v1.0.2`).
+  `verify-receipt-v1.0.2` until this release).
 
 ### Fixed
 
@@ -42,11 +44,30 @@ own versioning contract described in [CONFORMANCE.md](./CONFORMANCE.md).
 
 ---
 
+## [Unreleased]
+
+---
+
 ## Verifier-library releases
 
 The Python and TypeScript reference verifiers have their own patch
 release line. Spec `v1.0.0` is unaffected by these patches; only the
 verifier libraries are versioned.
+
+### `aqta-verify-receipt` 1.0.4 (npm and PyPI 2026-07-21)
+
+**Why:** Default verify path trusted the public key embedded in the receipt,
+so a self-signed forgery returned `valid: true`. Counsel-grade use already
+pinned; the library default now matches that expectation.
+
+#### Changed
+
+- Require `trustedPublicKey` / `trusted_public_key` unless the caller opts
+  into integrity-only (`allowUntrustedEmbeddedKey` /
+  `allow_untrusted_embedded_key`).
+- CLI: `--key` required, or `--integrity-only` for embedded-key checks.
+- Successful integrity-only results are labelled `keySource` /
+  `key_source: "untrusted"`.
 
 ### `aqta-verify-receipt` 1.0.2 (PyPI 2026-04-25)
 

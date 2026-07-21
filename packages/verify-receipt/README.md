@@ -117,3 +117,6 @@ security@aqta.ai over public issues for key or signature bugs.
 ## Licence
 
 Apache-2.0. Aqta Technologies Limited.
+
+If you implement or cite the ATTESTATION-v1 format itself, credit under
+CC-BY-4.0: see the repo [CITATION.cff](https://github.com/Aqta-ai/attestation-spec/blob/main/CITATION.cff).

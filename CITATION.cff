@@ -1,0 +1,40 @@
+cff-version: 1.2.0
+message: >-
+  If you use ATTESTATION-v1 or the reference verifiers, please cite this
+  repository and credit Aqta Technologies Ltd (CC-BY-4.0 for the spec;
+  Apache-2.0 for the code).
+type: software
+title: "ATTESTATION-v1: Seal enforcement receipt format and reference verifiers"
+abstract: >-
+  Open specification and reference verifiers for Ed25519-signed AI gateway
+  enforcement receipts. Offline-verifiable against a published public key
+  without trusting the issuer's servers.
+authors:
+  - name: Aqta Technologies Ltd
+    website: https://aqta.ai
+    email: hello@aqta.ai
+    alias: Aqta
+repository-code: https://github.com/Aqta-ai/attestation-spec
+url: https://github.com/Aqta-ai/attestation-spec
+license:
+  - Apache-2.0
+  - CC-BY-4.0
+keywords:
+  - attestation
+  - ed25519
+  - receipt
+  - seal
+  - enforcement
+  - offline-verify
+version: "1.0.4"
+date-released: "2026-07-21"
+preferred-citation:
+  type: software
+  title: "ATTESTATION-v1"
+  authors:
+    - name: Aqta Technologies Ltd
+  url: https://github.com/Aqta-ai/attestation-spec
+  year: 2026
+  notes: >-
+    Specification licensed under CC-BY-4.0; reference code under Apache-2.0.
+    Please attribute Aqta Technologies Ltd.
