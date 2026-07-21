@@ -1,6 +1,6 @@
 # Contributing to ATTESTATION-v1
 
-Thank you for your interest in contributing to the AqtaCore attestation
+Thank you for your interest in contributing to the Seal attestation
 specification and its reference verifier libraries.
 
 ## Read first

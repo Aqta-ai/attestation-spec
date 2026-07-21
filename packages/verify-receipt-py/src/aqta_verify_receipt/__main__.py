@@ -5,6 +5,7 @@ default. Exit 0 if valid, 1 if not, 2 on usage or IO errors.
 
     aqta-verify-receipt receipt.json --key <base64url>
     curl -sS https://api.aqta.ai/r/ID | aqta-verify-receipt - --key <base64url>
+    aqta-verify-receipt receipt.json --integrity-only
 """
 from __future__ import annotations
 
@@ -29,7 +30,12 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--key",
         dest="key",
-        help="trusted Ed25519 public key (base64url); omit for integrity-only vs embedded key",
+        help="trusted Ed25519 public key (base64url); required for counsel-grade",
+    )
+    parser.add_argument(
+        "--integrity-only",
+        action="store_true",
+        help="check signature vs embedded key only (anyone can self-sign)",
     )
     parser.add_argument(
         "--no-strict",
@@ -43,6 +49,20 @@ def main(argv: list[str] | None = None) -> int:
         help="no output, exit code only",
     )
     args = parser.parse_args(argv)
+
+    if not args.key and not args.integrity_only:
+        print(
+            "aqta-verify-receipt: pass --key <pinned> "
+            "(or --integrity-only for embedded-key checks)",
+            file=sys.stderr,
+        )
+        return 2
+    if args.key and args.integrity_only:
+        print(
+            "aqta-verify-receipt: use --key or --integrity-only, not both",
+            file=sys.stderr,
+        )
+        return 2
 
     try:
         if args.file == "-":
@@ -67,10 +87,10 @@ def main(argv: list[str] | None = None) -> int:
         print("aqta-verify-receipt: receipt must be a JSON object", file=sys.stderr)
         return 2
 
-    trusted = args.key or receipt.get("public_key")
     result = verify_receipt(
         receipt,
-        trusted_public_key=trusted,
+        trusted_public_key=args.key,
+        allow_untrusted_embedded_key=args.integrity_only,
         strict_fields=not args.no_strict,
     )
 
@@ -80,8 +100,8 @@ def main(argv: list[str] | None = None) -> int:
         if result.valid:
             trust = (
                 "pinned key"
-                if args.key
-                else "embedded key (integrity only; pass --key to bind issuer identity)"
+                if result.key_source == "pinned"
+                else "untrusted embedded key (integrity only)"
             )
             print(f"ok  {outcome}  {rid}  {trust}")
         else:

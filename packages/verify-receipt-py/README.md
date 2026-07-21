@@ -46,8 +46,12 @@ if not result.valid:
 ## CLI
 
 ```
-aqta-verify-receipt <file|-> [--key <base64url>] [--no-strict] [-q]
+aqta-verify-receipt <file|-> --key <base64url> [--no-strict] [-q]
+aqta-verify-receipt <file|-> --integrity-only [--no-strict] [-q]
 ```
+
+Pinning is required by default. Without `--key`, pass `--integrity-only`
+(embedded key only; anyone can self-sign; result is marked untrusted).
 
 ## Dependencies
 

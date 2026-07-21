@@ -1,6 +1,6 @@
 {
   "name": "aqta-verify-receipt",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Offline CLI and library for Seal ATTESTATION-v1 receipts. Ed25519 check of a signed model call; no account, no Aqta server required.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

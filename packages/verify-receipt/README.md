@@ -15,14 +15,14 @@ Same algorithm on npm and PyPI. Reference implementation, not a platform SDK.
 
 ```bash
 # download a receipt JSON, then:
-npx aqta-verify-receipt@1.0.3 receipt.json \
+npx aqta-verify-receipt@1.0.4 receipt.json \
   --key gUoUhIvptKAoLTnry3VrDtOQEWggGQveLrHFVrfNqmE
 ```
 
 Or pipe a public share link body:
 
 ```bash
-curl -sS https://api.aqta.ai/r/YOUR_RECEIPT_ID | npx aqta-verify-receipt@1.0.3 - \
+curl -sS https://api.aqta.ai/r/YOUR_RECEIPT_ID | npx aqta-verify-receipt@1.0.4 - \
   --key gUoUhIvptKAoLTnry3VrDtOQEWggGQveLrHFVrfNqmE
 ```
 
@@ -74,21 +74,25 @@ verify collapses trust back to "trust the issuer's server right now".
 ## CLI
 
 ```
-aqta-verify-receipt <file|-> [--key <base64url>] [--no-strict] [-q]
+aqta-verify-receipt <file|-> --key <base64url> [--no-strict] [-q]
+aqta-verify-receipt <file|-> --integrity-only [--no-strict] [-q]
 ```
 
 | Flag | Meaning |
 |------|---------|
-| `--key` | Pin issuer identity (counsel-grade). Without it, only integrity vs the embedded key is checked. |
+| `--key` | Pin issuer identity (required for counsel-grade). |
+| `--integrity-only` | Signature vs embedded key only; returns untrusted. Anyone can self-sign. |
 | `--no-strict` | Allow unknown top-level fields |
 | `-q` | Silent; exit code only |
 
 ## API
 
-### `verifyReceipt(receipt, options?) → { valid, reason? }`
+### `verifyReceipt(receipt, options?) → { valid, reason?, keySource? }`
 
-Never throws. Default `strictFields: true` rejects unknown top-level fields
-(ATTESTATION-v1 §4).
+Never throws. **Pinning is required by default.** Without `trustedPublicKey`,
+returns `valid: false` unless `allowUntrustedEmbeddedKey: true` (then
+`keySource: "untrusted"` on success). Default `strictFields: true` rejects
+unknown top-level fields (ATTESTATION-v1 §4).
 
 ### `fetchPublishedPublicKey(url?) → Promise<string>`
 

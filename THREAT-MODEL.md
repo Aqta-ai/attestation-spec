@@ -1,11 +1,12 @@
-# Threat model: ATTESTATION-v1 and the AqtaCore issuer
+# Threat model: ATTESTATION-v1 and the Seal issuer
 
 A self-authored adversarial analysis of our own system. We wrote this because a verification
 format that does not state its own trust assumptions is asking to be trusted, which is the
 failure mode this project exists to remove. Reporting a flaw: see [SECURITY.md](./SECURITY.md).
 
-Scope: the ATTESTATION-v1 envelope, the published reference verifiers (v1.0.2 on PyPI and
-npm), and the production AqtaCore issuer (signing since April 2026).
+Scope: the ATTESTATION-v1 envelope, the published reference verifiers (v1.0.4 on
+npm and PyPI; pinning required by default), and the production Seal issuer
+(signing since April 2026).
 
 ## What a receipt actually proves
 
@@ -41,13 +42,15 @@ Residual risk: implementation bugs; both verifiers are open source and deliberat
 
 **Key substitution (the important subtlety).** A receipt is self-verifying against its own
 embedded `public_key`, so a valid signature alone only proves "someone signed this", not
-"Aqta signed this": an attacker can self-sign a well-formed receipt with their own keypair.
+"Seal signed this": an attacker can self-sign a well-formed receipt with their own keypair.
 The defence is **key pinning**: a verifier must compare the receipt's embedded `public_key`
 against the issuer's published production key (served at
 `https://api.aqta.ai/v1/attestation/public-key` and shown on the aqta.ai/verify page) and
 treat any other key as untrusted even when the signature checks out. The reference verifiers
-expose this as the `trusted_public_key` argument; using them without it checks integrity but
-not identity.
+**require** `trusted_public_key` / `trustedPublicKey` by default. Integrity-only checks
+against the embedded key need an explicit opt-in
+(`allow_untrusted_embedded_key` / `allowUntrustedEmbeddedKey`) and return
+`key_source` / `keySource: "untrusted"`.
 
 **Key theft (insider or intruder).** The production signing key is a single Ed25519 key held
 in the serving environment's configuration, not an HSM. This is our largest honest gap at

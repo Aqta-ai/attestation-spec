@@ -47,14 +47,22 @@ def receipt(issuer) -> dict:
     )
 
 
-def test_real_receipt_verifies(receipt):
+def test_requires_pin_by_default(receipt):
     res = verify_receipt(receipt)
-    assert res.valid is True, res.reason
+    assert res.valid is False
+    assert "trusted_public_key required" in (res.reason or "")
 
 
-def test_pinned_public_key(receipt):
+def test_real_receipt_verifies_with_pin(receipt):
     res = verify_receipt(receipt, trusted_public_key=receipt["public_key"])
-    assert res.valid is True
+    assert res.valid is True, res.reason
+    assert res.key_source == "pinned"
+
+
+def test_integrity_only_marks_untrusted(receipt):
+    res = verify_receipt(receipt, allow_untrusted_embedded_key=True)
+    assert res.valid is True, res.reason
+    assert res.key_source == "untrusted"
 
 
 def test_pinned_public_key_mismatch_rejects(receipt):
@@ -70,14 +78,14 @@ def test_tampered_signature_rejects(receipt):
     sig = bad["signature"]
     flipped = ("A" if sig[0] != "A" else "B") + sig[1:]
     bad["signature"] = flipped
-    res = verify_receipt(bad)
+    res = verify_receipt(bad, trusted_public_key=receipt["public_key"])
     assert res.valid is False
 
 
 def test_tampered_field_rejects(receipt):
     bad = dict(receipt)
     bad["outcome"] = "BLOCKED"  # valid value, but not the signed one
-    res = verify_receipt(bad)
+    res = verify_receipt(bad, trusted_public_key=receipt["public_key"])
     assert res.valid is False
     assert "signature check" in (res.reason or "")
 
@@ -85,7 +93,7 @@ def test_tampered_field_rejects(receipt):
 def test_unknown_field_strict_rejects(receipt):
     bad = dict(receipt)
     bad["extra"] = "surprise"
-    res = verify_receipt(bad)
+    res = verify_receipt(bad, trusted_public_key=receipt["public_key"])
     assert res.valid is False
     assert "unknown top-level field" in (res.reason or "")
 
@@ -93,7 +101,7 @@ def test_unknown_field_strict_rejects(receipt):
 def test_missing_field_rejects(receipt):
     bad = dict(receipt)
     del bad["outcome"]
-    res = verify_receipt(bad)
+    res = verify_receipt(bad, trusted_public_key=receipt["public_key"])
     assert res.valid is False
     assert "missing required field" in (res.reason or "")
 
@@ -101,7 +109,7 @@ def test_missing_field_rejects(receipt):
 def test_wrong_version_rejects(receipt):
     bad = dict(receipt)
     bad["v"] = 2
-    res = verify_receipt(bad)
+    res = verify_receipt(bad, trusted_public_key=receipt["public_key"])
     assert res.valid is False
     assert "unsupported version" in (res.reason or "")
 

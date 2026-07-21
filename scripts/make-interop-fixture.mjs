@@ -56,24 +56,40 @@ console.log('  public_key:', receipt.public_key.slice(0, 16) + '...');
 console.log('  signature:', receipt.signature.slice(0, 16) + '...');
 console.log();
 
-// Test 1: valid receipt verifies
+// Test 1: without pin, must not accept (forgery footgun closed)
 const res1 = verifyReceipt(receipt);
-console.log('Test 1 valid receipt:', res1.valid ? 'PASS' : `FAIL (${res1.reason})`);
+console.log(
+  'Test 1 requires pin by default:',
+  !res1.valid && /trustedPublicKey required/.test(res1.reason ?? '')
+    ? 'PASS'
+    : `FAIL (${res1.reason})`
+);
 
-// Test 2: tampered outcome rejects
+// Test 2: tampered outcome rejects under pin
 const tampered = { ...receipt, outcome: 'BLOCKED' };
-const res2 = verifyReceipt(tampered);
+const res2 = verifyReceipt(tampered, { trustedPublicKey: receipt.public_key });
 console.log('Test 2 tampered outcome:', !res2.valid ? 'PASS' : 'FAIL (accepted tampered receipt)');
 
 // Test 3: pinned public key works
 const res3 = verifyReceipt(receipt, { trustedPublicKey: receipt.public_key });
-console.log('Test 3 pinned public key:', res3.valid ? 'PASS' : `FAIL (${res3.reason})`);
+console.log(
+  'Test 3 pinned public key:',
+  res3.valid && res3.keySource === 'pinned' ? 'PASS' : `FAIL (${res3.reason})`
+);
 
 // Test 4: pinned mismatch rejects
 const res4 = verifyReceipt(receipt, { trustedPublicKey: 'different_key_here' });
 console.log('Test 4 mismatched pinned key:', !res4.valid ? 'PASS' : 'FAIL');
 
-const allPass = res1.valid && !res2.valid && res3.valid && !res4.valid;
+// Test 5: integrity-only marks untrusted
+const res5 = verifyReceipt(receipt, { allowUntrustedEmbeddedKey: true });
+console.log(
+  'Test 5 integrity-only untrusted:',
+  res5.valid && res5.keySource === 'untrusted' ? 'PASS' : `FAIL (${res5.reason})`
+);
+
+const allPass =
+  !res1.valid && !res2.valid && res3.valid && !res4.valid && res5.valid;
 console.log();
 console.log(allPass ? '✅ All interop tests passed' : '❌ Interop failure');
 process.exit(allPass ? 0 : 1);

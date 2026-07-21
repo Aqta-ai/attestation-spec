@@ -43,30 +43,36 @@ test('rejects missing required field', () => {
 
 test('rejects unknown top-level field (strict mode)', () => {
   const bad = { ...FIXTURE_RECEIPT, extra: 'foo' } as any;
-  const res = verifyReceipt(bad);
+  const res = verifyReceipt(bad, { allowUntrustedEmbeddedKey: true });
   assert.equal(res.valid, false);
   assert.match(res.reason ?? '', /unknown top-level field/);
 });
 
 test('rejects unsupported version', () => {
   const bad = { ...FIXTURE_RECEIPT, v: 2 } as any;
-  const res = verifyReceipt(bad);
+  const res = verifyReceipt(bad, { allowUntrustedEmbeddedKey: true });
   assert.equal(res.valid, false);
   assert.match(res.reason ?? '', /unsupported version/);
 });
 
 test('rejects invalid outcome', () => {
   const bad = { ...FIXTURE_RECEIPT, outcome: 'YOLO' } as any;
-  const res = verifyReceipt(bad);
+  const res = verifyReceipt(bad, { allowUntrustedEmbeddedKey: true });
   assert.equal(res.valid, false);
   assert.match(res.reason ?? '', /invalid outcome/);
 });
 
 test('rejects malformed request_hash', () => {
   const bad = { ...FIXTURE_RECEIPT, request_hash: 'not-a-hash' } as any;
-  const res = verifyReceipt(bad);
+  const res = verifyReceipt(bad, { allowUntrustedEmbeddedKey: true });
   assert.equal(res.valid, false);
   assert.match(res.reason ?? '', /request_hash/);
+});
+
+test('rejects when trustedPublicKey omitted', () => {
+  const res = verifyReceipt(FIXTURE_RECEIPT);
+  assert.equal(res.valid, false);
+  assert.match(res.reason ?? '', /trustedPublicKey required/);
 });
 
 test('rejects pinned-key mismatch', () => {
@@ -80,10 +86,11 @@ test('rejects pinned-key mismatch', () => {
 // Note: full signature-verification interop test requires the fixture to be
 // populated by `scripts/make-test-fixture.py` before running this suite.
 // When FIXTURE_RECEIPT.signature is empty, the signature check is skipped.
-test('signature decoder rejects empty signature', () => {
-  const res = verifyReceipt(FIXTURE_RECEIPT);
+test('signature decoder rejects empty signature when integrity-only', () => {
+  const res = verifyReceipt(FIXTURE_RECEIPT, {
+    allowUntrustedEmbeddedKey: true,
+  });
   assert.equal(res.valid, false);
-  // Either the empty signature fails decode or fails length check
   assert.ok(
     /signature/.test(res.reason ?? '') ||
       /signature length/.test(res.reason ?? '')

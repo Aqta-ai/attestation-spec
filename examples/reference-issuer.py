@@ -9,7 +9,7 @@ Useful for:
   - Running the cross-implementation interop script without any dependency
     on a production gateway.
 
-This code is *not* a production issuer. A real issuer (like the AqtaCore
+This code is *not* a production issuer. A real issuer (like the Seal
 managed service at https://aqta.ai) additionally:
   - Manages the private signing key in a secure enclave or KMS;
   - Enforces policy, budget, and loop-detection before signing;

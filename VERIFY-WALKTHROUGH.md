@@ -13,16 +13,16 @@ out honestly in [THREAT-MODEL.md](./THREAT-MODEL.md).
 
 ## 1. Install the published verifier (about 10 seconds)
 
-Python:
+TypeScript/Node (current counsel-grade release; pinning required by default):
 
 ```bash
-pip install aqta-verify-receipt   # v1.0.2 on PyPI
+npm install aqta-verify-receipt@1.0.4
 ```
 
-or TypeScript/Node:
+Python (registry catch-up may lag npm; always pass `trusted_public_key`):
 
 ```bash
-npm install aqta-verify-receipt   # v1.0.2 on npm
+pip install aqta-verify-receipt
 ```
 
 Both are reference implementations of the spec in this repository, small enough to read
@@ -105,7 +105,7 @@ this demonstration receipt does not, and the verifier says so.
 
 ## 6. Verifying a receipt issued to you
 
-When AqtaCore issues a receipt for one of your calls, it is shareable at
+When Seal issues a receipt for one of your calls, it is shareable at
 `https://app.aqta.ai/r/<id>`, and the JSON at `https://app.aqta.ai/api/r/<id>` is the
 spec-pure twelve-field envelope, so it verifies with the commands above and no massaging.
 Pin it to the production key from step 2 to confirm it is a genuine Aqta receipt.

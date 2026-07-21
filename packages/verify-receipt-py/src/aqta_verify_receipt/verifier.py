@@ -4,6 +4,9 @@ Reference verifier for ATTESTATION-v1 receipts.
 Matches the canonical-payload + Ed25519 rules in the spec §6. Never raises;
 returns a :class:`VerifyResult` with a human-readable reason string when a
 check fails.
+
+Pinning is required by default. A self-signed receipt must not return
+``valid=True`` unless ``allow_untrusted_embedded_key`` is set.
 """
 
 from __future__ import annotations
@@ -12,7 +15,7 @@ import base64
 import json
 import re
 from dataclasses import dataclass
-from typing import Any, Mapping, Optional
+from typing import Any, Literal, Mapping, Optional
 from urllib.request import urlopen
 
 from cryptography.exceptions import InvalidSignature
@@ -40,6 +43,8 @@ ALLOWED_OUTCOMES = frozenset({"ALLOWED", "BLOCKED", "SUPPRESSED", "PASSED"})
 _HEX64 = re.compile(r"^[0-9a-f]{64}$")
 _DEFAULT_PUBKEY_URL = "https://app.aqta.ai/security/pubkey.txt"
 
+KeySource = Literal["pinned", "untrusted"]
+
 
 @dataclass
 class VerifyResult:
@@ -47,6 +52,7 @@ class VerifyResult:
 
     valid: bool
     reason: Optional[str] = None
+    key_source: Optional[KeySource] = None
 
 
 def _b64url_decode(s: str) -> bytes:
@@ -58,26 +64,30 @@ def verify_receipt(
     receipt: Mapping[str, Any],
     *,
     trusted_public_key: Optional[str] = None,
+    allow_untrusted_embedded_key: bool = False,
     strict_fields: bool = True,
 ) -> VerifyResult:
     """
-    Verify an AqtaCore attestation receipt.
+    Verify a Seal attestation receipt.
 
     Parameters
     ----------
     receipt
         The full receipt dict including the ``signature`` field.
     trusted_public_key
-        Optional base64url public key (no padding). If supplied, the receipt's
-        ``public_key`` field must match byte-for-byte. Strongly recommended.
+        Base64url public key (no padding). Required for a counsel-grade check:
+        the receipt must carry this key and verify under it.
+    allow_untrusted_embedded_key
+        If True, verify against the embedded ``public_key`` without pinning.
+        Result includes ``key_source="untrusted"``. Default False.
     strict_fields
         If True (default), unknown top-level fields cause rejection, per spec §4.
 
     Returns
     -------
     VerifyResult
-        ``valid=True`` iff the Ed25519 signature is valid under the declared
-        (and optionally pinned) public key. Never raises.
+        ``valid=True`` iff the Ed25519 signature is valid under the pinned
+        (or explicitly allowed embedded) public key. Never raises.
     """
     if not isinstance(receipt, Mapping):
         return VerifyResult(False, "receipt is not a mapping")
@@ -104,8 +114,18 @@ def verify_receipt(
     if not isinstance(rh, str) or not _HEX64.match(rh):
         return VerifyResult(False, "request_hash must be 64 lowercase hex chars")
 
+    if trusted_public_key is None and not allow_untrusted_embedded_key:
+        return VerifyResult(
+            False,
+            "trusted_public_key required "
+            "(pass allow_untrusted_embedded_key for integrity-only)",
+        )
+
     # Pinning
-    if trusted_public_key is not None and trusted_public_key != receipt["public_key"]:
+    if (
+        trusted_public_key is not None
+        and trusted_public_key != receipt["public_key"]
+    ):
         return VerifyResult(False, "public_key does not match trusted key")
 
     # Canonical payload per spec §6
@@ -133,7 +153,10 @@ def verify_receipt(
     except Exception as e:
         return VerifyResult(False, f"verification error: {e}")
 
-    return VerifyResult(True)
+    return VerifyResult(
+        True,
+        key_source="pinned" if trusted_public_key is not None else "untrusted",
+    )
 
 
 def fetch_published_public_key(
