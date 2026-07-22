@@ -53,11 +53,94 @@ class VerifyResult:
     valid: bool
     reason: Optional[str] = None
     key_source: Optional[KeySource] = None
+    #: Which envelope format was recognised, when one was.
+    envelope: Optional[str] = None
 
 
 def _b64url_decode(s: str) -> bytes:
     pad = "=" * (-len(s) % 4)
     return base64.urlsafe_b64decode(s + pad)
+
+
+ENVELOPE_FIELDS = {
+    "ATTESTATION-v1": ("signature", "public_key"),
+    "anchor-v1": ("signature_b64", "public_key_b64"),
+}
+
+
+def detect_envelope(receipt: object) -> Optional[str]:
+    """Identify an envelope by the field names it carries, else None.
+
+    An auditor should install one verifier, not one per issuer. The formats
+    differ only in which fields hold the signature and the signer's key, and in
+    base64 versus base64url, which ``_b64url_decode`` already normalises. The
+    canonicalisation rule is identical in both.
+    """
+    if not isinstance(receipt, dict):
+        return None
+    if isinstance(receipt.get("signature"), str) and isinstance(
+        receipt.get("public_key"), str
+    ):
+        return "ATTESTATION-v1"
+    if isinstance(receipt.get("signature_b64"), str) and isinstance(
+        receipt.get("public_key_b64"), str
+    ):
+        return "anchor-v1"
+    return None
+
+
+def _verify_signed_envelope(
+    receipt: dict,
+    envelope: str,
+    trusted_public_key: Optional[str],
+    allow_untrusted_embedded_key: bool,
+) -> "VerifyResult":
+    """Signature check shared by every envelope.
+
+    Answers only "were these bytes signed by this key". Format-specific
+    structural rules, such as ATTESTATION-v1's twelve-field requirement, are
+    applied by the caller before this runs.
+    """
+    sig_field, key_field = ENVELOPE_FIELDS[envelope]
+
+    if trusted_public_key is None and not allow_untrusted_embedded_key:
+        return VerifyResult(
+            False,
+            "trusted_public_key required "
+            "(pass allow_untrusted_embedded_key for integrity-only)",
+        )
+
+    embedded = receipt[key_field]
+    if trusted_public_key is not None and trusted_public_key != embedded:
+        return VerifyResult(False, "public key does not match trusted key")
+
+    payload = {k: v for k, v in receipt.items() if k != sig_field}
+    canonical = json.dumps(
+        payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False
+    ).encode("utf-8")
+
+    try:
+        sig = _b64url_decode(receipt[sig_field])
+        pub = _b64url_decode(embedded)
+    except Exception as e:
+        return VerifyResult(False, f"signature decode error: {e}")
+    if len(sig) != 64:
+        return VerifyResult(False, "signature length != 64 bytes")
+    if len(pub) != 32:
+        return VerifyResult(False, "public key length != 32 bytes")
+
+    try:
+        Ed25519PublicKey.from_public_bytes(pub).verify(sig, canonical)
+    except InvalidSignature:
+        return VerifyResult(False, "signature check failed")
+    except Exception as e:
+        return VerifyResult(False, f"verification error: {e}")
+
+    return VerifyResult(
+        True,
+        key_source="pinned" if trusted_public_key is not None else "untrusted",
+        envelope=envelope,
+    )
 
 
 def verify_receipt(
@@ -91,6 +174,20 @@ def verify_receipt(
     """
     if not isinstance(receipt, Mapping):
         return VerifyResult(False, "receipt is not a mapping")
+
+    envelope = detect_envelope(receipt)
+    if envelope is None:
+        return VerifyResult(
+            False,
+            "unrecognised envelope: expected signature/public_key "
+            "or signature_b64/public_key_b64",
+        )
+    # Other issuers' envelopes carry their own field sets, so only the
+    # signature is checked. The rules below are ATTESTATION-v1's alone.
+    if envelope != "ATTESTATION-v1":
+        return _verify_signed_envelope(
+            receipt, envelope, trusted_public_key, allow_untrusted_embedded_key
+        )
 
     # Structural checks
     for field in REQUIRED_FIELDS:
@@ -160,6 +257,7 @@ def verify_receipt(
     return VerifyResult(
         True,
         key_source="pinned" if trusted_public_key is not None else "untrusted",
+        envelope="ATTESTATION-v1",
     )
 
 

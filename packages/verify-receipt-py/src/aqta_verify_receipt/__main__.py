@@ -32,10 +32,10 @@ _SEAL_BLOCK = [
     "    ▄██████████████",
     "  ▄█████████████████",
     "▄███████████████████",
-    "████████████████████         ▄",
-    "██████████████▀ ████      ▄▀",
-    " ▀▀█████████▀   ███▀  ▄▄▀▀",
-    "     ▀▀▀██▄▄▄▄▄▄██▀ ▀▀",
+    "████████████████████",
+    "██████████████  ████",
+    " ███████████    ███",
+    "   ▀▀▀████▄▄▄▄▄███▀",
 ]
 
 _SEAL_ASCII = [
@@ -76,7 +76,7 @@ def _stamp(valid: bool) -> None:
         l if i < half else '  ' + l for i, l in enumerate(base)
     ]
     painted = [body + l + off for l in art]
-    painted.append(body + ('   sealed' if valid else '   broken') + off)
+    painted.append(body + ("   sealed" if valid else "   broken") + " \u00b7 aqta.ai" + off)
     print(chr(10).join(painted), file=sys.stderr)
 
 
