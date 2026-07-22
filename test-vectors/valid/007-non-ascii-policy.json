@@ -1,0 +1,18 @@
+{
+  "attestation_id": "00000000-0000-0000-0000-000000000007",
+  "cost_prevented_eur": 1.25,
+  "model": "mistral-large-latest",
+  "org_id": "org-test-vectors",
+  "outcome": "BLOCKED",
+  "policy_applied": [
+    "Gr\u00f6\u00dfe-Limit",
+    "contr\u00f4le-des-co\u00fbts",
+    "\u500b\u4eba\u60c5\u5831\u30b9\u30ad\u30e3\u30f3"
+  ],
+  "public_key": "alWzEnrA_z9McN9z_MFfQCnH9mVgOwRZ26wrI7oix4E",
+  "request_hash": "8f3a7e2b9c4d5f6a1b0c9d8e7f6a5b4c3d2e1f0a9b8c7d6e5f4a3b2c1d0e9f8a",
+  "signature": "kznd7xDPLyNjOJuddRwItzaR9e94jCVE7G23WiR5FhVkX0L67ohCdpsqhURAOz1d_1swcoYHfP3t0YpVCFUsDA",
+  "timestamp": "2026-04-23T10:15:30.000000+00:00",
+  "trace_id": "trace-tv-001",
+  "v": 1
+}

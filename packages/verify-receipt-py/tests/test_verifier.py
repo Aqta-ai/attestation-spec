@@ -10,6 +10,7 @@ canonical-payload rules and Ed25519 signing are consistent end to end.
 from __future__ import annotations
 
 import importlib.util
+import json
 import sys
 from pathlib import Path
 
@@ -118,3 +119,32 @@ def test_never_raises_on_garbage():
     assert verify_receipt({}).valid is False
     assert verify_receipt({"v": 1}).valid is False
     assert verify_receipt("not a mapping").valid is False  # type: ignore[arg-type]
+
+
+# Conformance against the published test vectors.
+#
+# The same files are checked by the TypeScript suite. Running them in both
+# languages is what catches a canonicalisation change that one accepts and
+# the other rejects; a fixture built locally by this language alone cannot.
+_VECTOR_KEY = "alWzEnrA_z9McN9z_MFfQCnH9mVgOwRZ26wrI7oix4E"
+_VECTOR_DIR = _REPO_ROOT / "test-vectors"
+
+
+def _vectors(kind: str) -> list:
+    paths = sorted((_VECTOR_DIR / kind).glob("*.json"))
+    assert paths, f"no {kind} vectors found"
+    return [pytest.param(p, id=p.name) for p in paths]
+
+
+@pytest.mark.parametrize("path", _vectors("valid"))
+def test_valid_vector_verifies(path: Path) -> None:
+    receipt = json.loads(path.read_text(encoding="utf-8"))
+    result = verify_receipt(receipt, trusted_public_key=_VECTOR_KEY)
+    assert result.valid, f"{path.name} must verify: {result.reason}"
+
+
+@pytest.mark.parametrize("path", _vectors("invalid"))
+def test_invalid_vector_rejected(path: Path) -> None:
+    receipt = json.loads(path.read_text(encoding="utf-8"))
+    result = verify_receipt(receipt, trusted_public_key=_VECTOR_KEY)
+    assert not result.valid, f"{path.name} must be rejected"

@@ -123,6 +123,22 @@ def main() -> None:
             cost_prevented_eur=2.5,
         ),
     )
+    # Pins spec §6.1. An issuer or verifier that escapes non-ASCII to \uXXXX
+    # (Python's json.dumps default) produces different canonical bytes than
+    # JSON.stringify, so this vector verifies in one language and fails in the
+    # other. Any implementation that passes 001-006 but fails this one has the
+    # escaping bug.
+    _write(
+        "valid/007-non-ascii-policy.json",
+        _make(
+            "007",
+            outcome="BLOCKED",
+            attestation_id="00000000-0000-0000-0000-000000000007",
+            model="mistral-large-latest",
+            policy_applied=["Größe-Limit", "contrôle-des-coûts", "個人情報スキャン"],
+            cost_prevented_eur=1.25,
+        ),
+    )
     print()
 
     # Invalid vectors: each should be rejected by a conformant verifier for

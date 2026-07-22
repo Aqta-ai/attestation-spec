@@ -7,9 +7,36 @@ and this repository adheres to [Semantic Versioning](https://semver.org/spec/v2.
 at the repository-release level. The ATTESTATION format itself has its
 own versioning contract described in [CONFORMANCE.md](./CONFORMANCE.md).
 
-## [1.0.5] - 2026-07-22 (verifier CLI mark)
+## [1.0.5] - 2026-07-22 (non-ASCII interop fix, verifier CLI mark)
+
+### Fixed
+
+- **Cross-language verification of receipts containing non-ASCII text.** The
+  Python verifier canonicalised with `json.dumps` defaults, which escape
+  non-ASCII to `\uXXXX`. `JSON.stringify` does not. A receipt with, for
+  example, a policy named `Größe-Limit` therefore produced different canonical
+  bytes in each language: it verified in Python and failed in JavaScript. The
+  Python verifier now passes `ensure_ascii=False`, matching the JavaScript
+  behaviour and spec §6.1.
+- Every field is affected in principle, `policy_applied` and `model` most
+  plausibly in practice. Receipts whose fields are entirely ASCII are
+  unaffected: all fourteen pre-existing test vectors regenerate byte for byte
+  identical, so no previously issued signature changes meaning.
+- The JavaScript verifier needed no behavioural change. A comment there
+  asserted that Python yields `"0"` for float `0.0`, which is untrue and
+  contradicted the spec it implements. Corrected.
 
 ### Added
+
+- Spec §6.1 makes string canonicalisation normative: literal UTF-8, never
+  `\uXXXX` escapes. Previously this was implied by "UTF-8 encoding of the
+  resulting string" and not stated, which is how the divergence survived.
+- Test vector `valid/007-non-ascii-policy.json`, carrying German, French and
+  Japanese text, pins the rule.
+- Both test suites now run the published vectors directly. They are the
+  cross-language contract, and until now nothing executed them, which is why
+  a divergence could ship. A verifier that passes vectors 001-006 but fails
+  007 has the escaping bug.
 
 - Both CLIs print the Seal mark on a successful or failed verify. The mark is
   traced from the brand artwork, so the head, snout, eye and flippers are the
@@ -26,7 +53,9 @@ own versioning contract described in [CONFORMANCE.md](./CONFORMANCE.md).
   nothing else, so parsers and CI are unaffected.
 - Half-block glyphs are used when the locale is UTF-8, with a plain ASCII
   fallback otherwise. `NO_COLOR` is respected.
-- No change to the wire format, the verification logic, or the public API.
+- No change to the wire format or the public API. The only logic change is the
+  canonicalisation fix above, which strictly widens the set of receipts the two
+  implementations agree on.
 
 ## [1.0.4] - 2026-07-21 (verifiers + docs)
 

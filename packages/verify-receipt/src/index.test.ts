@@ -5,6 +5,8 @@
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { readdirSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { verifyReceipt } from './index.js';
 
 /**
@@ -95,4 +97,40 @@ test('signature decoder rejects empty signature when integrity-only', () => {
     /signature/.test(res.reason ?? '') ||
       /signature length/.test(res.reason ?? '')
   );
+});
+
+/**
+ * Conformance against the published test vectors.
+ *
+ * These files are the cross-language contract: the same bytes are checked by
+ * the Python verifier's suite. Running them here is what catches a
+ * canonicalisation change that one language accepts and the other rejects,
+ * which unit tests written against a locally-built fixture cannot see.
+ */
+const VECTOR_KEY = 'alWzEnrA_z9McN9z_MFfQCnH9mVgOwRZ26wrI7oix4E';
+const VECTOR_DIR = join(__dirname, '..', '..', '..', 'test-vectors');
+
+function loadVectors(kind: 'valid' | 'invalid'): Array<[string, unknown]> {
+  const dir = join(VECTOR_DIR, kind);
+  return readdirSync(dir)
+    .filter((f) => f.endsWith('.json'))
+    .map((f) => [f, JSON.parse(readFileSync(join(dir, f), 'utf8'))]);
+}
+
+test('every valid test vector verifies under the pinned vector key', () => {
+  const vectors = loadVectors('valid');
+  assert.ok(vectors.length > 0, 'no valid vectors found');
+  for (const [name, receipt] of vectors) {
+    const result = verifyReceipt(receipt as never, { trustedPublicKey: VECTOR_KEY });
+    assert.equal(result.valid, true, `${name} must verify (${result.reason ?? 'no reason'})`);
+  }
+});
+
+test('every invalid test vector is rejected', () => {
+  const vectors = loadVectors('invalid');
+  assert.ok(vectors.length > 0, 'no invalid vectors found');
+  for (const [name, receipt] of vectors) {
+    const result = verifyReceipt(receipt as never, { trustedPublicKey: VECTOR_KEY });
+    assert.equal(result.valid, false, `${name} must be rejected`);
+  }
 });

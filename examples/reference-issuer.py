@@ -126,8 +126,10 @@ class ReferenceIssuer:
             "public_key": self.public_key_b64,
         }
 
+        # ensure_ascii=False per spec §6.1: the default would escape non-ASCII
+        # to \uXXXX and the signature would not verify in JavaScript.
         canonical = json.dumps(
-            payload, sort_keys=True, separators=(",", ":")
+            payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False
         ).encode("utf-8")
         signature = self.private_key.sign(canonical)
 
@@ -141,9 +143,9 @@ def canonical_payload(receipt: Mapping[str, object]) -> bytes:
     canonicalisation against this reference.
     """
     payload = {k: v for k, v in receipt.items() if k != "signature"}
-    return json.dumps(payload, sort_keys=True, separators=(",", ":")).encode(
-        "utf-8"
-    )
+    return json.dumps(
+        payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False
+    ).encode("utf-8")
 
 
 if __name__ == "__main__":
