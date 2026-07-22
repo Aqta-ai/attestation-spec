@@ -55,6 +55,8 @@ export interface VerifyOptions {
 export type KeySource = 'pinned' | 'untrusted';
 
 export interface VerifyResult {
+  /** Which envelope format was recognised, when one was. */
+  envelope?: EnvelopeFormat;
   valid: boolean;
   reason?: string;
   /** Present when `valid` is true. */
@@ -147,6 +149,93 @@ function canonicalValue(v: unknown): string {
  *   });
  *   if (!result.valid) throw new Error(`Receipt invalid: ${result.reason}`);
  */
+/**
+ * Envelope formats this verifier can read.
+ *
+ * The point of accepting more than one is that an auditor should install a
+ * single tool, not one per issuer. The formats differ only in which fields
+ * carry the signature and the signer's key, and in base64 versus base64url
+ * encoding, which `base64urlDecode` already normalises. The canonicalisation
+ * rule is the same in both: sorted keys, no whitespace, literal UTF-8.
+ */
+export type EnvelopeFormat = 'ATTESTATION-v1' | 'anchor-v1';
+
+const ENVELOPE_FIELDS: Record<EnvelopeFormat, { signature: string; publicKey: string }> = {
+  'ATTESTATION-v1': { signature: 'signature', publicKey: 'public_key' },
+  'anchor-v1': { signature: 'signature_b64', publicKey: 'public_key_b64' },
+};
+
+/** Identify an envelope by the field names it carries, or null if unrecognised. */
+export function detectEnvelope(receipt: unknown): EnvelopeFormat | null {
+  if (typeof receipt !== 'object' || receipt === null) return null;
+  const r = receipt as Record<string, unknown>;
+  if (typeof r.signature === 'string' && typeof r.public_key === 'string') {
+    return 'ATTESTATION-v1';
+  }
+  if (typeof r.signature_b64 === 'string' && typeof r.public_key_b64 === 'string') {
+    return 'anchor-v1';
+  }
+  return null;
+}
+
+/**
+ * Signature check shared by every envelope.
+ *
+ * Deliberately makes no claim about the receipt's meaning: it answers only
+ * "were these bytes signed by this key". Format-specific structural rules,
+ * such as ATTESTATION-v1's twelve-field requirement, are applied by the
+ * caller before this runs.
+ */
+function verifySignedEnvelope(
+  r: Record<string, unknown>,
+  envelope: EnvelopeFormat,
+  options: VerifyOptions
+): VerifyResult {
+  const fields = ENVELOPE_FIELDS[envelope];
+  const pinned = options.trustedPublicKey;
+  const allowUntrusted = options.allowUntrustedEmbeddedKey === true;
+
+  if (pinned === undefined && !allowUntrusted) {
+    return {
+      valid: false,
+      reason:
+        'trustedPublicKey required (pass allowUntrustedEmbeddedKey for integrity-only)',
+    };
+  }
+
+  const embeddedKey = r[fields.publicKey] as string;
+  if (pinned !== undefined && pinned !== embeddedKey) {
+    return { valid: false, reason: 'public key does not match trusted key' };
+  }
+
+  const payload: Record<string, unknown> = { ...r };
+  delete payload[fields.signature];
+
+  let canonical: Uint8Array;
+  try {
+    canonical = canonicalise(payload);
+  } catch (e) {
+    return { valid: false, reason: `failed to canonicalise: ${String(e)}` };
+  }
+
+  try {
+    const sig = base64urlDecode(r[fields.signature] as string);
+    const pub = base64urlDecode(embeddedKey);
+    if (sig.length !== 64) return { valid: false, reason: 'signature length != 64 bytes' };
+    if (pub.length !== 32) return { valid: false, reason: 'public key length != 32 bytes' };
+    if (!nacl.sign.detached.verify(canonical, sig, pub)) {
+      return { valid: false, reason: 'signature check failed' };
+    }
+    return {
+      valid: true,
+      envelope,
+      keySource: pinned !== undefined ? 'pinned' : 'untrusted',
+    };
+  } catch (e) {
+    return { valid: false, reason: `signature decode error: ${String(e)}` };
+  }
+}
+
 export function verifyReceipt(
   receipt: unknown,
   options: VerifyOptions = {}
@@ -155,6 +244,20 @@ export function verifyReceipt(
     return { valid: false, reason: 'receipt is not an object' };
   }
   const r = receipt as Record<string, unknown>;
+
+  const envelope = detectEnvelope(r);
+  if (envelope === null) {
+    return {
+      valid: false,
+      reason:
+        'unrecognised envelope: expected signature/public_key or signature_b64/public_key_b64',
+    };
+  }
+  // Other issuers' envelopes carry their own field sets, so only the signature
+  // is checked. The structural rules below are ATTESTATION-v1's alone.
+  if (envelope !== 'ATTESTATION-v1') {
+    return verifySignedEnvelope(r, envelope, options);
+  }
 
   // Structural checks
   for (const field of REQUIRED_FIELDS) {
@@ -230,6 +333,7 @@ export function verifyReceipt(
     }
     return {
       valid: true,
+      envelope: 'ATTESTATION-v1',
       keySource: pinned !== undefined ? 'pinned' : 'untrusted',
     };
   } catch (e) {
