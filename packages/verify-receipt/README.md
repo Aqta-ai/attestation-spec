@@ -1,3 +1,19 @@
+```
+           ▄▄▄▄▄▄▄▄
+         ▄███████▀████▄▄
+       ▄████████████████
+       ██████████████▀▀
+      █████████████▀
+     ▄█████████████
+    ▄██████████████
+  ▄█████████████████
+▄███████████████████
+████████████████████         ▄
+██████████████▀ ████      ▄▀
+ ▀▀█████████▀   ███▀  ▄▄▀▀
+     ▀▀▀██▄▄▄▄▄▄██▀ ▀▀
+```
+
 # aqta-verify-receipt
 
 [![npm](https://img.shields.io/npm/v/aqta-verify-receipt.svg)](https://www.npmjs.com/package/aqta-verify-receipt)
@@ -15,14 +31,14 @@ Same algorithm on npm and PyPI. Reference implementation, not a platform SDK.
 
 ```bash
 # download a receipt JSON, then:
-npx aqta-verify-receipt@1.0.4 receipt.json \
+npx aqta-verify-receipt@1.0.5 receipt.json \
   --key gUoUhIvptKAoLTnry3VrDtOQEWggGQveLrHFVrfNqmE
 ```
 
 Or pipe a public share link body:
 
 ```bash
-curl -sS https://api.aqta.ai/r/YOUR_RECEIPT_ID | npx aqta-verify-receipt@1.0.4 - \
+curl -sS https://api.aqta.ai/r/YOUR_RECEIPT_ID | npx aqta-verify-receipt@1.0.5 - \
   --key gUoUhIvptKAoLTnry3VrDtOQEWggGQveLrHFVrfNqmE
 ```
 
