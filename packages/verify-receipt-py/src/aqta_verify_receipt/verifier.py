@@ -128,11 +128,15 @@ def verify_receipt(
     ):
         return VerifyResult(False, "public_key does not match trusted key")
 
-    # Canonical payload per spec §6
+    # Canonical payload per spec §6.
+    # ensure_ascii=False is required, not stylistic: the default escapes
+    # non-ASCII to \uXXXX, so a policy name like "Größe-Limit" would canonicalise
+    # to different bytes here than under JSON.stringify, and a receipt valid in
+    # Python would fail in JavaScript. The spec mandates raw UTF-8.
     payload = {k: v for k, v in receipt.items() if k != "signature"}
-    canonical = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode(
-        "utf-8"
-    )
+    canonical = json.dumps(
+        payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False
+    ).encode("utf-8")
 
     # Signature verification (constant-time via cryptography library)
     try:

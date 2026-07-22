@@ -93,6 +93,8 @@ The canonical payload is produced by:
    - All object keys sorted lexicographically.
    - No whitespace between tokens (`","` and `":"` separators).
    - UTF-8 encoding of the resulting string to bytes.
+   - Non-ASCII characters emitted literally as UTF-8, never as `\uXXXX`
+     escapes (see §6.1).
 3. **Number canonicalisation:** integer-valued numbers MUST serialise without
    a decimal point or trailing zeros. Issuers that internally represent a
    numeric field as a float MUST coerce integer-valued floats to an integer
@@ -100,6 +102,21 @@ The canonical payload is produced by:
    identical across Python (where `json.dumps(0.0)` yields `"0.0"` by
    default) and JavaScript (where `JSON.stringify(0)` yields `"0"`). The
    reference issuer in `examples/reference-issuer.py` performs this coercion.
+
+### 6.1 String canonicalisation
+
+Strings MUST be serialised as literal UTF-8. Escaping non-ASCII characters as
+`\uXXXX` produces different canonical bytes and MUST NOT be done, only the
+escapes required by RFC 8259 (quote, backslash, control characters) are
+permitted.
+
+This rule exists because the two mainstream JSON serialisers disagree by
+default. Python's `json.dumps` escapes non-ASCII unless `ensure_ascii=False`
+is passed; JavaScript's `JSON.stringify` never escapes it. An issuer that
+takes the Python default signs `"Größe"` where a JavaScript verifier
+reconstructs `"Größe"`, and the signature fails across implementations while
+appearing valid within Python. Issuers and verifiers MUST both emit literal
+UTF-8.
 
 Expressed in Python (reference implementation):
 
@@ -109,7 +126,10 @@ cost = round(cost_prevented_eur, 6)
 if cost == int(cost):
     cost = int(cost)
 
-canonical = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
+# ensure_ascii=False is required by 6.1, the default breaks cross-language verification
+canonical = json.dumps(
+    payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False
+).encode("utf-8")
 ```
 
 Expressed in JavaScript (reference):

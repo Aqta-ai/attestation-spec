@@ -116,11 +116,13 @@ function canonicalValue(v: unknown): string {
     return '[' + v.map(canonicalValue).join(',') + ']';
   }
   if (typeof v === 'number') {
-    // Preserving the serialisation of floats such as 0.0 as "0.0" is NOT
-    // spec. JSON.stringify(0) yields "0" and that is what Python json.dumps
-    // yields for float 0.0 when sort_keys=True on a rounded value. For the
-    // one float field on the receipt (cost_prevented_eur) the issuer rounds
-    // to 6 dp and integers serialise as integers.
+    // Spec section 6: integer-valued numbers serialise without a decimal
+    // point. JSON.stringify does that natively, so nothing extra is needed
+    // here. Python's json.dumps does NOT (it yields "0.0" for float 0.0),
+    // which is why the spec puts the coercion duty on the issuer: an
+    // integer-valued float must become an int before it is signed. A receipt
+    // carrying a literal "0.0" was signed by a non-conforming issuer, and
+    // failing it is correct behaviour, not a gap in this verifier.
     return JSON.stringify(v);
   }
   // Strings, booleans
