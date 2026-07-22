@@ -7,6 +7,27 @@ and this repository adheres to [Semantic Versioning](https://semver.org/spec/v2.
 at the repository-release level. The ATTESTATION format itself has its
 own versioning contract described in [CONFORMANCE.md](./CONFORMANCE.md).
 
+## [1.0.5] - 2026-07-22 (verifier CLI mark)
+
+### Added
+
+- Both CLIs print the Seal mark on a successful or failed verify. The mark is
+  traced from the brand artwork, so the head, snout, eye and flippers are the
+  real silhouette rather than hand-drawn approximations. A failed check shears
+  the mark along its midline: the seal is visibly broken before the word is
+  read.
+- Package pages and the repository README carry the mark as a banner.
+
+### Notes
+
+- Output hygiene is unchanged and enforced: the mark is written to **stderr**,
+  only when stderr is a **TTY**, and never under `-q` / `--quiet`. Piped and
+  scripted runs still receive exactly `ok ...` / `fail ...` on stdout and
+  nothing else, so parsers and CI are unaffected.
+- Half-block glyphs are used when the locale is UTF-8, with a plain ASCII
+  fallback otherwise. `NO_COLOR` is respected.
+- No change to the wire format, the verification logic, or the public API.
+
 ## [1.0.4] - 2026-07-21 (verifiers + docs)
 
 ### Changed

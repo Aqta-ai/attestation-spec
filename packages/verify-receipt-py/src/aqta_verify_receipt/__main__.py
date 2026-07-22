@@ -11,11 +11,73 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 
 from .verifier import verify_receipt
 
 PUB_KEY_HINT = "https://api.aqta.ai/v1/attestation/public-key"
+
+
+# The Seal mark, traced from the brand artwork: head up, snout right, one
+# eye (the notch in the head). Half blocks double the vertical resolution;
+# plain ASCII is the fallback for non UTF-8 terminals.
+_SEAL_BLOCK = [
+    "           ▄▄▄▄▄▄▄▄",
+    "         ▄███████▀████▄▄",
+    "       ▄████████████████",
+    "       ██████████████▀▀",
+    "      █████████████▀",
+    "     ▄█████████████",
+    "    ▄██████████████",
+    "  ▄█████████████████",
+    "▄███████████████████",
+    "████████████████████         ▄",
+    "██████████████▀ ████      ▄▀",
+    " ▀▀█████████▀   ███▀  ▄▄▀▀",
+    "     ▀▀▀██▄▄▄▄▄▄██▀ ▀▀",
+]
+
+_SEAL_ASCII = [
+    "         +%@@@@%+",
+    "       %@@@@@@oo@@@@@",
+    "      @@@@@@@@@@@@@@+",
+    "     +@@@@@@@@@@@+",
+    "     @@@@@@@@@@@",
+    "   +@@@@@@@@@@@@%",
+    "  @@@@@@@@@@@@@@@",
+    "@@@@@@@@@@@@@@@@@%",
+    "@@@@@@@@@@@@@%@@@%",
+    "+%@@@@@@@@@+  @@@",
+    "    +%@@%+    @@+",
+]
+
+
+def _stamp(valid: bool) -> None:
+    """Print the Seal mark for a human.
+
+    stderr only, and only when stderr is a TTY, so piped and scripted runs
+    still see exactly the verdict line on stdout. A failed check shears the
+    mark along its midline: the seal is broken.
+    """
+    if not sys.stderr.isatty():
+        return
+
+    enc = (sys.stderr.encoding or '').lower()
+    utf8 = 'utf' in enc
+    esc = chr(27)
+    colour = os.environ.get('NO_COLOR') is None
+    body = (esc + '[' + ('32' if valid else '31') + 'm') if colour else ''
+    off = (esc + '[0m') if colour else ''
+
+    base = _SEAL_BLOCK if utf8 else _SEAL_ASCII
+    half = (len(base) + 1) // 2
+    art = base if valid else [
+        l if i < half else '  ' + l for i, l in enumerate(base)
+    ]
+    painted = [body + l + off for l in art]
+    painted.append(body + ('   sealed' if valid else '   broken') + off)
+    print(chr(10).join(painted), file=sys.stderr)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -95,6 +157,7 @@ def main(argv: list[str] | None = None) -> int:
     )
 
     if not args.quiet:
+        _stamp(result.valid)
         rid = receipt.get("attestation_id", "?")
         outcome = receipt.get("outcome", "?")
         if result.valid:
