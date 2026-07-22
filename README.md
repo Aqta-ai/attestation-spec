@@ -71,6 +71,28 @@ Production key (also at
 gUoUhIvptKAoLTnry3VrDtOQEWggGQveLrHFVrfNqmE
 ```
 
+## What you'll see
+
+A valid receipt prints the seal intact; a tampered one prints it sheared.
+
+```
+           ▄▄▄▄▄▄▄▄
+         ▄███████▀████▄▄
+       ▄████████████████
+       ██████████████▀▀
+      █████████████▀
+     ▄█████████████
+    ▄██████████████
+  ▄█████████████████
+▄███████████████████
+████████████████████
+██████████████  ████
+ ███████████    ███
+   ▀▀▀████▄▄▄▄▄███▀
+   sealed · aqta.ai
+ok  ALLOWED  2d41...871e94c  pinned key
+```
+
 ## Contents
 
 | Path | What |
