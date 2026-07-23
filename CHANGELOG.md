@@ -68,7 +68,7 @@ own versioning contract described in [CONFORMANCE.md](./CONFORMANCE.md).
   (returns `key_source` / `keySource: "untrusted"`). CLI requires `--key`
   or `--integrity-only`.
 - Published on **npm and PyPI** as `aqta-verify-receipt` **1.0.4**.
-- Spec: title and issuer references use **Seal** (not AqtaCore). §7 requires
+- Spec: title and issuer references use **Seal**. §7 requires
   out-of-band key pinning for counsel-grade verification; integrity-only is
   optional and must be labelled untrusted. No wire-format change.
 - Root README simplified (diagram removed). Attribution and
