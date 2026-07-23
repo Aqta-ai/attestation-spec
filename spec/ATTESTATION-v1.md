@@ -376,8 +376,7 @@ For any deployment using ATTESTATION-v1, the residual risk is:
 
 ## 13. Change Log
 
-- **Editorial (2026-07-21):** Product name **Seal** (was AqtaCore on public
-  surfaces). §7 now requires out-of-band key pinning for counsel-grade
+- **Editorial (2026-07-21):** Product name **Seal** on public surfaces. §7 now requires out-of-band key pinning for counsel-grade
   verification; integrity-only (embedded key) is optional, non-default, and
   must be labelled untrusted. Aligns the spec with reference verifiers
   v1.0.4+. Clarified `cost_prevented_eur` as issuer accounting (use `0` when
