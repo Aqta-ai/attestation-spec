@@ -19,65 +19,62 @@ from .verifier import verify_receipt
 PUB_KEY_HINT = "https://api.aqta.ai/v1/attestation/public-key"
 
 
-# The Seal mark, traced from the brand artwork: head up, snout right, one
-# eye (the notch in the head). Half blocks double the vertical resolution;
-# plain ASCII is the fallback for non UTF-8 terminals.
-_SEAL_BLOCK = [
-    "           ▄▄▄▄▄▄▄▄",
-    "         ▄███████▀████▄▄",
-    "       ▄████████████████",
-    "       ██████████████▀▀",
-    "      █████████████▀",
-    "     ▄█████████████",
-    "    ▄██████████████",
-    "  ▄█████████████████",
-    "▄███████████████████",
-    "████████████████████",
-    "██████████████  ████",
-    " ███████████    ███",
-    "   ▀▀▀████▄▄▄▄▄███▀",
-]
-
-_SEAL_ASCII = [
-    "         +%@@@@%+",
-    "       %@@@@@@oo@@@@@",
-    "      @@@@@@@@@@@@@@+",
-    "     +@@@@@@@@@@@+",
-    "     @@@@@@@@@@@",
-    "   +@@@@@@@@@@@@%",
-    "  @@@@@@@@@@@@@@@",
-    "@@@@@@@@@@@@@@@@@%",
-    "@@@@@@@@@@@@@%@@@%",
-    "+%@@@@@@@@@+  @@@",
-    "    +%@@%+    @@+",
-]
-
-
-def _stamp(valid: bool) -> None:
-    """Print the Seal mark for a human.
+def _stamp(receipt: dict, valid: bool, reason, trust: str) -> None:
+    """Compact human stamp for a TTY.
 
     stderr only, and only when stderr is a TTY, so piped and scripted runs
-    still see exactly the verdict line on stdout. A failed check shears the
-    mark along its midline: the seal is broken.
+    still see exactly the machine line on stdout. A small mark, aligned rows,
+    and a single coloured verdict token: green when the signature holds, red
+    when it does not. No block art, no flood of colour.
     """
     if not sys.stderr.isatty():
         return
 
-    enc = (sys.stderr.encoding or '').lower()
-    utf8 = 'utf' in enc
-    esc = chr(27)
-    colour = os.environ.get('NO_COLOR') is None
-    body = (esc + '[' + ('32' if valid else '31') + 'm') if colour else ''
-    off = (esc + '[0m') if colour else ''
+    enc = (sys.stderr.encoding or "").lower()
+    utf8 = "utf" in enc
+    mark = "•ᴥ•" if utf8 else "o.o"
+    dot = "·" if utf8 else "-"
+    ell = "…" if utf8 else "..."
+    ok = "✓" if utf8 else "+"
+    no = "✗" if utf8 else "x"
 
-    base = _SEAL_BLOCK if utf8 else _SEAL_ASCII
-    half = (len(base) + 1) // 2
-    art = base if valid else [
-        l if i < half else '  ' + l for i, l in enumerate(base)
-    ]
-    painted = [body + l + off for l in art]
-    painted.append(body + ("   sealed" if valid else "   broken") + " \u00b7 aqta.ai" + off)
-    print(chr(10).join(painted), file=sys.stderr)
+    esc = chr(27)
+    colour = os.environ.get("NO_COLOR") is None
+
+    def paint(code: str, s: str) -> str:
+        return (esc + "[" + code + "m" + s + esc + "[0m") if colour else s
+
+    def dim(s: str) -> str:
+        return paint("2", s)
+
+    def field(key: str) -> str:
+        v = receipt.get(key)
+        return v if isinstance(v, str) else "?"
+
+    def mid(v, head: int = 8, tail: int = 6) -> str:
+        s = v if isinstance(v, str) else "?"
+        return (s[:head] + ell + s[-tail:]) if len(s) > head + tail + 1 else s
+
+    pol = receipt.get("policy_applied")
+    rules = (" " + dot + " ").join(str(x) for x in pol) if isinstance(pol, list) and pol else ""
+
+    rows = [("outcome", field("outcome")), ("model", field("model"))]
+    if rules:
+        rows.append(("rules", rules))
+    rows.append(("key", trust))
+    rows.append(("request", mid(receipt.get("request_hash"))))
+    rows.append(("id", mid(receipt.get("attestation_id"), 8, 4)))
+
+    lines = ["", "  " + dim(mark + " Seal " + dot + " ATTESTATION-v1"), ""]
+    for key, value in rows:
+        lines.append("  " + dim(key.ljust(8)) + value)
+    lines.append("")
+    if valid:
+        lines.append("  " + paint("32", ok + " sealed") + "   " + dim("signature valid, checked offline"))
+    else:
+        lines.append("  " + paint("31", no + " broken") + "   " + dim(reason or "signature does not match the key"))
+    lines.append("")
+    print(chr(10).join(lines), file=sys.stderr)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -157,18 +154,22 @@ def main(argv: list[str] | None = None) -> int:
     )
 
     if not args.quiet:
-        _stamp(result.valid)
-        rid = receipt.get("attestation_id", "?")
-        outcome = receipt.get("outcome", "?")
-        if result.valid:
-            trust = (
-                "pinned key"
-                if result.key_source == "pinned"
-                else "untrusted embedded key (integrity only)"
-            )
-            print(f"ok  {outcome}  {rid}  {trust}")
-        else:
-            print(f"fail  {result.reason or 'verification failed'}  {rid}")
+        trust = (
+            "pinned key"
+            if result.key_source == "pinned"
+            else "untrusted embedded key (integrity only)"
+        )
+        _stamp(receipt, result.valid, result.reason, trust)
+
+        # One machine-readable line, only when stdout is not a terminal, so an
+        # interactive run shows just the stamp and `... | tool` still parses.
+        if not sys.stdout.isatty():
+            rid = receipt.get("attestation_id", "?")
+            outcome = receipt.get("outcome", "?")
+            if result.valid:
+                print(f"ok  {outcome}  {rid}  {trust}")
+            else:
+                print(f"fail  {result.reason or 'verification failed'}  {rid}")
     return 0 if result.valid else 1
 
 

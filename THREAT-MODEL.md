@@ -6,7 +6,7 @@ failure mode this project exists to remove. Reporting a flaw: see [SECURITY.md](
 
 Scope: the ATTESTATION-v1 envelope, the published reference verifiers (v1.0.4 on
 npm and PyPI; pinning required by default), and the production Seal issuer
-(signing since April 2026).
+(signing in production).
 
 ## What a receipt actually proves
 

@@ -16,64 +16,64 @@ const PUB_KEY_HINT =
   'https://api.aqta.ai/v1/attestation/public-key';
 
 /**
- * The Seal mark, traced from the brand artwork: head up, snout right,
- * one eye (the notch in the head). Half blocks give twice the vertical
- * resolution per line; plain ASCII is the fallback for non UTF-8 terminals.
+ * Human-facing stamp on stderr, TTY only, so piped runs still see exactly the
+ * machine line on stdout. A small mark, aligned rows, and a single coloured
+ * verdict token: green when the signature holds, red when it does not. No
+ * block art, no flood of colour. This is a tool an auditor runs.
  */
-const SEAL_BLOCK = [
-  '           ▄▄▄▄▄▄▄▄',
-  '         ▄███████▀████▄▄',
-  '       ▄████████████████',
-  '       ██████████████▀▀',
-  '      █████████████▀',
-  '     ▄█████████████',
-  '    ▄██████████████',
-  '  ▄█████████████████',
-  '▄███████████████████',
-  '████████████████████',
-  '██████████████  ████',
-  ' ███████████    ███',
-  '   ▀▀▀████▄▄▄▄▄███▀',
-];
-
-const SEAL_ASCII = [
-  '         +%@@@@%+',
-  '       %@@@@@@oo@@@@@',
-  '      @@@@@@@@@@@@@@+',
-  '     +@@@@@@@@@@@+',
-  '     @@@@@@@@@@@',
-  '   +@@@@@@@@@@@@%',
-  '  @@@@@@@@@@@@@@@',
-  '@@@@@@@@@@@@@@@@@%',
-  '@@@@@@@@@@@@@%@@@%',
-  '+%@@@@@@@@@+  @@@',
-  '    +%@@%+    @@+',
-];
-
-/**
- * Human-facing stamp: an intact seal when the signature verifies, a sheared
- * one when it does not, so the shape carries the answer before the word.
- *
- * stderr only, TTY only, so piped runs still see exactly the verdict line.
- */
-function stamp(valid: boolean): void {
+function stamp(
+  receipt: AttestationReceipt,
+  valid: boolean,
+  reason: string | undefined,
+  trust: string
+): void {
   if (!process.stderr.isTTY) return;
 
   const utf8 = /UTF-?8/i.test(
     process.env.LC_ALL || process.env.LC_CTYPE || process.env.LANG || ''
   );
+  const MARK = utf8 ? '•ᴥ•' : 'o.o';
+  const DOT = utf8 ? '·' : '-';
+  const ELL = utf8 ? '…' : '...';
+  const OK = utf8 ? '✓' : '+';
+  const NO = utf8 ? '✗' : 'x';
+
   const ESC = String.fromCharCode(27);
   const colour = process.env.NO_COLOR === undefined;
-  const body = colour ? ESC + '[' + (valid ? '32' : '31') + 'm' : '';
-  const off = colour ? ESC + '[0m' : '';
+  const paint = (code: string, s: string): string =>
+    colour ? ESC + '[' + code + 'm' + s + ESC + '[0m' : s;
+  const dim = (s: string): string => paint('2', s);
 
-  // A failed check shears the mark along its midline: the seal is broken.
-  const base = utf8 ? SEAL_BLOCK : SEAL_ASCII;
-  const half = Math.ceil(base.length / 2);
-  const art = valid ? base : base.map((l, i) => (i < half ? l : '  ' + l));
-  const painted = art.map((l) => body + l + off);
-  painted.push(body + (valid ? '   sealed' : '   broken') + ' \u00b7 aqta.ai' + off);
-  process.stderr.write(painted.join('\n') + '\n');
+  const r = receipt as unknown as Record<string, unknown>;
+  const str = (v: unknown): string => (typeof v === 'string' ? v : '?');
+  const mid = (v: unknown, head = 8, tail = 6): string => {
+    const s = str(v);
+    return s.length > head + tail + 1 ? s.slice(0, head) + ELL + s.slice(-tail) : s;
+  };
+  const policies =
+    Array.isArray(r.policy_applied) && r.policy_applied.length
+      ? (r.policy_applied as unknown[]).map(str).join(' ' + DOT + ' ')
+      : '';
+
+  const rows: Array<[string, string]> = [
+    ['outcome', str(r.outcome)],
+    ['model', str(r.model)],
+  ];
+  if (policies) rows.push(['rules', policies]);
+  rows.push(['key', trust]);
+  rows.push(['request', mid(r.request_hash)]);
+  rows.push(['id', mid(r.attestation_id, 8, 4)]);
+
+  const out = ['', '  ' + dim(MARK + ' Seal ' + DOT + ' ATTESTATION-v1'), ''];
+  for (const [k, v] of rows) out.push('  ' + dim(k.padEnd(8)) + v);
+  out.push('');
+  out.push(
+    valid
+      ? '  ' + paint('32', OK + ' sealed') + '   ' + dim('signature valid, checked offline')
+      : '  ' + paint('31', NO + ' broken') + '   ' + dim(reason ?? 'signature does not match the key')
+  );
+  out.push('');
+  process.stderr.write(out.join('\n') + '\n');
 }
 
 function usage(): never {
@@ -156,17 +156,22 @@ function main(): void {
   });
 
   if (!quiet) {
-    stamp(result.valid);
-    const id = typeof receipt.attestation_id === 'string' ? receipt.attestation_id : '?';
-    const outcome = typeof receipt.outcome === 'string' ? receipt.outcome : '?';
-    if (result.valid) {
-      const trust =
-        result.keySource === 'pinned'
-          ? 'pinned key'
-          : 'untrusted embedded key (integrity only)';
-      console.log(`ok  ${outcome}  ${id}  ${trust}`);
-    } else {
-      console.log(`fail  ${result.reason ?? 'verification failed'}  ${id}`);
+    const trust =
+      result.keySource === 'pinned'
+        ? 'pinned key'
+        : 'untrusted embedded key (integrity only)';
+    stamp(receipt, result.valid, result.reason, trust);
+
+    // One machine-readable line, emitted only when stdout is not a terminal,
+    // so an interactive run shows just the stamp and `... | tool` still parses.
+    if (!process.stdout.isTTY) {
+      const id = typeof receipt.attestation_id === 'string' ? receipt.attestation_id : '?';
+      const outcome = typeof receipt.outcome === 'string' ? receipt.outcome : '?';
+      if (result.valid) {
+        console.log(`ok  ${outcome}  ${id}  ${trust}`);
+      } else {
+        console.log(`fail  ${result.reason ?? 'verification failed'}  ${id}`);
+      }
     }
   }
   process.exit(result.valid ? 0 : 1);
