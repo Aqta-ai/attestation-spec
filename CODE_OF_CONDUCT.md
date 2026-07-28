@@ -17,7 +17,7 @@ focus criticism on ideas and code, not people.
 
 ## Reporting
 
-Report conduct concerns privately to **hello@aqta.ai**. Do not open a public
+Report conduct concerns privately to **hello@aqta.ai**. Do not file a public
 issue for interpersonal reports.
 
 Maintainers may warn, restrict, or remove participants who violate this code.

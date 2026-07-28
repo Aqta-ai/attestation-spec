@@ -18,7 +18,7 @@ labels: triage
 
 ## Environment
 
-- Spec / package version:
+- Spec revision / package version:
 - Language (Python / TypeScript / other):
 
 ## Notes

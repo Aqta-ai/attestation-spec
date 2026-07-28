@@ -1,6 +1,6 @@
 # Examples
 
-Minimal stand-alone tooling for ATTESTATION-v1. Not a production issuer.
+Minimal stand-alone tooling for ATTESTATION-v1. Interop and vectors only, not a production issuer.
 
 | File | Purpose |
 |---|---|

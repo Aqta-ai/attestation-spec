@@ -1,6 +1,6 @@
 # Publishing setup
 
-How to release new versions of the verifier libraries from this repository
+How to release verifier library versions from this repository
 using **trusted publishing via GitHub Actions OIDC** (Sigstore provenance,
 no long-lived registry tokens in GitHub secrets).
 
