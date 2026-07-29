@@ -7,6 +7,57 @@ and this repository adheres to [Semantic Versioning](https://semver.org/spec/v2.
 at the repository-release level. The ATTESTATION format itself has its
 own versioning contract described in [CONFORMANCE.md](./CONFORMANCE.md).
 
+## [Unreleased]
+
+## [1.0.7] - 2026-07-25 (CLI stamp rewrite, package-page branding)
+
+### Changed
+
+- **CLI stamp rewritten.** The block-character seal that sheared on a failed
+  verify is replaced with a small `•ᴥ•` mark, a short field table (outcome,
+  model, rules, key trust, request hash, attestation id) and a single
+  coloured `sealed` / `broken` verdict line, still written to stderr and
+  only when stderr is a TTY. The machine-readable `ok ...` / `fail ...` line
+  now prints only when stdout is not a TTY, instead of alongside the stamp
+  on every run.
+- Package pages (npm and PyPI READMEs) and the repository root now show the
+  Seal mark as an image (`aqta.ai/brand/seal-mark-512.png`) in place of the
+  block ASCII banner.
+- Two remaining internal product-name parentheticals removed from
+  `CHANGELOG.md` and `spec/ATTESTATION-v1.md`, and the GitHub repository
+  "About" field re-branded to Seal.
+
+### Notes
+
+- Published on **npm** as `aqta-verify-receipt` **1.0.7**. PyPI publish for
+  1.0.7 is pending; **1.0.6** remains the latest release there.
+
+## [1.0.6] - 2026-07-24 (multi-envelope verification, verifier parity)
+
+### Added
+
+- `detectEnvelope()` / `detect_envelope()` in both reference verifiers: a
+  receipt is now recognised as either an ATTESTATION-v1 envelope or another
+  issuer's anchor-v1 envelope, sharing one signature check. Structural
+  validation stays format-specific: only ATTESTATION-v1 receipts get the
+  twelve-field check.
+- Test coverage for the new multi-envelope path: ten TypeScript and thirteen
+  Python cases, mirrored case for case (detection by field name, refusal to
+  guess on wrong-typed fields, genuine verify, tampered field, wrong key,
+  missing pin, integrity-only, non-ASCII).
+
+### Fixed
+
+- Python verifier brought level with TypeScript: matching CLI stamp (tail
+  removed from the seal silhouette, `aqta.ai` added to the caption, a stray
+  underline removed) and the same envelope-detection capability, closing a
+  gap between the two reference implementations. Stamp output and verdicts
+  verified byte-identical across both.
+
+### Changed
+
+- Published on **npm and PyPI** as `aqta-verify-receipt` **1.0.6**.
+
 ## [1.0.5] - 2026-07-22 (non-ASCII interop fix, verifier CLI mark)
 
 ### Fixed
@@ -91,10 +142,6 @@ own versioning contract described in [CONFORMANCE.md](./CONFORMANCE.md).
   the model runs), with an ordinary-logs comparison, live browser verifier
   link, and an honest "relationship to open standards" section (SCITT /
   COSE / W3C VC / in-toto adjacent, not conforming).
-
----
-
-## [Unreleased]
 
 ---
 

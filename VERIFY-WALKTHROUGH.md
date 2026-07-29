@@ -16,7 +16,7 @@ out honestly in [THREAT-MODEL.md](./THREAT-MODEL.md).
 TypeScript/Node (current counsel-grade release; pinning required by default):
 
 ```bash
-npm install aqta-verify-receipt@1.0.4
+npm install aqta-verify-receipt@1.0.7
 ```
 
 Python (registry catch-up may lag npm; always pass `trusted_public_key`):

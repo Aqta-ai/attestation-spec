@@ -26,8 +26,8 @@ keywords:
   - seal
   - enforcement
   - offline-verify
-version: "1.0.4"
-date-released: "2026-07-21"
+version: "1.0.7"
+date-released: "2026-07-25"
 preferred-citation:
   type: software
   title: "ATTESTATION-v1"

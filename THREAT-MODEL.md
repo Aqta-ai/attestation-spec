@@ -4,8 +4,8 @@ A self-authored adversarial analysis of our own system. We wrote this because a 
 format that does not state its own trust assumptions is asking to be trusted, which is the
 failure mode this project exists to remove. Reporting a flaw: see [SECURITY.md](./SECURITY.md).
 
-Scope: the ATTESTATION-v1 envelope, the published reference verifiers (v1.0.4 on
-npm and PyPI; pinning required by default), and the production Seal issuer
+Scope: the ATTESTATION-v1 envelope, the published reference verifiers (v1.0.7 on
+npm, v1.0.6 on PyPI; pinning required by default), and the production Seal issuer
 (signing in production).
 
 ## What a receipt actually proves
