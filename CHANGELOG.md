@@ -29,8 +29,7 @@ own versioning contract described in [CONFORMANCE.md](./CONFORMANCE.md).
 
 ### Notes
 
-- Published on **npm** as `aqta-verify-receipt` **1.0.7**. PyPI publish for
-  1.0.7 is pending; **1.0.6** remains the latest release there.
+- Published as `aqta-verify-receipt` **1.0.7** on both **npm** and **PyPI**.
 
 ## [1.0.6] - 2026-07-24 (multi-envelope verification, verifier parity)
 

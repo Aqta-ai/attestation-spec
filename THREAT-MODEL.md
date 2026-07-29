@@ -5,7 +5,7 @@ format that does not state its own trust assumptions is asking to be trusted, wh
 failure mode this project exists to remove. Reporting a flaw: see [SECURITY.md](./SECURITY.md).
 
 Scope: the ATTESTATION-v1 envelope, the published reference verifiers (v1.0.7 on
-npm, v1.0.6 on PyPI; pinning required by default), and the production Seal issuer
+npm and PyPI; pinning required by default), and the production Seal issuer
 (signing in production).
 
 ## What a receipt actually proves
