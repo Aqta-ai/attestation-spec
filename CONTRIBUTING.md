@@ -71,9 +71,14 @@ conformant implementation:
    unless the change is trivial (typo, broken link, test flake).
 2. Branch from `main`.
 3. Include tests where applicable.
-4. Run `pytest packages/verify-receipt-py/tests/` and
-   `cd packages/verify-receipt && npm test` locally before requesting
-   review.
+4. Run both verifier suites locally before requesting review. From a clean
+   checkout, `dist/` is not committed, so the TypeScript build step is required:
+
+   ```bash
+   pip install -e packages/verify-receipt-py && pip install pytest cryptography
+   pytest packages/verify-receipt-py/tests/ -q
+   (cd packages/verify-receipt && npm ci && npm run build && npm test)
+   ```
 5. If the change touches the spec or the canonicalisation rule, run
    `node scripts/make-interop-fixture.mjs` to confirm cross-language
    parity still holds.

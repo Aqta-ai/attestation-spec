@@ -8,3 +8,6 @@ __pycache__/
 .pytest_cache/
 .DS_Store
 *.log
+
+# npm auth config, never commit (tokens)
+.npmrc

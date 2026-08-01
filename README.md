@@ -58,25 +58,45 @@ gUoUhIvptKAoLTnry3VrDtOQEWggGQveLrHFVrfNqmE
 
 ## What you'll see
 
-A valid receipt prints the seal intact; a tampered one prints it sheared.
+A valid receipt prints `sealed`. Change any field and the signature no longer
+matches the key, so the same receipt prints `broken`.
 
+```console
+$ aqta-verify-receipt test-vectors/valid/001-allowed.json --integrity-only
+
+  •ᴥ• Seal · ATTESTATION-v1
+
+  outcome ALLOWED
+  model   gpt-4o
+  rules   budget_guard
+  key     untrusted embedded key (integrity only)
+  request 8f3a7e2b…0e9f8a
+  id      00000000…0001
+
+  ✓ sealed   signature valid, checked offline
 ```
-           ▄▄▄▄▄▄▄▄
-         ▄███████▀████▄▄
-       ▄████████████████
-       ██████████████▀▀
-      █████████████▀
-     ▄█████████████
-    ▄██████████████
-  ▄█████████████████
-▄███████████████████
-████████████████████
-██████████████  ████
- ███████████    ███
-   ▀▀▀████▄▄▄▄▄███▀
-   sealed · aqta.ai
-ok  ALLOWED  2d41...871e94c  pinned key
+
+The same command on a receipt whose signature has been tampered with:
+
+```console
+$ aqta-verify-receipt test-vectors/invalid/001-tampered-signature.json --integrity-only
+
+  •ᴥ• Seal · ATTESTATION-v1
+
+  outcome ALLOWED
+  model   gpt-4o
+  rules   budget_guard
+  key     untrusted embedded key (integrity only)
+  request 8f3a7e2b…0e9f8a
+  id      00000000…ffff
+
+  ✗ broken   signature check failed
 ```
+
+Exit code is 0 when the signature verifies and 1 when it does not, so the check
+scripts cleanly. `--integrity-only` checks the receipt against the key embedded
+in it, which proves the receipt is internally consistent but not who issued it.
+Pass `--key` with the published key above to bind it to the issuer.
 
 ## Contents
 
@@ -89,9 +109,19 @@ ok  ALLOWED  2d41...871e94c  pinned key
 | [test-vectors/](./test-vectors) | Known-good and known-bad receipts |
 | [CONFORMANCE.md](./CONFORMANCE.md) | Issuer and verifier expectations |
 
+Run the whole suite from a clean checkout. Each block is independent, so you can
+paste them one at a time or all together.
+
 ```bash
+# Python verifier: 38 tests
+pip install -e packages/verify-receipt-py
+pip install pytest cryptography
 pytest packages/verify-receipt-py/tests/ -q
-cd packages/verify-receipt && npm ci && npm test
+
+# TypeScript verifier: 11 tests. The build step is required, dist/ is not committed.
+(cd packages/verify-receipt && npm ci && npm run build && npm test)
+
+# Cross-implementation check: every test vector, both verifiers, same verdict.
 node scripts/make-interop-fixture.mjs
 ```
 

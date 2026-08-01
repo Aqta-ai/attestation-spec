@@ -1,0 +1,46 @@
+name: readme
+
+# The README tells a reviewer to paste three commands and watch them pass. This
+# job runs those exact commands from a clean checkout, so the quickstart can
+# never drift ahead of the code again. If you edit the block in README.md,
+# edit it here too and keep the two identical.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    # Weekly, so an upstream dependency change surfaces here and not in front
+    # of someone evaluating the verifier.
+    - cron: "0 6 * * 1"
+
+jobs:
+  quickstart:
+    name: README quickstart runs from a clean checkout
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      # Block 1, verbatim from README.md
+      - name: Python verifier
+        run: |
+          pip install -e packages/verify-receipt-py
+          pip install pytest cryptography
+          pytest packages/verify-receipt-py/tests/ -q
+
+      # Block 2, verbatim from README.md
+      - name: TypeScript verifier
+        run: |
+          (cd packages/verify-receipt && npm ci && npm run build && npm test)
+
+      # Block 3, verbatim from README.md
+      - name: Cross-implementation interop
+        run: node scripts/make-interop-fixture.mjs
