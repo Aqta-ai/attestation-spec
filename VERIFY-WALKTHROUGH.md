@@ -97,9 +97,9 @@ this demonstration receipt does not, and the verifier says so.
 - Change one character of `model` or `outcome` and re-run: `valid: false`.
 - Add any thirteenth top-level field: `valid: false` under strict mode (the spec forbids
   extra fields in v1).
-- Run the conformance vectors in [CONFORMANCE.md](./CONFORMANCE.md): 14 vectors, 6 valid and
+- Run the conformance vectors in [CONFORMANCE.md](./CONFORMANCE.md): 15 vectors, 7 valid and
   8 deliberately invalid (wrong signature, mutated fields, malformed hashes, unknown fields).
-  A conformant verifier must agree on all 14.
+  A conformant verifier must agree on all 15.
 - There is also an in-browser verifier at [aqta.ai/verify](https://aqta.ai/verify) that runs
   the same check client-side and pre-verifies a signed sample on load.
 
