@@ -108,6 +108,7 @@ Pass `--key` with the published key above to bind it to the issuer.
 | [examples/](./examples) | Reference issuer and sample receipt |
 | [test-vectors/](./test-vectors) | Known-good and known-bad receipts |
 | [CONFORMANCE.md](./CONFORMANCE.md) | Issuer and verifier expectations |
+| [RELATIONSHIP-TO-SCITT.md](./RELATIONSHIP-TO-SCITT.md) | Where this sits against RFC 9943, and where it is weaker |
 
 Run the whole suite from a clean checkout. Each block is independent, so you can
 paste them one at a time or all together.
