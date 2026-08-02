@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://aqta.ai/brand/seal-mark-512.png" alt="Seal" width="168" height="168" />
+  <img src="https://aqta.ai/brand/seal-mark-512.png" alt="Seal" width="96" height="96" />
 </p>
 
 # aqta-verify-receipt
@@ -18,20 +18,42 @@ Same algorithm on npm and PyPI. Reference implementation, not a platform SDK.
 ## 30-second check
 
 ```bash
-# download a receipt JSON, then:
-npx aqta-verify-receipt@1.0.7 receipt.json \
+npx aqta-verify-receipt@1.0.8 receipt.json \
   --key gUoUhIvptKAoLTnry3VrDtOQEWggGQveLrHFVrfNqmE
 ```
 
-Or pipe a public share link body:
+Default output is one compact line (words carry meaning; colour is optional):
+
+```
+✓ valid  ALLOWED  2d41…871e94c  pinned issuer key
+```
+
+Invalid:
+
+```
+✕ invalid  signature mismatch  2d41…871e94c
+```
+
+Optional flourish (never the proof):
 
 ```bash
-curl -sS https://api.aqta.ai/r/YOUR_RECEIPT_ID | npx aqta-verify-receipt@1.0.7 - \
-  --key gUoUhIvptKAoLTnry3VrDtOQEWggGQveLrHFVrfNqmE
+npx aqta-verify-receipt@1.0.8 receipt.json --key <pinned> --pretty
+# …
+◈ seal intact · verified offline
 ```
 
-`ok` + exit `0` means the Ed25519 signature verifies against the pinned key.
-`fail` + exit `1` means it does not. Exit `2` is usage or IO.
+Automation:
+
+```bash
+npx aqta-verify-receipt@1.0.8 receipt.json --key <pinned> --json
+npx aqta-verify-receipt@1.0.8 receipt.json --key <pinned> -q; echo $?
+```
+
+| Exit | Meaning |
+|------|---------|
+| `0` | valid |
+| `1` | invalid |
+| `2` | usage / IO |
 
 Production public key (also at
 [`/v1/attestation/public-key`](https://api.aqta.ai/v1/attestation/public-key),
@@ -78,8 +100,8 @@ verify collapses trust back to "trust the issuer's server right now".
 ## CLI
 
 ```
-aqta-verify-receipt <file|-> --key <base64url> [--no-strict] [-q]
-aqta-verify-receipt <file|-> --integrity-only [--no-strict] [-q]
+aqta-verify-receipt <file|-> --key <base64url> [options]
+aqta-verify-receipt <file|-> --integrity-only [options]
 ```
 
 | Flag | Meaning |
@@ -87,7 +109,11 @@ aqta-verify-receipt <file|-> --integrity-only [--no-strict] [-q]
 | `--key` | Pin issuer identity (required for counsel-grade). |
 | `--integrity-only` | Signature vs embedded key only; returns untrusted. Anyone can self-sign. |
 | `--no-strict` | Allow unknown top-level fields |
+| `--json` | One JSON object on stdout |
+| `--pretty` | Optional human flourish after the compact line (not the proof) |
 | `-q` | Silent; exit code only |
+
+`NO_COLOR=1` disables colour. Meaning never depends on colour alone.
 
 ## API
 
@@ -111,7 +137,8 @@ Conformance suite (6 valid + 8 invalid):
 ## What this is not
 
 Not a governance dashboard. Not a cost router. Not a chain explorer.
-A small verifier for one signed model-call receipt.
+A small verifier for one signed model-call receipt. The novel part is the
+receipt format and offline verification model, not ASCII theatre.
 
 ## Security
 

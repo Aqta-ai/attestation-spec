@@ -9,6 +9,24 @@ own versioning contract described in [CONFORMANCE.md](./CONFORMANCE.md).
 
 ## [Unreleased]
 
+## [1.0.8] - 2026-08-02 (compact CLI default; --pretty / --json)
+
+### Changed
+
+- **CLI default is one compact stdout line.** Words carry the verdict
+  (`valid` / `invalid`); colour is optional and disabled under `NO_COLOR` or
+  non-TTY. The large block-character seal is gone from the default path.
+- Interactive and piped runs share the same compact contract. Exit `0` valid,
+  `1` invalid, `2` usage/IO.
+- **`--pretty`** adds a short flourish (`seal intact · verified offline`),
+  never changes the exit code, and is not the README's main proof.
+- **`--json`** emits one machine object on stdout for automation.
+- Package READMEs lead with the compact line; package-page mark shrunk.
+
+### Notes
+
+- Published as `aqta-verify-receipt` **1.0.8** on both **npm** and **PyPI**.
+
 ## [1.0.7] - 2026-07-25 (CLI stamp rewrite, package-page branding)
 
 ### Changed

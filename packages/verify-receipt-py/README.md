@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://aqta.ai/brand/seal-mark-512.png" alt="Seal" width="168" height="168" />
+  <img src="https://aqta.ai/brand/seal-mark-512.png" alt="Seal" width="96" height="96" />
 </p>
 
 # aqta-verify-receipt
@@ -16,9 +16,29 @@ without contacting Aqta. No account. Same algorithm as the npm package.
 ## 30-second check
 
 ```bash
-pip install aqta-verify-receipt
+pip install aqta-verify-receipt==1.0.8
 aqta-verify-receipt receipt.json \
   --key gUoUhIvptKAoLTnry3VrDtOQEWggGQveLrHFVrfNqmE
+```
+
+Default output is one compact line (words carry meaning; colour is optional):
+
+```
+✓ valid  ALLOWED  2d41…871e94c  pinned issuer key
+```
+
+Invalid:
+
+```
+✕ invalid  signature mismatch  2d41…871e94c
+```
+
+Optional flourish (never the proof):
+
+```bash
+aqta-verify-receipt receipt.json --key <pinned> --pretty
+# …
+◈ seal intact · verified offline
 ```
 
 Or pipe:
@@ -28,7 +48,12 @@ curl -sS https://api.aqta.ai/r/YOUR_RECEIPT_ID | aqta-verify-receipt - \
   --key gUoUhIvptKAoLTnry3VrDtOQEWggGQveLrHFVrfNqmE
 ```
 
-`ok` + exit `0` means the Ed25519 signature verifies against the pinned key.
+| Exit | Meaning |
+|------|---------|
+| `0` | valid |
+| `1` | invalid |
+| `2` | usage / IO |
+
 Production key id: `aqta-att-0a18c7c16bc18a12`
 ([`/v1/attestation/public-key`](https://api.aqta.ai/v1/attestation/public-key)).
 
@@ -50,9 +75,20 @@ if not result.valid:
 ## CLI
 
 ```
-aqta-verify-receipt <file|-> --key <base64url> [--no-strict] [-q]
-aqta-verify-receipt <file|-> --integrity-only [--no-strict] [-q]
+aqta-verify-receipt <file|-> --key <base64url> [--no-strict] [--json] [--pretty] [-q]
+aqta-verify-receipt <file|-> --integrity-only [--no-strict] [--json] [--pretty] [-q]
 ```
+
+| Flag | Meaning |
+|------|---------|
+| `--key` | Pin issuer identity (required for counsel-grade). |
+| `--integrity-only` | Signature vs embedded key only; returns untrusted. Anyone can self-sign. |
+| `--no-strict` | Allow unknown top-level fields |
+| `--json` | One JSON object on stdout |
+| `--pretty` | Optional human flourish after the compact line (not the proof) |
+| `-q` | Silent; exit code only |
+
+`NO_COLOR=1` disables colour. Meaning never depends on colour alone.
 
 Pinning is required by default. Without `--key`, pass `--integrity-only`
 (embedded key only; anyone can self-sign; result is marked untrusted).
@@ -64,7 +100,8 @@ Pinning is required by default. Without `--key`, pass `--integrity-only`
 ## What this is not
 
 Not a governance dashboard. Not a cost router. A small verifier for one
-signed model-call receipt.
+signed model-call receipt. The novel part is the receipt format and offline
+verification model, not ASCII theatre.
 
 ## Licence
 

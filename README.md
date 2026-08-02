@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://aqta.ai/brand/seal-mark-512.png" alt="Seal" width="168" height="168" />
+  <img src="https://aqta.ai/brand/seal-mark-512.png" alt="Seal" width="96" height="96" />
 </p>
 
 # ATTESTATION-v1
@@ -58,45 +58,26 @@ gUoUhIvptKAoLTnry3VrDtOQEWggGQveLrHFVrfNqmE
 
 ## What you'll see
 
-A valid receipt prints `sealed`. Change any field and the signature no longer
-matches the key, so the same receipt prints `broken`.
+Default output is one compact line. Words carry the verdict; colour is optional.
 
 ```console
 $ aqta-verify-receipt test-vectors/valid/001-allowed.json --integrity-only
-
-  •ᴥ• Seal · ATTESTATION-v1
-
-  outcome ALLOWED
-  model   gpt-4o
-  rules   budget_guard
-  key     untrusted embedded key (integrity only)
-  request 8f3a7e2b…0e9f8a
-  id      00000000…0001
-
-  ✓ sealed   signature valid, checked offline
+✓ valid  ALLOWED  0000…0001  untrusted embedded key (integrity only)
 ```
 
-The same command on a receipt whose signature has been tampered with:
+Tampered signature:
 
 ```console
 $ aqta-verify-receipt test-vectors/invalid/001-tampered-signature.json --integrity-only
-
-  •ᴥ• Seal · ATTESTATION-v1
-
-  outcome ALLOWED
-  model   gpt-4o
-  rules   budget_guard
-  key     untrusted embedded key (integrity only)
-  request 8f3a7e2b…0e9f8a
-  id      00000000…ffff
-
-  ✗ broken   signature check failed
+✕ invalid  signature mismatch  0000…ffff
 ```
 
-Exit code is 0 when the signature verifies and 1 when it does not, so the check
-scripts cleanly. `--integrity-only` checks the receipt against the key embedded
-in it, which proves the receipt is internally consistent but not who issued it.
-Pass `--key` with the published key above to bind it to the issuer.
+Exit `0` valid, `1` invalid, `2` usage/IO. `--json` for automation. `--pretty`
+adds a short flourish (`seal intact · verified offline`); it is never the proof.
+
+`--integrity-only` checks the receipt against the key embedded in it, which
+proves internal consistency but not who issued it. Pass `--key` with the
+published key above to bind it to the issuer.
 
 ## Contents
 

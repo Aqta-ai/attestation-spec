@@ -5,94 +5,93 @@
  * Offline check of an ATTESTATION-v1 receipt. No account. No network by
  * default. Exit 0 if the signature verifies, 1 if not, 2 on usage/IO errors.
  *
+ * Default output is one compact, scriptable line on stdout. Colour is
+ * presentation only (NO_COLOR / non-TTY disables it). --pretty adds a short
+ * human flourish; it is never the verification contract.
+ *
  *   npx aqta-verify-receipt receipt.json --key <base64url-ed25519-key>
  *   curl -sS https://api.aqta.ai/r/REC_ID | npx aqta-verify-receipt - --key <key>
- *   npx aqta-verify-receipt receipt.json --integrity-only
+ *   npx aqta-verify-receipt receipt.json --key <key> --json
+ *   npx aqta-verify-receipt receipt.json --key <key> --pretty
  */
 import { readFileSync } from 'fs';
 import { verifyReceipt, AttestationReceipt } from './index';
 
-const PUB_KEY_HINT =
-  'https://api.aqta.ai/v1/attestation/public-key';
+const PUB_KEY_HINT = 'https://api.aqta.ai/v1/attestation/public-key';
 
-/**
- * Human-facing stamp on stderr, TTY only, so piped runs still see exactly the
- * machine line on stdout. A small mark, aligned rows, and a single coloured
- * verdict token: green when the signature holds, red when it does not. No
- * block art, no flood of colour. This is a tool an auditor runs.
- */
-function stamp(
-  receipt: AttestationReceipt,
-  valid: boolean,
-  reason: string | undefined,
-  trust: string
-): void {
-  if (!process.stderr.isTTY) return;
-
-  const utf8 = /UTF-?8/i.test(
+function useUtf8(): boolean {
+  return /UTF-?8/i.test(
     process.env.LC_ALL || process.env.LC_CTYPE || process.env.LANG || ''
   );
-  const MARK = utf8 ? '•ᴥ•' : 'o.o';
-  const DOT = utf8 ? '·' : '-';
-  const ELL = utf8 ? '…' : '...';
-  const OK = utf8 ? '✓' : '+';
-  const NO = utf8 ? '✗' : 'x';
+}
 
-  const ESC = String.fromCharCode(27);
-  const colour = process.env.NO_COLOR === undefined;
-  const paint = (code: string, s: string): string =>
-    colour ? ESC + '[' + code + 'm' + s + ESC + '[0m' : s;
-  const dim = (s: string): string => paint('2', s);
-
-  const r = receipt as unknown as Record<string, unknown>;
-  const str = (v: unknown): string => (typeof v === 'string' ? v : '?');
-  const mid = (v: unknown, head = 8, tail = 6): string => {
-    const s = str(v);
-    return s.length > head + tail + 1 ? s.slice(0, head) + ELL + s.slice(-tail) : s;
-  };
-  const policies =
-    Array.isArray(r.policy_applied) && r.policy_applied.length
-      ? (r.policy_applied as unknown[]).map(str).join(' ' + DOT + ' ')
-      : '';
-
-  const rows: Array<[string, string]> = [
-    ['outcome', str(r.outcome)],
-    ['model', str(r.model)],
-  ];
-  if (policies) rows.push(['rules', policies]);
-  rows.push(['key', trust]);
-  rows.push(['request', mid(r.request_hash)]);
-  rows.push(['id', mid(r.attestation_id, 8, 4)]);
-
-  const out = ['', '  ' + dim(MARK + ' Seal ' + DOT + ' ATTESTATION-v1'), ''];
-  for (const [k, v] of rows) out.push('  ' + dim(k.padEnd(8)) + v);
-  out.push('');
-  out.push(
-    valid
-      ? '  ' + paint('32', OK + ' sealed') + '   ' + dim('signature valid, checked offline')
-      : '  ' + paint('31', NO + ' broken') + '   ' + dim(reason ?? 'signature does not match the key')
+function useColour(): boolean {
+  return (
+    process.stdout.isTTY === true &&
+    process.env.NO_COLOR === undefined &&
+    process.env.TERM !== 'dumb'
   );
-  out.push('');
-  process.stderr.write(out.join('\n') + '\n');
+}
+
+function paint(code: string, s: string): string {
+  if (!useColour()) return s;
+  return `\x1b[${code}m${s}\x1b[0m`;
+}
+
+function mid(s: string, head = 4, tail = 6): string {
+  const ell = useUtf8() ? '…' : '...';
+  return s.length > head + tail + 1 ? `${s.slice(0, head)}${ell}${s.slice(-tail)}` : s;
 }
 
 function usage(): never {
-  console.error(`aqta-verify-receipt - offline check for ATTESTATION-v1 (Seal)
+  process.stderr.write(`aqta-verify-receipt - offline check for ATTESTATION-v1 (Seal)
 
 Usage:
-  aqta-verify-receipt <receipt.json | -> --key <base64url> [--no-strict] [-q]
-  aqta-verify-receipt <receipt.json | -> --integrity-only [--no-strict] [-q]
+  aqta-verify-receipt <receipt.json | -> --key <base64url> [options]
+  aqta-verify-receipt <receipt.json | -> --integrity-only [options]
 
 Options:
   --key <key>        pin the issuer public key (required for counsel-grade)
   --integrity-only   check signature vs embedded key only (anyone can self-sign)
   --no-strict        allow unknown top-level fields
+  --json             machine JSON on stdout (one object)
+  --pretty           optional human flourish after the compact line
   -q, --quiet        exit code only
+
+Contract:
+  exit 0 valid · exit 1 invalid · exit 2 usage/IO
+  default stdout is one compact line (words carry meaning; colour is optional)
+  --pretty never changes the exit code or the verify result
 
 Pin the production key once from ${PUB_KEY_HINT}
 (field public_key). Do not re-fetch on every verify.
 `);
   process.exit(2);
+}
+
+function compactLine(
+  valid: boolean,
+  outcome: string,
+  id: string,
+  trustOrReason: string
+): string {
+  const utf8 = useUtf8();
+  const ok = utf8 ? '✓' : '+';
+  const no = utf8 ? '✕' : 'x';
+  if (valid) {
+    return `${paint('32', `${ok} valid`)}  ${outcome}  ${mid(id)}  ${trustOrReason}`;
+  }
+  return `${paint('31', `${no} invalid`)}  ${trustOrReason}  ${mid(id)}`;
+}
+
+function prettyExtra(valid: boolean): string {
+  const utf8 = useUtf8();
+  const mark = utf8 ? '◈' : '*';
+  const dot = utf8 ? '·' : '-';
+  if (valid) {
+    return `${mark} seal intact ${dot} verified offline`;
+  }
+  return `${mark} seal broken ${dot} do not trust this receipt`;
 }
 
 function main(): void {
@@ -104,6 +103,8 @@ function main(): void {
   let integrityOnly = false;
   let strict = true;
   let quiet = false;
+  let asJson = false;
+  let pretty = false;
   for (let i = 0; i < args.length; i++) {
     const a = args[i];
     if (a === '--key') {
@@ -115,6 +116,10 @@ function main(): void {
       strict = false;
     } else if (a === '--quiet' || a === '-q') {
       quiet = true;
+    } else if (a === '--json') {
+      asJson = true;
+    } else if (a === '--pretty') {
+      pretty = true;
     } else if (!file) {
       file = a;
     } else {
@@ -123,13 +128,17 @@ function main(): void {
   }
   if (!file) usage();
   if (!trustedKey && !integrityOnly) {
-    console.error(
-      'aqta-verify-receipt: pass --key <pinned> (or --integrity-only for embedded-key checks)'
+    process.stderr.write(
+      'aqta-verify-receipt: pass --key <pinned> (or --integrity-only for embedded-key checks)\n'
     );
     process.exit(2);
   }
   if (trustedKey && integrityOnly) {
-    console.error('aqta-verify-receipt: use --key or --integrity-only, not both');
+    process.stderr.write('aqta-verify-receipt: use --key or --integrity-only, not both\n');
+    process.exit(2);
+  }
+  if (quiet && (asJson || pretty)) {
+    process.stderr.write('aqta-verify-receipt: -q cannot be combined with --json or --pretty\n');
     process.exit(2);
   }
 
@@ -137,7 +146,9 @@ function main(): void {
   try {
     raw = file === '-' ? readFileSync(0, 'utf8') : readFileSync(file, 'utf8');
   } catch {
-    console.error(`aqta-verify-receipt: cannot read ${file === '-' ? 'stdin' : file}`);
+    process.stderr.write(
+      `aqta-verify-receipt: cannot read ${file === '-' ? 'stdin' : file}\n`
+    );
     process.exit(2);
   }
 
@@ -145,7 +156,7 @@ function main(): void {
   try {
     receipt = JSON.parse(raw);
   } catch {
-    console.error('aqta-verify-receipt: input is not valid JSON');
+    process.stderr.write('aqta-verify-receipt: input is not valid JSON\n');
     process.exit(2);
   }
 
@@ -155,22 +166,29 @@ function main(): void {
     strictFields: strict,
   });
 
-  if (!quiet) {
-    const trust =
-      result.keySource === 'pinned'
-        ? 'pinned key'
-        : 'untrusted embedded key (integrity only)';
-    stamp(receipt, result.valid, result.reason, trust);
+  const id = typeof receipt.attestation_id === 'string' ? receipt.attestation_id : '?';
+  const outcome = typeof receipt.outcome === 'string' ? receipt.outcome : '?';
+  const trust =
+    result.keySource === 'pinned'
+      ? 'pinned issuer key'
+      : 'untrusted embedded key (integrity only)';
 
-    // One machine-readable line, emitted only when stdout is not a terminal,
-    // so an interactive run shows just the stamp and `... | tool` still parses.
-    if (!process.stdout.isTTY) {
-      const id = typeof receipt.attestation_id === 'string' ? receipt.attestation_id : '?';
-      const outcome = typeof receipt.outcome === 'string' ? receipt.outcome : '?';
-      if (result.valid) {
-        console.log(`ok  ${outcome}  ${id}  ${trust}`);
-      } else {
-        console.log(`fail  ${result.reason ?? 'verification failed'}  ${id}`);
+  if (!quiet) {
+    if (asJson) {
+      process.stdout.write(
+        JSON.stringify({
+          valid: result.valid,
+          outcome,
+          attestation_id: id,
+          key_source: result.keySource ?? null,
+          reason: result.valid ? null : result.reason ?? 'verification failed',
+        }) + '\n'
+      );
+    } else {
+      const detail = result.valid ? trust : result.reason ?? 'verification failed';
+      process.stdout.write(compactLine(result.valid, outcome, id, detail) + '\n');
+      if (pretty) {
+        process.stdout.write(prettyExtra(result.valid) + '\n');
       }
     }
   }
