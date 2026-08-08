@@ -30,16 +30,25 @@ ref = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(ref)
 
 issuer = ref.ReferenceIssuer.new()
-receipt = issuer.sign(
-    trace_id="trace-interop-test",
-    org_id="org-interop-test",
-    request_hash="8f3a7e2b9c4d5f6a1b0c9d8e7f6a5b4c3d2e1f0a9b8c7d6e5f4a3b2c1d0e9f8a",
-    model="gpt-4o",
-    outcome="ALLOWED",
-    policy_applied=["budget_guard", "loop_guard"],
-    cost_prevented_eur=0.0,
-)
-print(json.dumps(receipt))
+
+# Sweep the number grammar, not one convenient value. This script pinned
+# cost_prevented_eur=0.0 and therefore could never observe that Python and
+# JavaScript disagree on how to render a float below 1e-4, which is inside
+# what spec 4's six digits of precision permits. Every receipt below must
+# verify in the TypeScript verifier.
+COSTS = [0.0, 0.5, 1.25, 2.5, 0.0001, 0.00009, 0.000015, 0.000001, 1e21]
+out = []
+for _c in COSTS:
+    out.append(issuer.sign(
+        trace_id="trace-interop-test",
+        org_id="org-interop-test",
+        request_hash="8f3a7e2b9c4d5f6a1b0c9d8e7f6a5b4c3d2e1f0a9b8c7d6e5f4a3b2c1d0e9f8a",
+        model="gpt-4o",
+        outcome="ALLOWED",
+        policy_applied=["budget_guard", "loop_guard"],
+        cost_prevented_eur=_c,
+    ))
+print(json.dumps(out))
 `;
 
 const py = spawnSync('python3', ['-c', pyScript], { encoding: 'utf8' });
@@ -48,7 +57,20 @@ if (py.status !== 0) {
   process.exit(1);
 }
 
-const receipt = JSON.parse(py.stdout.trim());
+const receipts = JSON.parse(py.stdout.trim());
+for (const [i, rec] of receipts.entries()) {
+  const res = verifyReceipt(rec, { trustedPublicKey: rec.public_key });
+  if (!res.valid) {
+    console.error(
+      `Interop FAILED at cost_prevented_eur=${JSON.stringify(rec.cost_prevented_eur)} ` +
+        `(case ${i}): ${res.reason}`
+    );
+    process.exit(1);
+  }
+}
+console.log(`Number-grammar sweep: ${receipts.length}/${receipts.length} verified.`);
+
+const receipt = receipts[0];
 console.log('Receipt produced by reference issuer:');
 console.log('  spec version:', receipt.v);
 console.log('  attestation_id:', receipt.attestation_id);

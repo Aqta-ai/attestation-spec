@@ -50,6 +50,15 @@ export interface VerifyOptions {
    * top-level fields."
    */
   strictFields?: boolean;
+
+  /**
+   * Name of a non-ATTESTATION-v1 envelope the caller is deliberately
+   * verifying. Foreign envelopes carry their own field sets, so none of
+   * ATTESTATION-v1's structural or semantic rules apply; naming one here is
+   * how a caller says it understands that. Without it, a foreign envelope is
+   * rejected rather than silently verified under weaker rules.
+   */
+  envelope?: EnvelopeFormat;
 }
 
 export type KeySource = 'pinned' | 'untrusted';
@@ -102,13 +111,21 @@ function base64urlDecode(s: string): Uint8Array {
  * array values). It is NOT a general-purpose canonical-JSON library.
  */
 function canonicalise(payload: Record<string, unknown>): Uint8Array {
-  const keys = Object.keys(payload).sort();
-  const parts: string[] = [];
-  for (const k of keys) {
-    parts.push(`${JSON.stringify(k)}:${canonicalValue(payload[k])}`);
-  }
-  return new TextEncoder().encode('{' + parts.join(',') + '}');
+  return new TextEncoder().encode(canonicalValue(payload));
 }
+
+/**
+ * RFC 3339 with an explicit offset, range-checked without Date.
+ *
+ * Must stay character-for-character identical to _RFC3339_OFFSET in the Python
+ * verifier; the two implementations agreeing on what a timestamp is is the
+ * whole point of having two.
+ */
+const RFC3339_OFFSET =
+  /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])[Tt ]([01]\d|2[0-3]):[0-5]\d:([0-5]\d|60)(\.\d+)?([Zz]|[+-]([01]\d|2[0-3]):[0-5]\d)$/;
+
+/** Matches an unpaired surrogate, which has no UTF-8 encoding. */
+const LONE_SURROGATE = /[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/;
 
 function canonicalValue(v: unknown): string {
   if (v === null || v === undefined) {
@@ -118,17 +135,38 @@ function canonicalValue(v: unknown): string {
     return '[' + v.map(canonicalValue).join(',') + ']';
   }
   if (typeof v === 'number') {
-    // Spec section 6: integer-valued numbers serialise without a decimal
-    // point. JSON.stringify does that natively, so nothing extra is needed
-    // here. Python's json.dumps does NOT (it yields "0.0" for float 0.0),
-    // which is why the spec puts the coercion duty on the issuer: an
-    // integer-valued float must become an int before it is signed. A receipt
-    // carrying a literal "0.0" was signed by a non-conforming issuer, and
-    // failing it is correct behaviour, not a gap in this verifier.
+    if (!Number.isFinite(v)) throw new Error('non-finite number');
+    // JSON.stringify implements ECMA-262 Number::toString, which is exactly
+    // the number grammar RFC 8785 (JCS) 3.2.2.3 specifies. Python's default
+    // float repr does not agree with it below 1e-4, so the Python verifier
+    // implements this algorithm rather than the reverse.
     return JSON.stringify(v);
   }
-  // Strings, booleans
-  return JSON.stringify(v);
+  if (typeof v === 'string') {
+    // JSON.stringify escapes a lone surrogate to \uXXXX and would happily sign
+    // it, while a UTF-8 encoder cannot represent it at all. Rejecting in both
+    // implementations is the only way they agree on such a receipt.
+    if (LONE_SURROGATE.test(v)) throw new Error('string contains an unpaired surrogate');
+    return JSON.stringify(v);
+  }
+  if (typeof v === 'boolean') {
+    return JSON.stringify(v);
+  }
+  if (typeof v === 'object') {
+    // Nested objects sort too. No conformant receipt nests, but Python sorted
+    // recursively and this did not, so the two would have diverged the moment
+    // a field ever did.
+    const o = v as Record<string, unknown>;
+    return (
+      '{' +
+      Object.keys(o)
+        .sort()
+        .map((k) => `${JSON.stringify(k)}:${canonicalValue(o[k])}`)
+        .join(',') +
+      '}'
+    );
+  }
+  throw new Error(`not canonicalisable: ${typeof v}`);
 }
 
 /**
@@ -178,6 +216,26 @@ export function detectEnvelope(receipt: unknown): EnvelopeFormat | null {
   return null;
 }
 
+/** The Ed25519 group order L, RFC 8032 section 5.1. */
+const ED25519_L =
+  7237005577332262213973186563042994240857116359379907606001950938285454250989n;
+
+/**
+ * RFC 8032 5.1.7 requires the signature scalar S to decode in [0, L).
+ *
+ * tweetnacl omits this check, so 16 byte-distinct signatures verified for any
+ * one receipt: S, S+L, ... S+15L. No forgery, since producing any of them
+ * needs a genuine signature over unchanged content, but the two published
+ * verifiers returned different verdicts on identical bytes, and a transparency
+ * log that keys a leaf on receipt bytes would see 16 distinct leaves for one
+ * decision.
+ */
+function canonicalScalar(sig: Uint8Array): boolean {
+  let s = 0n;
+  for (let i = 63; i >= 32; i--) s = (s << 8n) | BigInt(sig[i]);
+  return s < ED25519_L;
+}
+
 /**
  * Signature check shared by every envelope.
  *
@@ -223,6 +281,9 @@ function verifySignedEnvelope(
     const pub = base64urlDecode(embeddedKey);
     if (sig.length !== 64) return { valid: false, reason: 'signature length != 64 bytes' };
     if (pub.length !== 32) return { valid: false, reason: 'public key length != 32 bytes' };
+    if (!canonicalScalar(sig)) {
+      return { valid: false, reason: 'non-canonical signature scalar' };
+    }
     if (!nacl.sign.detached.verify(canonical, sig, pub)) {
       return { valid: false, reason: 'signature check failed' };
     }
@@ -255,7 +316,20 @@ export function verifyReceipt(
   }
   // Other issuers' envelopes carry their own field sets, so only the signature
   // is checked. The structural rules below are ATTESTATION-v1's alone.
+  //
+  // Which is why it has to be opted into. Detecting a foreign envelope purely
+  // by field name meant any object naming its fields signature_b64 and
+  // public_key_b64 skipped every structural and semantic rule: a payload with
+  // v:99, outcome:"MAYBE" and request_hash:"nope" verified, and so did an
+  // object that was not a receipt at all. Exit 0 then answered "were these
+  // bytes signed by that key" rather than "is this a conformant receipt".
   if (envelope !== 'ATTESTATION-v1') {
+    if (options.envelope !== envelope) {
+      return {
+        valid: false,
+        reason: `envelope ${envelope} requires explicit opt-in (pass envelope: '${envelope}'); ATTESTATION-v1 rules do not apply to it`,
+      };
+    }
     return verifySignedEnvelope(r, envelope, options);
   }
 
@@ -285,6 +359,41 @@ export function verifyReceipt(
   }
   if (typeof r.request_hash !== 'string' || !/^[0-9a-f]{64}$/.test(r.request_hash)) {
     return { valid: false, reason: 'request_hash must be 64 lowercase hex chars' };
+  }
+  // The remaining §7 semantic checks. The Python verifier has always applied
+  // these; this one did not, so the two reference implementations returned
+  // different answers for the same receipt. A format whose verifiers disagree
+  // cannot settle a dispute, so they are enforced identically in both.
+  if (!r.policy_applied.every((p: unknown) => typeof p === 'string')) {
+    return { valid: false, reason: 'policy_applied must contain only strings' };
+  }
+  const sorted = [...(r.policy_applied as string[])].sort();
+  if ((r.policy_applied as string[]).some((p, i) => p !== sorted[i])) {
+    return { valid: false, reason: 'policy_applied must be in lexicographic order' };
+  }
+  if (typeof r.cost_prevented_eur !== 'number' || !Number.isFinite(r.cost_prevented_eur)) {
+    return { valid: false, reason: 'cost_prevented_eur must be a number' };
+  }
+  if (r.cost_prevented_eur < 0) {
+    return { valid: false, reason: 'cost_prevented_eur must be non-negative' };
+  }
+  // Well-formedness only. Freshness stays informative per CONFORMANCE.md, so
+  // an old receipt still verifies offline; a timestamp that is not a datetime
+  // with an explicit offset is a malformed field, not a stale one.
+  //
+  // The range checks live in the pattern rather than in Date.parse. Deferring
+  // to V8 made this verifier reject "2016-12-31T23:59:60Z", a real leap second
+  // and legal RFC 3339, while still accepting February 30th because V8 rolls it
+  // forward. Python had no such clause, so the two disagreed on both. This
+  // pattern is character-for-character the one in the Python verifier.
+  if (
+    typeof r.timestamp !== 'string' ||
+    !RFC3339_OFFSET.test(r.timestamp)
+  ) {
+    return {
+      valid: false,
+      reason: 'timestamp must be an RFC 3339 datetime with an explicit offset',
+    };
   }
 
   const pinned = options.trustedPublicKey;
@@ -326,6 +435,9 @@ export function verifyReceipt(
     }
     if (pub.length !== 32) {
       return { valid: false, reason: 'public key length != 32 bytes' };
+    }
+    if (!canonicalScalar(sig)) {
+      return { valid: false, reason: 'non-canonical signature scalar' };
     }
     const ok = nacl.sign.detached.verify(canonical, sig, pub);
     if (!ok) {

@@ -5,12 +5,12 @@
   "org_id": "org-test-vectors",
   "outcome": "ALLOWED",
   "policy_applied": [
-    "budget_guard"
+    1
   ],
   "public_key": "alWzEnrA_z9McN9z_MFfQCnH9mVgOwRZ26wrI7oix4E",
   "request_hash": "8f3a7e2b9c4d5f6a1b0c9d8e7f6a5b4c3d2e1f0a9b8c7d6e5f4a3b2c1d0e9f8a",
-  "signature": "61iYyEsqc6VilgHOdOlN3fvp3u5BbCjxLYxP8OAO9OiGrUzkNGqEDN7Fo8E1bpniSjeKfmWtymUoyp9ikmKKCQ",
+  "signature": "il8F5ethfJHK8PHi2NMRpp7ic_ZTxZm7i2qL6KL6ZuMNlCIUnp33OXumic80NwAZVgsWWacGfzRqKZ3jRmDIAw",
   "timestamp": "2026-04-23T10:15:30.000000+00:00",
   "trace_id": "trace-tv-001",
-  "v": 2
+  "v": 1
 }

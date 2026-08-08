@@ -13,8 +13,10 @@ from __future__ import annotations
 
 import base64
 import json
+import math
 import re
 from dataclasses import dataclass
+from decimal import Decimal
 from typing import Any, Literal, Mapping, Optional
 from urllib.request import urlopen
 
@@ -41,6 +43,102 @@ REQUIRED_FIELDS = frozenset(
 
 ALLOWED_OUTCOMES = frozenset({"ALLOWED", "BLOCKED", "SUPPRESSED", "PASSED"})
 _HEX64 = re.compile(r"^[0-9a-f]{64}$")
+# Range-checks the calendar without parsing, and permits a leap second (:60),
+# which is legal RFC 3339. Character-for-character identical to the regex in
+# the TypeScript verifier: the two must agree on what a timestamp is.
+_RFC3339_OFFSET = re.compile(
+    r"^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])"
+    r"[Tt ]([01]\d|2[0-3]):[0-5]\d:([0-5]\d|60)(\.\d+)?"
+    r"([Zz]|[+-]([01]\d|2[0-3]):[0-5]\d)$"
+)
+_B64URL = re.compile(r"^[A-Za-z0-9_-]+$")
+_LONE_SURROGATE = re.compile(r"[\ud800-\udfff]")
+
+
+def _js_number(x: float) -> str:
+    """ECMA-262 Number::toString, which is what RFC 8785 (JCS) 3.2.2.3 requires.
+
+    Python and JavaScript disagree about how to render a float. Python switches
+    to exponent notation below 1e-4 and zero-pads the exponent (1e-05);
+    JavaScript switches below 1e-6 and does not (0.00001). Every value in
+    0 < |x| < 1e-4 therefore canonicalised to different bytes in the two
+    reference verifiers, so a correctly signed receipt from the reference issuer
+    verified in Python and failed in JavaScript with "signature check failed".
+    spec 4 permits six digits of precision, so the whole divergent band is
+    reachable by a conforming issuer.
+
+    JavaScript is the side that matches RFC 8785, so Python moves to it.
+    """
+    if not math.isfinite(x):
+        raise ValueError("non-finite number")
+    if x == 0:
+        return "0"  # ECMA-262 renders both +0 and -0 as "0"
+    sign, digits, exp = Decimal(repr(x)).as_tuple()  # repr is shortest round-trip
+    ds = "".join(map(str, digits))
+    # n is the position of the decimal point relative to the leading digit, so
+    # it is fixed before trailing zeros are dropped. Dropping them is what makes
+    # 1.0 render as "1" and 1.2345678901234568e20 render as the shortest
+    # round-tripping form rather than the exact binary value.
+    n = len(ds) + exp
+    ds = ds.rstrip("0") or "0"
+    if -6 < n <= 21:
+        if n <= 0:
+            s = "0." + "0" * -n + ds
+        elif n >= len(ds):
+            s = ds + "0" * (n - len(ds))
+        else:
+            s = ds[:n] + "." + ds[n:]
+    else:
+        mant = ds[0] + ("." + ds[1:] if len(ds) > 1 else "")
+        s = f'{mant}e{"+" if n - 1 >= 0 else "-"}{abs(n - 1)}'
+    return ("-" if sign else "") + s
+
+
+def _canonical(value) -> str:
+    """Canonical JSON for one value, mirroring the TypeScript canonicalValue.
+
+    Written out rather than delegated to json.dumps because the float rule
+    above has to apply at every depth, and because both implementations must
+    be the same algorithm rather than two languages' defaults that happen to
+    agree on the values anyone happened to test.
+    """
+    if value is None:
+        return "null"
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    if isinstance(value, int):
+        # JSON numbers are IEEE 754 binary64 (spec 6). Python keeps large
+        # integer literals exact where JavaScript's JSON.parse rounds them, so
+        # anything outside the exactly-representable range goes through the
+        # double model to keep the two implementations on one numeric model.
+        if -(2**53) <= value <= 2**53:
+            return str(value)
+        return _js_number(float(value))
+    if isinstance(value, float):
+        return _js_number(value)
+    if isinstance(value, str):
+        if _LONE_SURROGATE.search(value):
+            # Not encodable as UTF-8, so there is no canonical payload to sign.
+            raise ValueError("string contains an unpaired surrogate")
+        return json.dumps(value, ensure_ascii=False)
+    if isinstance(value, (list, tuple)):
+        return "[" + ",".join(_canonical(v) for v in value) + "]"
+    if isinstance(value, Mapping):
+        return (
+            "{"
+            + ",".join(
+                f"{_canonical(str(k))}:{_canonical(value[k])}"
+                for k in sorted(value.keys())
+            )
+            + "}"
+        )
+    raise ValueError(f"not canonicalisable: {type(value).__name__}")
+
+
+def _canonical_bytes(payload: Mapping[str, Any]) -> bytes:
+    return _canonical(payload).encode("utf-8")
+
+
 _DEFAULT_PUBKEY_URL = "https://app.aqta.ai/security/pubkey.txt"
 
 KeySource = Literal["pinned", "untrusted"]
@@ -58,8 +156,30 @@ class VerifyResult:
 
 
 def _b64url_decode(s: str) -> bytes:
-    pad = "=" * (-len(s) % 4)
-    return base64.urlsafe_b64decode(s + pad)
+    """Strict base64url, no padding, per spec 4.
+
+    base64.urlsafe_b64decode defaults to validate=False, which silently
+    discards every character outside the alphabet and stops at the first "=".
+    Since `signature` is the one field the signature cannot cover, that made it
+    an unauthenticated write channel: arbitrary text could be appended to a
+    genuine signature and the receipt still passed a pinned check here while
+    failing in JavaScript.
+    """
+    if not isinstance(s, str) or not _B64URL.match(s):
+        raise ValueError("not base64url")
+    return base64.urlsafe_b64decode(s + "=" * (-len(s) % 4))
+
+
+def _b64_any_decode(s: str) -> bytes:
+    """Lenient decoder for foreign envelopes, which use standard base64.
+
+    Kept separate so ATTESTATION-v1 stays strict. Only the alphabet is
+    relaxed here; anything outside it is still rejected.
+    """
+    if not isinstance(s, str) or not re.match(r"^[A-Za-z0-9_+/-]+=*$", s):
+        raise ValueError("not base64")
+    t = s.rstrip("=").replace("+", "-").replace("/", "_")
+    return base64.urlsafe_b64decode(t + "=" * (-len(t) % 4))
 
 
 ENVELOPE_FIELDS = {
@@ -115,13 +235,14 @@ def _verify_signed_envelope(
         return VerifyResult(False, "public key does not match trusted key")
 
     payload = {k: v for k, v in receipt.items() if k != sig_field}
-    canonical = json.dumps(
-        payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False
-    ).encode("utf-8")
+    try:
+        canonical = _canonical_bytes(payload)
+    except (ValueError, TypeError, OverflowError, UnicodeEncodeError) as e:
+        return VerifyResult(False, f"receipt is not canonicalisable: {e}")
 
     try:
-        sig = _b64url_decode(receipt[sig_field])
-        pub = _b64url_decode(embedded)
+        sig = _b64_any_decode(receipt[sig_field])
+        pub = _b64_any_decode(embedded)
     except Exception as e:
         return VerifyResult(False, f"signature decode error: {e}")
     if len(sig) != 64:
@@ -149,6 +270,7 @@ def verify_receipt(
     trusted_public_key: Optional[str] = None,
     allow_untrusted_embedded_key: bool = False,
     strict_fields: bool = True,
+    envelope: Optional[str] = None,
 ) -> VerifyResult:
     """
     Verify a Seal attestation receipt.
@@ -165,6 +287,11 @@ def verify_receipt(
         Result includes ``key_source="untrusted"``. Default False.
     strict_fields
         If True (default), unknown top-level fields cause rejection, per spec §4.
+    envelope
+        Name of a non-ATTESTATION-v1 envelope the caller is deliberately
+        verifying. Foreign envelopes carry their own field sets, so none of
+        ATTESTATION-v1's structural or semantic rules apply to them; naming one
+        here is how a caller says it understands that.
 
     Returns
     -------
@@ -172,6 +299,7 @@ def verify_receipt(
         ``valid=True`` iff the Ed25519 signature is valid under the pinned
         (or explicitly allowed embedded) public key. Never raises.
     """
+    expect_envelope = envelope
     if not isinstance(receipt, Mapping):
         return VerifyResult(False, "receipt is not a mapping")
 
@@ -184,7 +312,22 @@ def verify_receipt(
         )
     # Other issuers' envelopes carry their own field sets, so only the
     # signature is checked. The rules below are ATTESTATION-v1's alone.
+    #
+    # That has to be opted into. Detecting a foreign envelope by field name
+    # meant any object naming its fields signature_b64/public_key_b64 skipped
+    # every structural and semantic rule: a payload carrying v:99,
+    # outcome:"MAYBE" and request_hash:"nope" verified, and so did an object
+    # that was not a receipt at all. Exit 0 then meant "these bytes were signed
+    # by that key" rather than "this is a conformant ATTESTATION-v1 receipt",
+    # which is not the question the tool is asked.
     if envelope != "ATTESTATION-v1":
+        if expect_envelope != envelope:
+            return VerifyResult(
+                False,
+                f"envelope {envelope} requires explicit opt-in "
+                f"(pass envelope={envelope!r}); "
+                "ATTESTATION-v1 rules do not apply to it",
+            )
         return _verify_signed_envelope(
             receipt, envelope, trusted_public_key, allow_untrusted_embedded_key
         )
@@ -201,12 +344,47 @@ def verify_receipt(
             )
 
     # Semantic sanity
-    if receipt["v"] != 1:
+    # isinstance excluding bool is required, not stylistic: bool subclasses
+    # int in Python, so True == 1 and a receipt carrying "v": true passed this
+    # gate while the TypeScript verifier's strict !== rejected it. Reported by
+    # Michael Msebenzi, 2026-08-05.
+    if not isinstance(receipt["v"], int) or isinstance(receipt["v"], bool) or receipt["v"] != 1:
         return VerifyResult(False, f"unsupported version: {receipt['v']!r}")
     if receipt["outcome"] not in ALLOWED_OUTCOMES:
         return VerifyResult(False, f"invalid outcome: {receipt['outcome']!r}")
     if not isinstance(receipt["policy_applied"], list):
         return VerifyResult(False, "policy_applied must be an array")
+    # Draft 6 step 1 specifies three further checks that neither verifier
+    # implemented, because no test vector exercised them: the conformance
+    # suite derived its invalid vectors by mutating a signed receipt, so
+    # every one failed on the signature first. Reported by Michael Msebenzi
+    # 2026-08-05; vectors 009-013 now cover these.
+    if not all(isinstance(p, str) for p in receipt["policy_applied"]):
+        return VerifyResult(False, "policy_applied must contain only strings")
+    if list(receipt["policy_applied"]) != sorted(receipt["policy_applied"]):
+        return VerifyResult(
+            False, "policy_applied must be in lexicographic order"
+        )
+    cost = receipt["cost_prevented_eur"]
+    # isfinite matters: 1e999 is ordinary RFC 8259 JSON, so it never reaches
+    # the parse_constant guard that rejects the NaN and Infinity literals. It
+    # arrives here as inf, passes an isinstance check, and used to reach
+    # int(value) in the coercion path, which raises OverflowError. Parity with
+    # the TypeScript Number.isFinite check.
+    if (
+        isinstance(cost, bool)
+        or not isinstance(cost, (int, float))
+        or (isinstance(cost, float) and not math.isfinite(cost))
+    ):
+        return VerifyResult(False, "cost_prevented_eur must be a number")
+    if cost < 0:
+        return VerifyResult(False, "cost_prevented_eur must be non-negative")
+    ts = receipt["timestamp"]
+    if not isinstance(ts, str) or not _RFC3339_OFFSET.match(ts):
+        return VerifyResult(
+            False,
+            "timestamp must be an RFC 3339 datetime with an explicit offset",
+        )
     rh = receipt["request_hash"]
     if not isinstance(rh, str) or not _HEX64.match(rh):
         return VerifyResult(False, "request_hash must be 64 lowercase hex chars")
@@ -230,10 +408,20 @@ def verify_receipt(
     # non-ASCII to \uXXXX, so a policy name like "Größe-Limit" would canonicalise
     # to different bytes here than under JSON.stringify, and a receipt valid in
     # Python would fail in JavaScript. The spec mandates raw UTF-8.
+    # Integer-valued floats are coerced to int before serialisation, per
+    # spec 6(3) and draft 5 step 4. The TypeScript verifier already did
+    # this; Python did not, so a receipt signed by a non-conforming issuer
+    # over "1.0" verified here and failed there. Coercing means such a
+    # receipt now fails in BOTH, which is the intended behaviour: it is a
+    # non-conforming issuer and the mismatch should surface.
     payload = {k: v for k, v in receipt.items() if k != "signature"}
-    canonical = json.dumps(
-        payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False
-    ).encode("utf-8")
+    try:
+        canonical = _canonical_bytes(payload)
+    except (ValueError, TypeError, OverflowError, UnicodeEncodeError) as e:
+        # The contract is that this never raises. Any value that has no
+        # canonical form, an unpaired surrogate for instance, is a malformed
+        # receipt and must be reported as one rather than escape as a traceback.
+        return VerifyResult(False, f"receipt is not canonicalisable: {e}")
 
     # Signature verification (constant-time via cryptography library)
     try:

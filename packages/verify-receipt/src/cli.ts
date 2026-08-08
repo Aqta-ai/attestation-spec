@@ -15,7 +15,7 @@
  *   npx aqta-verify-receipt receipt.json --key <key> --pretty
  */
 import { readFileSync } from 'fs';
-import { verifyReceipt, AttestationReceipt } from './index';
+import { verifyReceipt, AttestationReceipt, EnvelopeFormat } from './index';
 
 const PUB_KEY_HINT = 'https://api.aqta.ai/v1/attestation/public-key';
 
@@ -53,6 +53,7 @@ Usage:
 Options:
   --key <key>        pin the issuer public key (required for counsel-grade)
   --integrity-only   check signature vs embedded key only (anyone can self-sign)
+  --envelope <name>  opt in to a non-ATTESTATION-v1 envelope (e.g. anchor-v1)
   --no-strict        allow unknown top-level fields
   --json             machine JSON on stdout (one object)
   --pretty           optional human flourish after the compact line
@@ -101,6 +102,7 @@ function main(): void {
   let file = '';
   let trustedKey: string | undefined;
   let integrityOnly = false;
+  let envelope: EnvelopeFormat | undefined;
   let strict = true;
   let quiet = false;
   let asJson = false;
@@ -112,6 +114,9 @@ function main(): void {
       if (!trustedKey) usage();
     } else if (a === '--integrity-only') {
       integrityOnly = true;
+    } else if (a === '--envelope') {
+      envelope = args[++i] as EnvelopeFormat;
+      if (!envelope) usage();
     } else if (a === '--no-strict') {
       strict = false;
     } else if (a === '--quiet' || a === '-q') {
@@ -160,9 +165,33 @@ function main(): void {
     process.exit(2);
   }
 
+  // Bare `null` parses fine and then crashed the display code below with an
+  // uncaught TypeError and a Node stack trace, including on the documented
+  // `curl ... | aqta-verify-receipt -` path. Matches the Python message and
+  // exit code.
+  if (typeof receipt !== 'object' || receipt === null || Array.isArray(receipt)) {
+    process.stderr.write('aqta-verify-receipt: receipt must be a JSON object\n');
+    process.exit(2);
+  }
+
+  // ATTESTATION-v1 canonicalises a parsed object, so a receipt carrying the same
+  // member name twice has no single canonical payload: a parser keeping the first
+  // value and one keeping the last compute different signed bytes from identical
+  // input. RFC 8259 leaves that choice to the implementation, so the format
+  // rejects the receipt. JSON.parse silently keeps the last value, so the check
+  // has to run over the raw text.
+  const duplicate = findDuplicateMemberName(raw);
+  if (duplicate !== null) {
+    process.stderr.write(
+      `aqta-verify-receipt: duplicate member name: ${duplicate}\n`
+    );
+    process.exit(2);
+  }
+
   const result = verifyReceipt(receipt, {
     trustedPublicKey: trustedKey,
     allowUntrustedEmbeddedKey: integrityOnly,
+    envelope,
     strictFields: strict,
   });
 
@@ -181,11 +210,17 @@ function main(): void {
           outcome,
           attestation_id: id,
           key_source: result.keySource ?? null,
+          envelope: result.envelope ?? null,
           reason: result.valid ? null : result.reason ?? 'verification failed',
         }) + '\n'
       );
     } else {
-      const detail = result.valid ? trust : result.reason ?? 'verification failed';
+      let detail = result.valid ? trust : result.reason ?? 'verification failed';
+      // Name the envelope when it is not the default, so a valid line never
+      // leaves the reader assuming ATTESTATION-v1 rules were applied.
+      if (result.valid && result.envelope && result.envelope !== 'ATTESTATION-v1') {
+        detail = `${detail}, envelope ${result.envelope}`;
+      }
       process.stdout.write(compactLine(result.valid, outcome, id, detail) + '\n');
       if (pretty) {
         process.stdout.write(prettyExtra(result.valid) + '\n');
@@ -196,3 +231,60 @@ function main(): void {
 }
 
 main();
+
+/**
+ * Returns the first member name that appears twice within the same object, or
+ * null. Walks the raw text because JSON.parse has already collapsed duplicates
+ * by the time a reviver runs.
+ */
+function findDuplicateMemberName(raw: string): string | null {
+  const stack: Array<Set<string>> = [];
+  let i = 0;
+  const readString = (): string => {
+    let out = '';
+    i += 1; // opening quote
+    while (i < raw.length) {
+      const ch = raw[i];
+      if (ch === '\\') {
+        out += raw.slice(i, i + 2);
+        i += 2;
+        continue;
+      }
+      if (ch === '"') {
+        i += 1;
+        // Decode escapes before comparing. Comparing raw source spelling made
+        // the check escape-blind, so "outcome" was not seen as a duplicate
+        // of "outcome" and the ambiguous receipt verified here while Python
+        // rejected it. `out` is a valid JSON string body by construction.
+        try {
+          return JSON.parse('"' + out + '"');
+        } catch {
+          return out;
+        }
+      }
+      out += ch;
+      i += 1;
+    }
+    return out;
+  };
+  while (i < raw.length) {
+    const ch = raw[i];
+    if (ch === '"') {
+      const value = readString();
+      // A string is a member name only if the next non-space character is a colon
+      // and we are directly inside an object.
+      let j = i;
+      while (j < raw.length && /\s/.test(raw[j])) j += 1;
+      if (raw[j] === ':' && stack.length > 0) {
+        const names = stack[stack.length - 1];
+        if (names.has(value)) return value;
+        names.add(value);
+      }
+      continue;
+    }
+    if (ch === '{') stack.push(new Set());
+    else if (ch === '}') stack.pop();
+    i += 1;
+  }
+  return null;
+}

@@ -65,7 +65,7 @@ def test_detect_returns_none_rather_than_guessing(value):
 
 def test_genuine_anchor_receipt_verifies():
     receipt, key = make_anchor()
-    result = verify_receipt(receipt, trusted_public_key=key)
+    result = verify_receipt(receipt, trusted_public_key=key, envelope="anchor-v1")
     assert result.valid is True
     assert result.envelope == "anchor-v1"
     assert result.key_source == "pinned"
@@ -73,7 +73,9 @@ def test_genuine_anchor_receipt_verifies():
 
 def test_altering_a_signed_field_breaks_it():
     receipt, key = make_anchor()
-    result = verify_receipt({**receipt, "bound": 99}, trusted_public_key=key)
+    result = verify_receipt(
+        {**receipt, "bound": 99}, trusted_public_key=key, envelope="anchor-v1"
+    )
     assert result.valid is False
     assert result.reason == "signature check failed"
 
@@ -81,31 +83,54 @@ def test_altering_a_signed_field_breaks_it():
 def test_will_not_verify_against_a_different_key():
     receipt, _ = make_anchor()
     _, other = make_anchor()
-    result = verify_receipt(receipt, trusted_public_key=other)
+    result = verify_receipt(receipt, trusted_public_key=other, envelope="anchor-v1")
     assert result.valid is False
     assert result.reason == "public key does not match trusted key"
 
 
 def test_refuses_to_run_without_a_pinned_key():
     receipt, _ = make_anchor()
-    result = verify_receipt(receipt)
+    result = verify_receipt(receipt, envelope="anchor-v1")
     assert result.valid is False
     assert "trusted_public_key required" in (result.reason or "")
 
 
 def test_integrity_only_reports_key_as_untrusted():
     receipt, _ = make_anchor()
-    result = verify_receipt(receipt, allow_untrusted_embedded_key=True)
+    result = verify_receipt(
+        receipt, allow_untrusted_embedded_key=True, envelope="anchor-v1"
+    )
     assert result.valid is True
     assert result.key_source == "untrusted"
 
 
 def test_non_ascii_still_verifies():
     receipt, key = make_anchor(note="Größe · héllo · 世界")
-    assert verify_receipt(receipt, trusted_public_key=key).valid is True
+    assert verify_receipt(receipt, trusted_public_key=key, envelope="anchor-v1").valid is True
 
 
 def test_unrecognised_envelope_is_rejected_not_assumed():
     result = verify_receipt({"some": "object"}, trusted_public_key="k")
     assert result.valid is False
     assert "unrecognised envelope" in (result.reason or "")
+
+
+def test_foreign_envelope_needs_explicit_opt_in():
+    """A foreign envelope must not silently skip ATTESTATION-v1's rules.
+
+    Envelopes were detected purely by field name, so any object naming its
+    fields signature_b64/public_key_b64 bypassed every structural and semantic
+    check. An object that was not a receipt at all verified. Exit 0 then
+    answered "were these bytes signed by that key" rather than "is this a
+    conformant receipt", which is not what the tool is asked.
+    """
+    receipt, key = make_anchor()
+    assert verify_receipt(receipt, trusted_public_key=key).valid is False
+    assert "explicit opt-in" in (
+        verify_receipt(receipt, trusted_public_key=key).reason or ""
+    )
+    # And an object with no receipt fields at all, signed correctly.
+    assert (
+        verify_receipt(receipt, trusted_public_key=key, envelope="anchor-v1").valid
+        is True
+    )

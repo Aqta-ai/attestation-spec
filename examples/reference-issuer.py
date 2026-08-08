@@ -25,8 +25,11 @@ from __future__ import annotations
 import base64
 import hashlib
 import json
+import math
+import re
 import uuid
 from datetime import datetime, timezone
+from decimal import Decimal
 from typing import List, Mapping, Optional
 
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
@@ -126,14 +129,71 @@ class ReferenceIssuer:
             "public_key": self.public_key_b64,
         }
 
-        # ensure_ascii=False per spec §6.1: the default would escape non-ASCII
-        # to \uXXXX and the signature would not verify in JavaScript.
-        canonical = json.dumps(
-            payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False
-        ).encode("utf-8")
+        canonical = canonical_payload(payload)
         signature = self.private_key.sign(canonical)
 
         return {**payload, "signature": _b64url_encode(signature)}
+
+
+def _js_number(x: float) -> str:
+    """ECMA-262 Number::toString, the number grammar RFC 8785 (JCS) 3.2.2.3 sets.
+
+    Python's default float repr disagrees with JavaScript's below 1e-4, so an
+    issuer using json.dumps minted receipts that verified in Python and failed
+    in JavaScript. spec 4 allows six digits of precision, which puts the whole
+    divergent band inside what a conforming issuer may emit.
+    """
+    if not math.isfinite(x):
+        raise ValueError("non-finite number")
+    if x == 0:
+        return "0"
+    sign, digits, exp = Decimal(repr(x)).as_tuple()
+    ds = "".join(map(str, digits))
+    n = len(ds) + exp
+    ds = ds.rstrip("0") or "0"
+    if -6 < n <= 21:
+        if n <= 0:
+            s = "0." + "0" * -n + ds
+        elif n >= len(ds):
+            s = ds + "0" * (n - len(ds))
+        else:
+            s = ds[:n] + "." + ds[n:]
+    else:
+        mant = ds[0] + ("." + ds[1:] if len(ds) > 1 else "")
+        s = f'{mant}e{"+" if n - 1 >= 0 else "-"}{abs(n - 1)}'
+    return ("-" if sign else "") + s
+
+
+def _canonical(value) -> str:
+    """Canonical JSON per spec 6. Mirrors both reference verifiers exactly."""
+    if value is None:
+        return "null"
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    if isinstance(value, int):
+        if -(2**53) <= value <= 2**53:
+            return str(value)
+        return _js_number(float(value))
+    if isinstance(value, float):
+        return _js_number(value)
+    if isinstance(value, str):
+        if re.search(r"[\ud800-\udfff]", value):
+            raise ValueError("string contains an unpaired surrogate")
+        # ensure_ascii=False per spec 6.1: the default escapes non-ASCII to
+        # \uXXXX and the signature would not verify in JavaScript.
+        return json.dumps(value, ensure_ascii=False)
+    if isinstance(value, (list, tuple)):
+        return "[" + ",".join(_canonical(v) for v in value) + "]"
+    if isinstance(value, Mapping):
+        return (
+            "{"
+            + ",".join(
+                f"{_canonical(str(k))}:{_canonical(value[k])}"
+                for k in sorted(value.keys())
+            )
+            + "}"
+        )
+    raise ValueError(f"not canonicalisable: {type(value).__name__}")
 
 
 def canonical_payload(receipt: Mapping[str, object]) -> bytes:
@@ -143,9 +203,7 @@ def canonical_payload(receipt: Mapping[str, object]) -> bytes:
     canonicalisation against this reference.
     """
     payload = {k: v for k, v in receipt.items() if k != "signature"}
-    return json.dumps(
-        payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False
-    ).encode("utf-8")
+    return _canonical(payload).encode("utf-8")
 
 
 if __name__ == "__main__":

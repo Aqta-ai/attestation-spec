@@ -96,6 +96,13 @@ def main(argv: list[str] | None = None) -> int:
         help="allow unknown top-level fields",
     )
     parser.add_argument(
+        "--envelope",
+        metavar="NAME",
+        default=None,
+        help="opt in to a non-ATTESTATION-v1 envelope (e.g. anchor-v1); "
+        "ATTESTATION-v1 rules do not apply to it",
+    )
+    parser.add_argument(
         "--json",
         action="store_true",
         help="machine JSON on stdout (one object)",
@@ -139,6 +146,15 @@ def main(argv: list[str] | None = None) -> int:
         else:
             with open(args.file, encoding="utf-8") as fh:
                 raw = fh.read()
+    except UnicodeDecodeError:
+        # Subclasses ValueError, not OSError, so it used to escape as a
+        # traceback. A file that is not UTF-8 is malformed input, which is
+        # exit 2, the same answer the TypeScript CLI gives.
+        print(
+            f"aqta-verify-receipt: cannot read {args.file}: not valid UTF-8",
+            file=sys.stderr,
+        )
+        return 2
     except OSError:
         print(
             f"aqta-verify-receipt: cannot read {'stdin' if args.file == '-' else args.file}",
@@ -146,10 +162,37 @@ def main(argv: list[str] | None = None) -> int:
         )
         return 2
 
+    def _no_duplicate_names(pairs):
+        # ATTESTATION-v1 canonicalises a parsed object, so a receipt carrying the
+        # same member name twice has no single canonical payload: parsers that
+        # keep the first value and parsers that keep the last would compute
+        # different signed bytes from identical input. RFC 8259 leaves the choice
+        # to the implementation, so the format rejects the receipt instead.
+        seen = set()
+        for key, value in pairs:
+            if key in seen:
+                raise ValueError(f"duplicate member name: {key}")
+            seen.add(key)
+        return dict(pairs)
+
+    def _no_json5_constants(token):
+        # RFC 8259 has no NaN or Infinity. Python's json accepts all three as an
+        # extension, so without this the two reference verifiers disagree on
+        # whether a receipt is even JSON, and NaN reaches the number handling
+        # and raises there instead of being rejected as malformed input.
+        raise ValueError(f"not valid JSON: {token}")
+
     try:
-        receipt = json.loads(raw)
-    except json.JSONDecodeError:
-        print("aqta-verify-receipt: input is not valid JSON", file=sys.stderr)
+        receipt = json.loads(
+            raw,
+            object_pairs_hook=_no_duplicate_names,
+            parse_constant=_no_json5_constants,
+        )
+    except ValueError as exc:
+        if isinstance(exc, json.JSONDecodeError):
+            print("aqta-verify-receipt: input is not valid JSON", file=sys.stderr)
+        else:
+            print(f"aqta-verify-receipt: {exc}", file=sys.stderr)
         return 2
 
     if not isinstance(receipt, dict):
@@ -161,6 +204,7 @@ def main(argv: list[str] | None = None) -> int:
         trusted_public_key=args.key,
         allow_untrusted_embedded_key=args.integrity_only,
         strict_fields=not args.no_strict,
+        envelope=args.envelope,
     )
 
     rid = receipt.get("attestation_id", "?")
@@ -184,6 +228,7 @@ def main(argv: list[str] | None = None) -> int:
                         "outcome": outcome,
                         "attestation_id": rid,
                         "key_source": result.key_source,
+                        "envelope": result.envelope,
                         "reason": None if result.valid else (result.reason or "verification failed"),
                     },
                     separators=(",", ":"),
@@ -192,6 +237,10 @@ def main(argv: list[str] | None = None) -> int:
             )
         else:
             detail = trust if result.valid else (result.reason or "verification failed")
+            # Name the envelope when it is not the default, so a valid line
+            # never leaves the reader assuming ATTESTATION-v1 rules were applied.
+            if result.valid and result.envelope and result.envelope != "ATTESTATION-v1":
+                detail = f"{detail}, envelope {result.envelope}"
             print(_compact_line(result.valid, outcome, rid, detail))
             if args.pretty:
                 print(_pretty_extra(result.valid))
@@ -199,4 +248,15 @@ def main(argv: list[str] | None = None) -> int:
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    # A closed downstream pipe turned a valid receipt into exit 120 at
+    # interpreter shutdown, which is outside the documented {0,1,2} contract.
+    # Redirecting stdout to devnull before exit stops the flush from raising.
+    try:
+        _code = main()
+    except BrokenPipeError:
+        _code = 0
+    try:
+        sys.stdout.flush()
+    except (BrokenPipeError, ValueError):
+        os.dup2(os.open(os.devnull, os.O_WRONLY), sys.stdout.fileno())
+    raise SystemExit(_code)

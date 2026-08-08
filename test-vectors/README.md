@@ -33,6 +33,10 @@ against the `public_key` field in each receipt.
 | [`valid/004-passed.json`](./valid/004-passed.json) | `PASSED` | Legacy synonym of `ALLOWED` |
 | [`valid/005-multi-policy.json`](./valid/005-multi-policy.json) | `ALLOWED` | Five policies applied; exercises `policy_applied` sort requirement |
 | [`valid/006-cost-prevented-nonzero.json`](./valid/006-cost-prevented-nonzero.json) | `BLOCKED` | Non-integer `cost_prevented_eur` value (`2.5`) |
+| [`valid/007-non-ascii-policy.json`](./valid/007-non-ascii-policy.json) | `BLOCKED` | Non-ASCII policy names. Pins §6.1: an implementation that escapes non-ASCII to `\uXXXX` produces different canonical bytes than `JSON.stringify` |
+| [`valid/008-cost-sub-milli.json`](./valid/008-cost-sub-milli.json) | `BLOCKED` | `cost_prevented_eur` of `0.000015`. Pins the §6 number grammar: Python's default float repr writes `1.5e-05` where JavaScript writes `0.000015`, so an implementation using either language's default disagrees with the other across the whole band `0 < \|x\| < 1e-4` |
+| [`valid/009-cost-smallest-precision.json`](./valid/009-cost-smallest-precision.json) | `BLOCKED` | `cost_prevented_eur` of `0.000001`, the smallest non-zero value §4's six digits of precision allows |
+| [`valid/010-timestamp-leap-second.json`](./valid/010-timestamp-leap-second.json) | `ALLOWED` | `timestamp` of `2016-12-31T23:59:60Z`, a real leap second and legal RFC 3339. A verifier that defers well-formedness to a date parser rejects it |
 
 ## Invalid vectors
 
@@ -48,6 +52,32 @@ Each file encodes exactly one failure mode. A verifier MUST reject.
 | [`invalid/006-wrong-version.json`](./invalid/006-wrong-version.json) | `v: 2` (future version) | Unsupported version |
 | [`invalid/007-bad-request-hash.json`](./invalid/007-bad-request-hash.json) | `request_hash` not 64-char hex | Semantic check fails |
 | [`invalid/008-invalid-outcome.json`](./invalid/008-invalid-outcome.json) | `outcome: "MAYBE"` (not in enum) | Semantic check fails |
+| [`invalid/009-policy-not-sorted.json`](./invalid/009-policy-not-sorted.json) | `policy_applied` in descending order | Semantic check fails: spec §4 requires lexicographic order |
+| [`invalid/010-policy-not-strings.json`](./invalid/010-policy-not-strings.json) | `policy_applied` contains a number | Semantic check fails: elements are ASCII policy identifiers |
+| [`invalid/011-timestamp-no-offset.json`](./invalid/011-timestamp-no-offset.json) | `timestamp` has no timezone offset | Semantic check fails: an explicit offset is required |
+| [`invalid/012-timestamp-not-datetime.json`](./invalid/012-timestamp-not-datetime.json) | `timestamp` is not a datetime | Semantic check fails: not a well-formed RFC 3339 datetime |
+| [`invalid/013-negative-cost.json`](./invalid/013-negative-cost.json) | `cost_prevented_eur` is negative | Semantic check fails: the field is non-negative |
+| [`invalid/014-boolean-version.json`](./invalid/014-boolean-version.json) | `v: true` | Unsupported version: `true` is not `1` |
+| [`invalid/015-uncoerced-integer-float.json`](./invalid/015-uncoerced-integer-float.json) | `cost_prevented_eur` signed as `1.0`, uncoerced by the issuer | Canonical bytes mismatch: §6(3) puts integer coercion on the issuer, so the signature check fails |
+
+## Cases that cannot be shipped as vectors
+
+Two defect classes live in each package's own tests rather than here, because
+the runners above parse every file before verifying it and a parse-layer defect
+does not survive being parsed:
+
+- **Duplicate member names.** `{"v":1,"v":1}` has no single canonical payload,
+  since a parser keeping the first value and one keeping the last compute
+  different signed bytes. Parsers collapse the duplicate, so a vector file
+  would arrive at the verifier already repaired.
+- **`NaN` and `Infinity`.** Not JSON at all (RFC 8259), so a vector file would
+  fail the runner's own `JSON.parse` rather than test anything. Python's `json`
+  module accepts all three as an extension, which is how the two verifiers came
+  to disagree on whether such input was even parseable.
+
+Both are covered by CLI-level tests in `packages/verify-receipt` and
+`packages/verify-receipt-py`, and both must exit 2 (malformed input) rather
+than 1 (invalid receipt).
 
 ## Reproducibility
 

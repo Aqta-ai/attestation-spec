@@ -1,6 +1,6 @@
 {
   "attestation_id": "00000000-0000-0000-0000-00000000ffff",
-  "cost_prevented_eur": 0,
+  "cost_prevented_eur": 1.0,
   "model": "gpt-4o",
   "org_id": "org-test-vectors",
   "outcome": "ALLOWED",
@@ -9,8 +9,8 @@
   ],
   "public_key": "alWzEnrA_z9McN9z_MFfQCnH9mVgOwRZ26wrI7oix4E",
   "request_hash": "8f3a7e2b9c4d5f6a1b0c9d8e7f6a5b4c3d2e1f0a9b8c7d6e5f4a3b2c1d0e9f8a",
-  "signature": "61iYyEsqc6VilgHOdOlN3fvp3u5BbCjxLYxP8OAO9OiGrUzkNGqEDN7Fo8E1bpniSjeKfmWtymUoyp9ikmKKCQ",
+  "signature": "-0qGUt8GDhWYHWQj6N-uJWXCvlzpDItjIRl4g1ghDJjzUfUw40LNhS00Rhg4wRPsVZ_iYameCIHaEiLyDZMZAQ",
   "timestamp": "2026-04-23T10:15:30.000000+00:00",
   "trace_id": "trace-tv-001",
-  "v": 2
+  "v": 1
 }

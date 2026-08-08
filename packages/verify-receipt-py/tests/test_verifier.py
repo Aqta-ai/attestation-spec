@@ -148,3 +148,21 @@ def test_invalid_vector_rejected(path: Path) -> None:
     receipt = json.loads(path.read_text(encoding="utf-8"))
     result = verify_receipt(receipt, trusted_public_key=_VECTOR_KEY)
     assert not result.valid, f"{path.name} must be rejected"
+
+
+# CLI-level input handling.
+#
+# These go through __main__ rather than verify_receipt because the bug they
+# guard against lived in the parse step, not the verifier: Python's json
+# module accepts NaN and Infinity as an extension, so a receipt that Node
+# rejects as malformed reached the number handling here and raised there.
+@pytest.mark.parametrize("token", ["NaN", "Infinity", "-Infinity"])
+def test_cli_rejects_json5_constants(tmp_path: Path, capsys, token: str) -> None:
+    from aqta_verify_receipt.__main__ import main
+
+    path = tmp_path / "receipt.json"
+    path.write_text('{"v":1,"cost_prevented_eur":%s}' % token, encoding="utf-8")
+    # Exit 2 is the usage/IO code: this is malformed input, not an invalid
+    # receipt, and the TypeScript CLI reports it the same way.
+    assert main([str(path), "--integrity-only"]) == 2
+    assert "not valid JSON" in capsys.readouterr().err

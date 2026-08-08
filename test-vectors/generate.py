@@ -74,6 +74,50 @@ def _make(
     )
 
 
+def _sign_raw(payload: dict) -> dict:
+    """Sign an arbitrary payload, bypassing the issuer's own validation.
+
+    Needed because the invalid vectors must carry a VALID signature over their
+    defect. Signing a clean receipt and mutating it afterwards, which is what
+    this generator used to do, breaks the signature, so every invalid vector
+    failed on the signature before the defect it is named for was ever
+    reached. A verifier that checked nothing but the signature scored 15/15 on
+    the published suite, which means the suite could not distinguish a
+    conformant verifier from a signature-only one. Reported by Michael
+    Msebenzi, 2026-08-05, and reproduced.
+
+    The issuer's sign() rejects invalid outcomes and malformed hashes by
+    design, so it cannot mint these. This signs the exact bytes given.
+    """
+    payload = {**payload, "public_key": ISSUER.public_key_b64}
+    canonical = json.dumps(
+        payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False
+    ).encode("utf-8")
+    signature = ISSUER.private_key.sign(canonical)
+    return {**payload, "signature": _ref._b64url_encode(signature)}
+
+
+def _base_payload(**overrides) -> dict:
+    """The twelve-field payload a valid receipt carries, before signing."""
+    payload = {
+        "v": 1,
+        "attestation_id": "00000000-0000-0000-0000-00000000ffff",
+        "trace_id": "trace-tv-001",
+        "org_id": "org-test-vectors",
+        "request_hash": (
+            "8f3a7e2b9c4d5f6a1b0c9d8e7f6a5b4c"
+            "3d2e1f0a9b8c7d6e5f4a3b2c1d0e9f8a"
+        ),
+        "model": "gpt-4o",
+        "outcome": "ALLOWED",
+        "policy_applied": ["budget_guard"],
+        "cost_prevented_eur": 0,
+        "timestamp": "2026-04-23T10:15:30.000000+00:00",
+    }
+    payload.update(overrides)
+    return payload
+
+
 def main() -> None:
     print("Public key (pin this to verify vectors):")
     print(f"  {ISSUER.public_key_b64}")
@@ -139,13 +183,52 @@ def main() -> None:
             cost_prevented_eur=1.25,
         ),
     )
+    # Pins the number grammar in §6. Python's default float repr switches to
+    # exponent notation below 1e-4 and zero-pads the exponent (1e-05) where
+    # JavaScript writes 0.00001, so every value in 0 < |x| < 1e-4 canonicalised
+    # to different bytes in the two reference verifiers: the reference issuer
+    # minted receipts that verified in Python and failed in JavaScript with
+    # "signature check failed". §4 allows six digits of precision, so the whole
+    # divergent band is reachable by a conforming issuer. No vector exercised
+    # it, because every cost in the suite was 0, 1.0, 1.25, 2.5 or -5.
+    # An implementation that passes 001-007 and fails these has that bug.
+    _write(
+        "valid/008-cost-sub-milli.json",
+        _make(
+            "008",
+            outcome="BLOCKED",
+            attestation_id="00000000-0000-0000-0000-000000000008",
+            cost_prevented_eur=0.000015,
+        ),
+    )
+    _write(
+        "valid/009-cost-smallest-precision.json",
+        _make(
+            "009",
+            outcome="BLOCKED",
+            attestation_id="00000000-0000-0000-0000-000000000009",
+            cost_prevented_eur=0.000001,
+        ),
+    )
+    # A leap second is legal RFC 3339. A verifier that defers timestamp
+    # well-formedness to a date parser rejects this one.
+    _write(
+        "valid/010-timestamp-leap-second.json",
+        _make(
+            "010",
+            outcome="ALLOWED",
+            attestation_id="00000000-0000-0000-0000-000000000010",
+            timestamp="2016-12-31T23:59:60Z",
+        ),
+    )
     print()
 
     # Invalid vectors: each should be rejected by a conformant verifier for
     # a specific reason. The filename encodes the failure mode.
     print("Invalid vectors (verifier MUST reject):")
 
-    # Valid receipt to base tampering on
+    # 001 to 003 are signature-integrity vectors: the defect IS the broken
+    # signature, so these are correctly produced by tampering after signing.
     base = _make(
         "tamper-base",
         attestation_id="00000000-0000-0000-0000-00000000ffff",
@@ -165,25 +248,62 @@ def main() -> None:
     tampered_public_key["public_key"] = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
     _write("invalid/003-tampered-public-key.json", tampered_public_key)
 
-    missing_field = dict(base)
+    # 004 onwards are STRUCTURAL vectors. Each carries a VALID signature over
+    # its own defect, so a verifier must reject it on the named rule rather
+    # than on the signature. Before 2026-08-05 these were also produced by
+    # mutating after signing, which meant they failed on the signature first
+    # and the named rule was never exercised.
+    missing_field = _base_payload()
     del missing_field["outcome"]
-    _write("invalid/004-missing-field.json", missing_field)
+    _write("invalid/004-missing-field.json", _sign_raw(missing_field))
 
-    unknown_field = dict(base)
-    unknown_field["extra_metadata"] = "should not be here"
-    _write("invalid/005-unknown-field.json", unknown_field)
+    _write(
+        "invalid/005-unknown-field.json",
+        _sign_raw(_base_payload(extra_metadata="should not be here")),
+    )
 
-    wrong_version = dict(base)
-    wrong_version["v"] = 2
-    _write("invalid/006-wrong-version.json", wrong_version)
+    _write("invalid/006-wrong-version.json", _sign_raw(_base_payload(v=2)))
 
-    bad_request_hash = dict(base)
-    bad_request_hash["request_hash"] = "not-a-hash"
-    _write("invalid/007-bad-request-hash.json", bad_request_hash)
+    _write(
+        "invalid/007-bad-request-hash.json",
+        _sign_raw(_base_payload(request_hash="not-a-hash")),
+    )
 
-    invalid_outcome = dict(base)
-    invalid_outcome["outcome"] = "MAYBE"
-    _write("invalid/008-invalid-outcome.json", invalid_outcome)
+    _write(
+        "invalid/008-invalid-outcome.json",
+        _sign_raw(_base_payload(outcome="MAYBE")),
+    )
+
+    # New structural vectors for the rules draft 6 step 1 specifies but no
+    # verifier was checking, because nothing in the suite exercised them.
+    _write(
+        "invalid/009-policy-not-sorted.json",
+        _sign_raw(_base_payload(policy_applied=["z_guard", "a_guard"])),
+    )
+    _write(
+        "invalid/010-policy-not-strings.json",
+        _sign_raw(_base_payload(policy_applied=[1])),
+    )
+    _write(
+        "invalid/011-timestamp-no-offset.json",
+        _sign_raw(_base_payload(timestamp="2026-08-05T10:00:00")),
+    )
+    _write(
+        "invalid/012-timestamp-not-datetime.json",
+        _sign_raw(_base_payload(timestamp="whenever")),
+    )
+    _write(
+        "invalid/013-negative-cost.json",
+        _sign_raw(_base_payload(cost_prevented_eur=-5)),
+    )
+    _write(
+        "invalid/014-boolean-version.json",
+        _sign_raw(_base_payload(v=True)),
+    )
+    _write(
+        "invalid/015-uncoerced-integer-float.json",
+        _sign_raw(_base_payload(cost_prevented_eur=1.0)),
+    )
 
     print()
     print("All vectors written to test-vectors/.")

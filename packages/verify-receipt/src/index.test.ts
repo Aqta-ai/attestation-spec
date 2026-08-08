@@ -134,3 +134,41 @@ test('every invalid test vector is rejected', () => {
     assert.equal(result.valid, false, `${name} must be rejected`);
   }
 });
+
+/**
+ * Parse-layer input handling, exercised through the real CLI entry point.
+ *
+ * These cannot be shared test vectors: the vector runner parses each file
+ * before verifying, and a defect in the parse step does not survive being
+ * parsed. Duplicate member names collapse to one, and NaN is not JSON at
+ * all. Both languages must reject them the same way, so both packages
+ * carry the same cases.
+ */
+test('CLI rejects malformed input at the parse layer', async () => {
+  const { execFileSync } = await import('node:child_process');
+  const { writeFileSync, mkdtempSync } = await import('node:fs');
+  const { tmpdir } = await import('node:os');
+  const dir = mkdtempSync(join(tmpdir(), 'aqta-cli-'));
+  const bin = join(__dirname, '..', 'bin', 'aqta-verify-receipt.js');
+
+  const cases: Array<[string, string]> = [
+    ['duplicate member name', '{"v":1,"v":1,"outcome":"ALLOWED"}'],
+    ['NaN literal', '{"v":1,"cost_prevented_eur":NaN}'],
+    ['Infinity literal', '{"v":1,"cost_prevented_eur":Infinity}'],
+    ['-Infinity literal', '{"v":1,"cost_prevented_eur":-Infinity}'],
+  ];
+
+  for (const [label, body] of cases) {
+    const file = join(dir, 'receipt.json');
+    writeFileSync(file, body);
+    let code = 0;
+    try {
+      execFileSync(process.execPath, [bin, file, '--integrity-only'], { stdio: 'pipe' });
+    } catch (err: any) {
+      code = err.status;
+    }
+    // Exit 2 is usage/IO: malformed input, not an invalid receipt. Exit 1
+    // would mean the bytes parsed and the receipt merely failed to verify.
+    assert.equal(code, 2, `${label} must exit 2, got ${code}`);
+  }
+});

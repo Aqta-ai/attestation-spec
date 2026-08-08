@@ -57,7 +57,7 @@ test('detectEnvelope returns null rather than guessing', () => {
 
 test('a genuine anchor-v1 receipt verifies against its pinned key', () => {
   const { receipt, key } = makeAnchor();
-  const r = verifyReceipt(receipt, { trustedPublicKey: key });
+  const r = verifyReceipt(receipt, { trustedPublicKey: key, envelope: 'anchor-v1' });
   assert.equal(r.valid, true);
   assert.equal(r.envelope, 'anchor-v1');
   assert.equal(r.keySource, 'pinned');
@@ -65,7 +65,7 @@ test('a genuine anchor-v1 receipt verifies against its pinned key', () => {
 
 test('altering any signed field breaks an anchor-v1 receipt', () => {
   const { receipt, key } = makeAnchor();
-  const r = verifyReceipt({ ...receipt, bound: 99 }, { trustedPublicKey: key });
+  const r = verifyReceipt({ ...receipt, bound: 99 }, { trustedPublicKey: key, envelope: 'anchor-v1' });
   assert.equal(r.valid, false);
   assert.equal(r.reason, 'signature check failed');
 });
@@ -73,32 +73,48 @@ test('altering any signed field breaks an anchor-v1 receipt', () => {
 test('anchor-v1 will not verify against a key it was not signed with', () => {
   const { receipt } = makeAnchor();
   const other = makeAnchor().key;
-  const r = verifyReceipt(receipt, { trustedPublicKey: other });
+  const r = verifyReceipt(receipt, { trustedPublicKey: other, envelope: 'anchor-v1' });
   assert.equal(r.valid, false);
   assert.equal(r.reason, 'public key does not match trusted key');
 });
 
 test('anchor-v1 refuses to run without a pinned key', () => {
   const { receipt } = makeAnchor();
-  const r = verifyReceipt(receipt);
+  const r = verifyReceipt(receipt, { envelope: 'anchor-v1' });
   assert.equal(r.valid, false);
   assert.match(r.reason ?? '', /trustedPublicKey required/);
 });
 
 test('anchor-v1 integrity-only mode reports the key as untrusted', () => {
   const { receipt } = makeAnchor();
-  const r = verifyReceipt(receipt, { allowUntrustedEmbeddedKey: true });
+  const r = verifyReceipt(receipt, { allowUntrustedEmbeddedKey: true, envelope: 'anchor-v1' });
   assert.equal(r.valid, true);
   assert.equal(r.keySource, 'untrusted');
 });
 
 test('non-ASCII in an anchor-v1 field still verifies', () => {
   const { receipt, key } = makeAnchor({ note: 'Größe · héllo · 世界' });
-  assert.equal(verifyReceipt(receipt, { trustedPublicKey: key }).valid, true);
+  assert.equal(verifyReceipt(receipt, { trustedPublicKey: key, envelope: 'anchor-v1' }).valid, true);
 });
 
 test('an unrecognised envelope is rejected, not assumed', () => {
   const r = verifyReceipt({ some: 'object' }, { trustedPublicKey: 'k' });
   assert.equal(r.valid, false);
   assert.match(r.reason ?? '', /unrecognised envelope/);
+});
+
+test('a foreign envelope needs explicit opt-in', () => {
+  // Envelopes were detected purely by field name, so any object naming its
+  // fields signature_b64/public_key_b64 skipped every structural and semantic
+  // check: an object that was not a receipt at all verified. Exit 0 then
+  // answered 'were these bytes signed by that key' rather than 'is this a
+  // conformant receipt'.
+  const { receipt, key } = makeAnchor();
+  const without = verifyReceipt(receipt, { trustedPublicKey: key });
+  assert.equal(without.valid, false);
+  assert.match(without.reason ?? '', /explicit opt-in/);
+  assert.equal(
+    verifyReceipt(receipt, { trustedPublicKey: key, envelope: 'anchor-v1' }).valid,
+    true
+  );
 });
