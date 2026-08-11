@@ -81,7 +81,9 @@ ATTESTATION-v1 receipt as SCITT-conformant. It is not.
 ## What this means for an implementer
 
 If you need a signed, offline-checkable record of an AI decision today, this
-specification and its verifiers do that and are stable at v1.0.7.
+specification and its verifiers do that; the current published verifier
+release on npm and PyPI is the reference (both registries carry the same
+version, enforced by a consistency test).
 
 If you need transparency in the RFC 9943 sense, with inclusion proofs and
 third-party monitoring, you need a Transparency Service. Use SCITT. We intend
