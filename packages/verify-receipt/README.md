@@ -18,8 +18,8 @@ Same algorithm on npm and PyPI. Reference implementation, not a platform SDK.
 ## 30-second check
 
 ```bash
-npx aqta-verify-receipt@1.0.8 receipt.json \
-  --key gUoUhIvptKAoLTnry3VrDtOQEWggGQveLrHFVrfNqmE
+npx aqta-verify-receipt receipt.json \
+  --key 9Y3Eiq6V8QjRDUM5nPqSwKIOPQaoEU4SbagfYFdvWa4
 ```
 
 Default output is one compact line (words carry meaning; colour is optional):
@@ -37,7 +37,7 @@ Invalid:
 Optional flourish (never the proof):
 
 ```bash
-npx aqta-verify-receipt@1.0.8 receipt.json --key <pinned> --pretty
+npx aqta-verify-receipt receipt.json --key <pinned> --pretty
 # …
 ◈ seal intact · verified offline
 ```
@@ -45,8 +45,8 @@ npx aqta-verify-receipt@1.0.8 receipt.json --key <pinned> --pretty
 Automation:
 
 ```bash
-npx aqta-verify-receipt@1.0.8 receipt.json --key <pinned> --json
-npx aqta-verify-receipt@1.0.8 receipt.json --key <pinned> -q; echo $?
+npx aqta-verify-receipt receipt.json --key <pinned> --json
+npx aqta-verify-receipt receipt.json --key <pinned> -q; echo $?
 ```
 
 | Exit | Meaning |
@@ -57,13 +57,17 @@ npx aqta-verify-receipt@1.0.8 receipt.json --key <pinned> -q; echo $?
 
 Production public key (also at
 [`/v1/attestation/public-key`](https://api.aqta.ai/v1/attestation/public-key),
-key id `aqta-att-0a18c7c16bc18a12`):
+key id `aqta-att-01269bb4b6a7d950`):
 
 ```
-gUoUhIvptKAoLTnry3VrDtOQEWggGQveLrHFVrfNqmE
+9Y3Eiq6V8QjRDUM5nPqSwKIOPQaoEU4SbagfYFdvWa4
 ```
 
-Pin that string. Do not re-fetch it inside a verify loop.
+Pin that string; do not re-fetch it inside a verify loop. Keys rotate and
+receipts do not: a receipt verifies against the key current when it was
+signed, and the permanent key record (with retired keys and their validity
+windows) is at
+[`app.aqta.ai/security/issuer-keys.txt`](https://app.aqta.ai/security/issuer-keys.txt).
 
 ## Install
 

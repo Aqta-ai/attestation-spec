@@ -16,9 +16,9 @@ without contacting Aqta. No account. Same algorithm as the npm package.
 ## 30-second check
 
 ```bash
-pip install aqta-verify-receipt==1.0.8
+pip install aqta-verify-receipt
 aqta-verify-receipt receipt.json \
-  --key gUoUhIvptKAoLTnry3VrDtOQEWggGQveLrHFVrfNqmE
+  --key 9Y3Eiq6V8QjRDUM5nPqSwKIOPQaoEU4SbagfYFdvWa4
 ```
 
 Default output is one compact line (words carry meaning; colour is optional):
@@ -45,7 +45,7 @@ Or pipe:
 
 ```bash
 curl -sS https://api.aqta.ai/r/YOUR_RECEIPT_ID | aqta-verify-receipt - \
-  --key gUoUhIvptKAoLTnry3VrDtOQEWggGQveLrHFVrfNqmE
+  --key 9Y3Eiq6V8QjRDUM5nPqSwKIOPQaoEU4SbagfYFdvWa4
 ```
 
 | Exit | Meaning |
@@ -54,10 +54,14 @@ curl -sS https://api.aqta.ai/r/YOUR_RECEIPT_ID | aqta-verify-receipt - \
 | `1` | invalid |
 | `2` | usage / IO |
 
-Production key id: `aqta-att-0a18c7c16bc18a12`
+Current production key id: `aqta-att-01269bb4b6a7d950`
 ([`/v1/attestation/public-key`](https://api.aqta.ai/v1/attestation/public-key)).
 
-Pin that string. Do not re-fetch it inside a verify loop.
+Pin that string; do not re-fetch it inside a verify loop. Keys rotate and
+receipts do not: a receipt verifies against the key current when it was
+signed, and the permanent key record (with retired keys and their validity
+windows) is at
+[`app.aqta.ai/security/issuer-keys.txt`](https://app.aqta.ai/security/issuer-keys.txt).
 
 ## Library
 

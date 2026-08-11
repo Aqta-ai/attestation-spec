@@ -183,7 +183,7 @@ function canonicalValue(v: unknown): string {
  *
  * @example
  *   const result = verifyReceipt(receipt, {
- *     trustedPublicKey: 'gUoUhIvptKAoLTnry3VrDtOQEWggGQveLrHFVrfNqmE',
+ *     trustedPublicKey: '9Y3Eiq6V8QjRDUM5nPqSwKIOPQaoEU4SbagfYFdvWa4',
  *   });
  *   if (!result.valid) throw new Error(`Receipt invalid: ${result.reason}`);
  */

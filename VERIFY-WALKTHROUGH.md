@@ -16,7 +16,7 @@ out honestly in [THREAT-MODEL.md](./THREAT-MODEL.md).
 TypeScript/Node (current counsel-grade release; pinning required by default):
 
 ```bash
-npm install aqta-verify-receipt@1.0.7
+npm install aqta-verify-receipt
 ```
 
 Python (registry catch-up may lag npm; always pass `trusted_public_key`):
@@ -38,7 +38,7 @@ Returns the raw 32-byte Ed25519 key (base64url), plus pointers back to this spec
 verifiers:
 
 ```json
-{"public_key":"gUoUhIvptKAoLTnry3VrDtOQEWggGQveLrHFVrfNqmE","key_id":"aqta-att-0a18c7c16bc18a12","algorithm":"Ed25519", ...}
+{"public_key":"9Y3Eiq6V8QjRDUM5nPqSwKIOPQaoEU4SbagfYFdvWa4","key_id":"aqta-att-01269bb4b6a7d950","algorithm":"Ed25519", ...}
 ```
 
 Note `key_id` and `algorithm` here are fields of the *key endpoint*, not of a receipt: the
@@ -85,7 +85,7 @@ receipt's embedded key to the issuer's published key. Pin the demonstration samp
 production key from step 2 and it correctly fails:
 
 ```python
-verify_receipt(receipt, trusted_public_key="gUoUhIvptKAoLTnry3VrDtOQEWggGQveLrHFVrfNqmE")
+verify_receipt(receipt, trusted_public_key="9Y3Eiq6V8QjRDUM5nPqSwKIOPQaoEU4SbagfYFdvWa4")
 # VerifyResult(valid=False, reason='public_key does not match trusted key')
 ```
 

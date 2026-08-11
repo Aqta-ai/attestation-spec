@@ -49,12 +49,17 @@ From **v1.0.4**, a pinned `trusted_public_key` is required by default.
 Verifying against the key embedded in the receipt alone only proves
 integrity, not issuer identity. CLI: `--key <pinned>` or `--integrity-only`.
 
-Production key (also at
+Current production key (also at
 [`/v1/attestation/public-key`](https://api.aqta.ai/v1/attestation/public-key)):
 
 ```
-gUoUhIvptKAoLTnry3VrDtOQEWggGQveLrHFVrfNqmE
+9Y3Eiq6V8QjRDUM5nPqSwKIOPQaoEU4SbagfYFdvWa4
 ```
+
+Keys rotate; receipts do not. A receipt verifies against the key that was
+current when it was signed. The permanent key record, including retired keys
+and their validity windows, is at
+[`app.aqta.ai/security/issuer-keys.txt`](https://app.aqta.ai/security/issuer-keys.txt).
 
 ## What you'll see
 
