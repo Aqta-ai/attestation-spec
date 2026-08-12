@@ -58,12 +58,33 @@ def _compact_line(valid: bool, outcome: str, rid: str, detail: str) -> str:
     return f"{_paint('31', no + ' invalid')}  {detail}  {_mid(rid)}"
 
 
-def _pretty_extra(valid: bool) -> str:
+def _pretty_extra(valid: bool, key_source: str | None = None) -> str:
+    """The optional human lines under the compact verdict.
+
+    Says what was established and what was not, because a receipt that verifies
+    still does not prove which model ran, and someone reading this at the end of
+    an audit should not have to already know that. Never changes the exit code.
+
+    Must stay word-for-word identical to prettyExtra in the TypeScript CLI.
+    """
     mark = "◈" if _utf8() else "*"
     dot = "·" if _utf8() else "-"
-    if valid:
-        return f"{mark} seal intact {dot} verified offline"
-    return f"{mark} seal broken {dot} do not trust this receipt"
+    if not valid:
+        return (
+            f"{mark} seal broken {dot} do not rely on this receipt\n"
+            "  these bytes are not what the issuer signed"
+        )
+    if key_source != "pinned":
+        return (
+            f"{mark} signature checks out, against a key this receipt supplied itself\n"
+            "  anyone can self-sign, so this shows only that the file is internally consistent\n"
+            "  pin the issuer key with --key before you rely on it"
+        )
+    return (
+        f"{mark} seal intact {dot} checked offline, nothing was sent to Aqta\n"
+        "  the issuer signed these exact bytes and no one has altered them since\n"
+        "  it does not prove which model actually ran"
+    )
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -243,7 +264,7 @@ def main(argv: list[str] | None = None) -> int:
                 detail = f"{detail}, envelope {result.envelope}"
             print(_compact_line(result.valid, outcome, rid, detail))
             if args.pretty:
-                print(_pretty_extra(result.valid))
+                print(_pretty_extra(result.valid, result.key_source))
     return 0 if result.valid else 1
 
 

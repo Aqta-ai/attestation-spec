@@ -85,14 +85,37 @@ function compactLine(
   return `${paint('31', `${no} invalid`)}  ${trustOrReason}  ${mid(id)}`;
 }
 
-function prettyExtra(valid: boolean): string {
+/**
+ * The optional human lines under the compact verdict.
+ *
+ * Says what was established and what was not, because a receipt that verifies
+ * still does not prove which model ran, and someone reading this at the end of
+ * an audit should not have to already know that. Never changes the exit code.
+ *
+ * Must stay word-for-word identical to _pretty_extra in the Python CLI.
+ */
+function prettyExtra(valid: boolean, keySource?: string): string {
   const utf8 = useUtf8();
   const mark = utf8 ? '◈' : '*';
   const dot = utf8 ? '·' : '-';
-  if (valid) {
-    return `${mark} seal intact ${dot} verified offline`;
+  if (!valid) {
+    return (
+      `${mark} seal broken ${dot} do not rely on this receipt\n` +
+      '  these bytes are not what the issuer signed'
+    );
   }
-  return `${mark} seal broken ${dot} do not trust this receipt`;
+  if (keySource !== 'pinned') {
+    return (
+      `${mark} signature checks out, against a key this receipt supplied itself\n` +
+      '  anyone can self-sign, so this shows only that the file is internally consistent\n' +
+      '  pin the issuer key with --key before you rely on it'
+    );
+  }
+  return (
+    `${mark} seal intact ${dot} checked offline, nothing was sent to Aqta\n` +
+    '  the issuer signed these exact bytes and no one has altered them since\n' +
+    '  it does not prove which model actually ran'
+  );
 }
 
 function main(): void {
@@ -223,7 +246,7 @@ function main(): void {
       }
       process.stdout.write(compactLine(result.valid, outcome, id, detail) + '\n');
       if (pretty) {
-        process.stdout.write(prettyExtra(result.valid) + '\n');
+        process.stdout.write(prettyExtra(result.valid, result.keySource) + '\n');
       }
     }
   }
