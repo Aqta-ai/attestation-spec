@@ -1,9 +1,10 @@
 # What gateway-level receipts can and cannot prove
 
 An Aqta Research note. We operate Seal, a production gateway whose request path signs
-an ATTESTATION-v1 receipt for each call it allows through; refusals are audit-logged rather
-than receipt-signed, and per-request production issuance begins when upstream provider keys
-are provisioned. This note places that layer precisely in the verification stack described
+an ATTESTATION-v1 receipt for each call it evaluates. Since 16 July 2026 that includes
+refusals: BLOCKED and SUPPRESSED outcomes are signed rather than only audit-logged, so the
+receipt stream records decisions to stop alongside decisions to proceed. This note places
+that layer precisely in the verification stack described
 by the flexHEG reports (ARIA-commissioned; arXiv 2506.15093, 2506.03409, 2506.15100) and
 Attestable Audits (arXiv 2506.23706, ICML 2025), and states plainly which trust assumptions
 our layer does not remove. It is a companion to [THREAT-MODEL.md](./THREAT-MODEL.md).
@@ -24,9 +25,8 @@ cannot see is traffic that never came through it. flexHEG II grounds why that ma
 hardware terms: its preferred architecture puts the verifying component on the data path
 precisely so it is "the only path for data and instructions" into the accelerator. A
 gateway holds that position by convention and configuration, not by physics. And the
-receipt stream is narrower still than what the gateway observes: receipts are issued for
-allowed requests, refusals live in the audit log, so receipts are claims about allowed
-routed traffic, not all routed traffic, and never all traffic.
+receipt stream is narrower than the whole picture: receipts are claims about routed
+traffic, never about traffic that did not come through the gateway.
 
 ## What the literature says sits below us
 
