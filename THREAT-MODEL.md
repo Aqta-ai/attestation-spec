@@ -37,7 +37,7 @@ would help is called out honestly under each gap.
 **Signature forgery (outsider).** Breaking Ed25519 or the canonicalisation. Mitigated by
 standard cryptography (RFC 8032 over canonical JSON) and by verifier strictness: the
 published verifier rejects unknown top-level fields and malformed values, and the repository
-ships conformance vectors (7 valid, 8 invalid) an independent implementation must agree on.
+ships conformance vectors (10 valid, 15 adversarial) an independent implementation must agree on.
 Residual risk: implementation bugs; both verifiers are open source and deliberately small.
 
 **Key substitution (the important subtlety).** A receipt is self-verifying against its own
