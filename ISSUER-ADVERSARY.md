@@ -138,6 +138,41 @@ service. Where SCITT provides the registry and the receipt of registration, the
 classes above describe what an adversarial issuer does *around* such a registry,
 and what a reviewer needs in order to notice.
 
+## Turning A6 from an attack into a feature
+
+A6 is the one class where the defence and the most requested product capability
+are the same mechanism, which makes it the first thing worth building.
+
+The objection that blocks adoption is not cryptographic. A reviewer asks for
+evidence about one disputed decision, and the operator does not want to hand
+over the whole decision log, because a complete forensic trail is a liability
+surface in every unrelated dispute that follows. So the operator discloses a
+subset, and the reviewer has no way to tell a relevant subset from a flattering
+one. Both parties lose.
+
+Merkle inclusion proofs resolve it in one move. Disclose only the receipts the
+question requires, and ship with each an inclusion proof against a signed tree
+head the reviewer can obtain independently. The reviewer then verifies that
+every disclosed receipt is a genuine member of the issuer's history at that
+head, without seeing a single receipt that was not disclosed.
+
+**Build note, recorded 15 Aug 2026.** The mechanism is already implemented and
+already exposed: `GET /v1/transparency/proof/{attestation_id}` and
+`GET /v1/transparency/sth`. The evidence pack does not carry either, so a pack
+handed to a reviewer today is exactly the undetectable partial disclosure this
+document describes. The work is to include the proof and the tree head in the
+pack, and to say in the cover note what they establish.
+
+**State the residual limit in the same breath.** Inclusion proofs establish that
+what you were shown is genuine. They do not establish that what you were *not*
+shown is irrelevant. That is A2, omission, and it stays open. A pack that
+implies otherwise would be worse than one that carries no proofs at all.
+
+This is not zero-knowledge and should never be described as such. It is
+selective disclosure at the history layer. Field-level selective disclosure,
+proving a decision cleared a policy without revealing the policy's inputs, is a
+separate and genuinely unsolved problem.
+
 ## Honest limits
 
 We are not claiming to have solved verifiable inference, and this document does
