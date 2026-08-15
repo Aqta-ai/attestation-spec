@@ -146,3 +146,15 @@ the vector file name, your verifier version, and a minimal reproduction.
 Do not submit a pull request that silently changes a vector without
 explanation: the vectors are the canonical source of truth for cross
 language parity.
+
+## Planned: a nested-payload canonicalisation vector
+
+No ATTESTATION-v1 envelope nests, so no vector here exercises recursive key
+sorting inside canonical JSON. On 15 Aug 2026 that gap let a third-party port
+(Aqta's own browser verifier) ship a canonicaliser that sorted only top-level
+keys; the divergence was invisible until the first nested sidecar document was
+hashed against a Python-signed value and failed. Implementations that reuse
+their canonicaliser for payloads beyond the envelope will hit this silently.
+A vector with a nested object in a documented sidecar context belongs here so
+ports cannot repeat the mistake quietly.
+
