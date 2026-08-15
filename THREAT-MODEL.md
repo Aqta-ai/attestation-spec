@@ -109,3 +109,8 @@ classical Ed25519 and we do not claim otherwise.
 Every mechanism in this spec exists to let a claim be checked rather than trusted. The same
 standard has to apply to the spec itself: these are the checks we cannot yet offer, written
 down before anyone asks. Corrections and attacks are welcome at security@aqta.ai.
+
+The adversary this document does not fully cover is the issuer itself.
+See [ISSUER-ADVERSARY.md](./ISSUER-ADVERSARY.md), which names six classes of
+dishonest-issuer behaviour that produce cryptographically valid receipts, and
+states which of them we can detect today.

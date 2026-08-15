@@ -119,3 +119,7 @@ in, in the open, against this spec.
 - Attestable Audits: Verifiable AI Safety Benchmarks Using Trusted Execution Environments,
   arXiv 2506.23706, ICML 2025
 - IETF SCITT working group, datatracker.ietf.org/group/scitt (our mapping, not the papers')
+
+A companion note, [ISSUER-ADVERSARY.md](./ISSUER-ADVERSARY.md), takes the same
+question one layer further: what a dishonest issuer can do while producing
+receipts that verify correctly, and what is required to notice.
