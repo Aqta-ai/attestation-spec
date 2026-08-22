@@ -27,6 +27,29 @@ export interface AttestationReceipt {
   signature: string;
 }
 
+/**
+ * Required top-level fields of an ACTION-v1 record (spec/ACTION-v1.md §4).
+ *
+ * Every field is a string or an array of strings by design: the profile has
+ * no numeric fields, so the number-canonicalisation divergence class cannot
+ * occur here.
+ */
+export interface ActionRecord {
+  v: string;
+  action_id: string;
+  org_id: string;
+  session_id: string;
+  intent_hash: string;
+  agent: string;
+  tool: string;
+  args_hash: string;
+  outcome: 'ALLOWED' | 'BLOCKED';
+  policy_applied: string[];
+  timestamp: string;
+  public_key: string;
+  signature: string;
+}
+
 export interface VerifyOptions {
   /**
    * Trusted issuer public key (base64url, no padding). Required for a
@@ -59,6 +82,15 @@ export interface VerifyOptions {
    * rejected rather than silently verified under weaker rules.
    */
   envelope?: EnvelopeFormat;
+
+  /**
+   * Verification profile to apply. ACTION-v1 §7 forbids auto-detection by
+   * field shape, so the caller must name the profile explicitly; without it,
+   * an ACTION-v1 record is rejected by the ATTESTATION-v1 rules. Mutually
+   * exclusive with `envelope`: a profile applies the full structural and
+   * semantic rule set, never the signature-only foreign-envelope path.
+   */
+  profile?: 'ACTION-v1';
 }
 
 export type KeySource = 'pinned' | 'untrusted';
@@ -89,6 +121,34 @@ const REQUIRED_FIELDS: ReadonlySet<string> = new Set([
   'outcome',
   'policy_applied',
   'cost_prevented_eur',
+  'timestamp',
+  'public_key',
+  'signature',
+]);
+
+/**
+ * ACTION-v1 outcomes (spec §5). SUPPRESSED and PASSED are ATTESTATION-v1
+ * outcomes only: an action record attests an authorisation decision, which
+ * is either granted or refused.
+ */
+const ACTION_OUTCOMES: ReadonlySet<string> = new Set(['ALLOWED', 'BLOCKED']);
+
+/**
+ * ACTION-v1 required fields (spec §4). Iteration order is the presence-check
+ * order shared with the Python verifier; both implementations must emit the
+ * same missing-field reason for the same record.
+ */
+const ACTION_REQUIRED_FIELDS: ReadonlySet<string> = new Set([
+  'v',
+  'action_id',
+  'org_id',
+  'session_id',
+  'intent_hash',
+  'agent',
+  'tool',
+  'args_hash',
+  'outcome',
+  'policy_applied',
   'timestamp',
   'public_key',
   'signature',
@@ -196,15 +256,24 @@ function canonicalValue(v: unknown): string {
  * encoding, which `base64urlDecode` already normalises. The canonicalisation
  * rule is the same in both: sorted keys, no whitespace, literal UTF-8.
  */
-export type EnvelopeFormat = 'ATTESTATION-v1' | 'anchor-v1';
+export type EnvelopeFormat = 'ATTESTATION-v1' | 'anchor-v1' | 'ACTION-v1';
 
-const ENVELOPE_FIELDS: Record<EnvelopeFormat, { signature: string; publicKey: string }> = {
+/**
+ * Envelopes the shared signature path can carry. ACTION-v1 is deliberately
+ * absent: it is a verification profile with its own structural and semantic
+ * rules, never a signature-only envelope, and `detectEnvelope` never
+ * returns it. It appears in `EnvelopeFormat` only so `VerifyResult.envelope`
+ * can name it on success.
+ */
+type SignedEnvelope = Exclude<EnvelopeFormat, 'ACTION-v1'>;
+
+const ENVELOPE_FIELDS: Record<SignedEnvelope, { signature: string; publicKey: string }> = {
   'ATTESTATION-v1': { signature: 'signature', publicKey: 'public_key' },
   'anchor-v1': { signature: 'signature_b64', publicKey: 'public_key_b64' },
 };
 
 /** Identify an envelope by the field names it carries, or null if unrecognised. */
-export function detectEnvelope(receipt: unknown): EnvelopeFormat | null {
+export function detectEnvelope(receipt: unknown): SignedEnvelope | null {
   if (typeof receipt !== 'object' || receipt === null) return null;
   const r = receipt as Record<string, unknown>;
   if (typeof r.signature === 'string' && typeof r.public_key === 'string') {
@@ -246,7 +315,7 @@ function canonicalScalar(sig: Uint8Array): boolean {
  */
 function verifySignedEnvelope(
   r: Record<string, unknown>,
-  envelope: EnvelopeFormat,
+  envelope: SignedEnvelope,
   options: VerifyOptions
 ): VerifyResult {
   const fields = ENVELOPE_FIELDS[envelope];
@@ -301,10 +370,34 @@ export function verifyReceipt(
   receipt: unknown,
   options: VerifyOptions = {}
 ): VerifyResult {
+  // Profile selection is explicit and exclusive. A profile applies a full
+  // structural and semantic rule set; a foreign-envelope opt-in skips all of
+  // them and checks the signature alone. Naming both is a contradiction, and
+  // naming ACTION-v1 as an envelope would route an action record through the
+  // signature-only path, which is exactly the bypass §7 forbids.
+  if (options.profile !== undefined && options.envelope !== undefined) {
+    return { valid: false, reason: 'profile and envelope are mutually exclusive' };
+  }
+  if (options.envelope === 'ACTION-v1') {
+    return {
+      valid: false,
+      reason: 'ACTION-v1 is a profile, not a foreign envelope; use the profile option',
+    };
+  }
+
   if (typeof receipt !== 'object' || receipt === null) {
     return { valid: false, reason: 'receipt is not an object' };
   }
   const r = receipt as Record<string, unknown>;
+
+  // The profile branch runs before envelope detection: ACTION-v1 §7 forbids
+  // selecting a profile by inspecting the input's fields.
+  if (options.profile !== undefined) {
+    if (options.profile !== 'ACTION-v1') {
+      return { valid: false, reason: `unknown profile: ${String(options.profile)}` };
+    }
+    return verifyActionV1(r, options);
+  }
 
   const envelope = detectEnvelope(r);
   if (envelope === null) {
@@ -451,6 +544,153 @@ export function verifyReceipt(
   } catch (e) {
     return { valid: false, reason: `signature decode error: ${String(e)}` };
   }
+}
+
+/**
+ * ACTION-v1 profile verification (spec/ACTION-v1.md §4-§7).
+ *
+ * Same key family, same canonicalisation, same signature construction as
+ * ATTESTATION-v1; different subject and different structural rules. The
+ * check order below is a shared cross-implementation contract with the
+ * Python verifier: first failure wins, and both implementations must emit
+ * the same reason for the same record.
+ */
+function verifyActionV1(
+  r: Record<string, unknown>,
+  options: VerifyOptions
+): VerifyResult {
+  // Structural checks
+  for (const field of ACTION_REQUIRED_FIELDS) {
+    if (!(field in r)) {
+      return { valid: false, reason: `missing required field: ${field}` };
+    }
+  }
+  if (options.strictFields !== false) {
+    for (const k of Object.keys(r)) {
+      if (!ACTION_REQUIRED_FIELDS.has(k)) {
+        return { valid: false, reason: `unknown top-level field: ${k}` };
+      }
+    }
+  }
+
+  // Version tag. ATTESTATION-v1 uses the integer 1; this profile uses the
+  // string "action-1", so the two record types are structurally disjoint.
+  if (r.v !== 'action-1') {
+    return { valid: false, reason: "v must be the string 'action-1'" };
+  }
+
+  // Type checks: every field except policy_applied is a string.
+  for (const field of ACTION_REQUIRED_FIELDS) {
+    if (field === 'v') continue; // exact value already checked above
+    if (field === 'policy_applied') {
+      if (!Array.isArray(r.policy_applied)) {
+        return { valid: false, reason: 'policy_applied must be an array' };
+      }
+    } else if (typeof r[field] !== 'string') {
+      return { valid: false, reason: `${field} must be a string` };
+    }
+  }
+
+  // Semantic sanity (spec §5, §7)
+  if (!ACTION_OUTCOMES.has(r.outcome as string)) {
+    return { valid: false, reason: 'outcome must be ALLOWED or BLOCKED' };
+  }
+  if ((r.tool as string).length === 0) {
+    return { valid: false, reason: 'tool must be a non-empty string' };
+  }
+  if (!/^[0-9a-f]{64}$/.test(r.args_hash as string)) {
+    return { valid: false, reason: 'args_hash must be 64 lowercase hex characters' };
+  }
+  const intentHash = r.intent_hash as string;
+  if (intentHash !== '' && !/^[0-9a-f]{64}$/.test(intentHash)) {
+    return { valid: false, reason: "intent_hash must be '' or 64 lowercase hex characters" };
+  }
+  if (intentHash !== '' && (r.session_id as string) === '') {
+    return { valid: false, reason: 'intent_hash requires a non-empty session_id' };
+  }
+  if (!(r.policy_applied as unknown[]).every((p) => typeof p === 'string')) {
+    return { valid: false, reason: 'policy_applied must contain only strings' };
+  }
+  const sorted = [...(r.policy_applied as string[])].sort();
+  if ((r.policy_applied as string[]).some((p, i) => p !== sorted[i])) {
+    return { valid: false, reason: 'policy_applied must be in lexicographic order' };
+  }
+  if (!RFC3339_OFFSET.test(r.timestamp as string)) {
+    return {
+      valid: false,
+      reason: 'timestamp must be an RFC 3339 datetime with an explicit offset',
+    };
+  }
+
+  const pinned = options.trustedPublicKey;
+  const allowUntrusted = options.allowUntrustedEmbeddedKey === true;
+
+  if (pinned === undefined && !allowUntrusted) {
+    return {
+      valid: false,
+      reason:
+        'trustedPublicKey required (pass allowUntrustedEmbeddedKey for integrity-only)',
+    };
+  }
+
+  // Public-key pinning
+  if (pinned !== undefined && pinned !== r.public_key) {
+    return {
+      valid: false,
+      reason: 'public_key does not match trusted key',
+    };
+  }
+
+  // Canonical payload (all fields except signature). No numeric fields exist
+  // in this profile, so the number-canonicalisation path is never exercised,
+  // but the shared canonicalise function is used unchanged.
+  const payload: Record<string, unknown> = { ...r };
+  delete payload.signature;
+
+  let canonical: Uint8Array;
+  try {
+    canonical = canonicalise(payload);
+  } catch (e) {
+    return { valid: false, reason: `failed to canonicalise: ${String(e)}` };
+  }
+
+  // Ed25519 verification
+  try {
+    const sig = base64urlDecode(r.signature as string);
+    const pub = base64urlDecode(r.public_key as string);
+    if (sig.length !== 64) {
+      return { valid: false, reason: 'signature length != 64 bytes' };
+    }
+    if (pub.length !== 32) {
+      return { valid: false, reason: 'public key length != 32 bytes' };
+    }
+    if (!canonicalScalar(sig)) {
+      return { valid: false, reason: 'non-canonical signature scalar' };
+    }
+    const ok = nacl.sign.detached.verify(canonical, sig, pub);
+    if (!ok) {
+      return { valid: false, reason: 'signature check failed' };
+    }
+    return {
+      valid: true,
+      envelope: 'ACTION-v1',
+      keySource: pinned !== undefined ? 'pinned' : 'untrusted',
+    };
+  } catch (e) {
+    return { valid: false, reason: `signature decode error: ${String(e)}` };
+  }
+}
+
+/**
+ * Verify a Seal ACTION-v1 action record. Convenience wrapper for
+ * `verifyReceipt(record, { ...options, profile: 'ACTION-v1' })`; the profile
+ * must be named explicitly because ACTION-v1 §7 forbids auto-detection.
+ */
+export function verifyActionRecord(
+  record: unknown,
+  options: Omit<VerifyOptions, 'profile' | 'envelope'> = {}
+): VerifyResult {
+  return verifyReceipt(record, { ...options, profile: 'ACTION-v1' });
 }
 
 /**

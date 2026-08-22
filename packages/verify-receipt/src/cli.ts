@@ -54,6 +54,7 @@ Options:
   --key <key>        pin the issuer public key (required for counsel-grade)
   --integrity-only   check signature vs embedded key only (anyone can self-sign)
   --envelope <name>  opt in to a non-ATTESTATION-v1 envelope (e.g. anchor-v1)
+  --profile <name>   verify under a named profile (action-1 for ACTION-v1 records)
   --no-strict        allow unknown top-level fields
   --json             machine JSON on stdout (one object)
   --pretty           optional human flourish after the compact line
@@ -126,6 +127,7 @@ function main(): void {
   let trustedKey: string | undefined;
   let integrityOnly = false;
   let envelope: EnvelopeFormat | undefined;
+  let profile: string | undefined;
   let strict = true;
   let quiet = false;
   let asJson = false;
@@ -140,6 +142,9 @@ function main(): void {
     } else if (a === '--envelope') {
       envelope = args[++i] as EnvelopeFormat;
       if (!envelope) usage();
+    } else if (a === '--profile') {
+      profile = args[++i];
+      if (!profile) usage();
     } else if (a === '--no-strict') {
       strict = false;
     } else if (a === '--quiet' || a === '-q') {
@@ -163,6 +168,16 @@ function main(): void {
   }
   if (trustedKey && integrityOnly) {
     process.stderr.write('aqta-verify-receipt: use --key or --integrity-only, not both\n');
+    process.exit(2);
+  }
+  // The flag takes the wire tag ("action-1"), the library takes the profile
+  // name ("ACTION-v1"); the mapping is fixed here and nowhere else.
+  if (profile !== undefined && profile !== 'action-1') {
+    process.stderr.write(`aqta-verify-receipt: unknown profile ${profile} (only: action-1)\n`);
+    process.exit(2);
+  }
+  if (profile !== undefined && envelope !== undefined) {
+    process.stderr.write('aqta-verify-receipt: use --profile or --envelope, not both\n');
     process.exit(2);
   }
   if (quiet && (asJson || pretty)) {
@@ -211,14 +226,19 @@ function main(): void {
     process.exit(2);
   }
 
+  const actionProfile = profile === 'action-1';
   const result = verifyReceipt(receipt, {
     trustedPublicKey: trustedKey,
     allowUntrustedEmbeddedKey: integrityOnly,
     envelope,
     strictFields: strict,
+    profile: actionProfile ? 'ACTION-v1' : undefined,
   });
 
-  const id = typeof receipt.attestation_id === 'string' ? receipt.attestation_id : '?';
+  const idField = actionProfile
+    ? (receipt as unknown as Record<string, unknown>).action_id
+    : receipt.attestation_id;
+  const id = typeof idField === 'string' ? idField : '?';
   const outcome = typeof receipt.outcome === 'string' ? receipt.outcome : '?';
   const trust =
     result.keySource === 'pinned'
@@ -228,20 +248,34 @@ function main(): void {
   if (!quiet) {
     if (asJson) {
       process.stdout.write(
-        JSON.stringify({
-          valid: result.valid,
-          outcome,
-          attestation_id: id,
-          key_source: result.keySource ?? null,
-          envelope: result.envelope ?? null,
-          reason: result.valid ? null : result.reason ?? 'verification failed',
-        }) + '\n'
+        JSON.stringify(
+          actionProfile
+            ? {
+                valid: result.valid,
+                outcome,
+                action_id: id,
+                key_source: result.keySource ?? null,
+                profile: 'ACTION-v1',
+                reason: result.valid ? null : result.reason ?? 'verification failed',
+              }
+            : {
+                valid: result.valid,
+                outcome,
+                attestation_id: id,
+                key_source: result.keySource ?? null,
+                envelope: result.envelope ?? null,
+                reason: result.valid ? null : result.reason ?? 'verification failed',
+              }
+        ) + '\n'
       );
     } else {
       let detail = result.valid ? trust : result.reason ?? 'verification failed';
-      // Name the envelope when it is not the default, so a valid line never
-      // leaves the reader assuming ATTESTATION-v1 rules were applied.
-      if (result.valid && result.envelope && result.envelope !== 'ATTESTATION-v1') {
+      // Name the profile or envelope when it is not the default, so a valid
+      // line never leaves the reader assuming ATTESTATION-v1 rules were
+      // applied.
+      if (result.valid && actionProfile) {
+        detail = `${detail}, profile ACTION-v1`;
+      } else if (result.valid && result.envelope && result.envelope !== 'ATTESTATION-v1') {
         detail = `${detail}, envelope ${result.envelope}`;
       }
       process.stdout.write(compactLine(result.valid, outcome, id, detail) + '\n');

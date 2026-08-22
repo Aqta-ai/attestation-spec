@@ -124,6 +124,14 @@ def main(argv: list[str] | None = None) -> int:
         "ATTESTATION-v1 rules do not apply to it",
     )
     parser.add_argument(
+        "--profile",
+        metavar="NAME",
+        default=None,
+        help="verify under an explicit profile; the only accepted value is "
+        "action-1 (ACTION-v1 action records). Cannot be combined with "
+        "--envelope",
+    )
+    parser.add_argument(
         "--json",
         action="store_true",
         help="machine JSON on stdout (one object)",
@@ -157,6 +165,19 @@ def main(argv: list[str] | None = None) -> int:
     if args.quiet and (args.json or args.pretty):
         print(
             "aqta-verify-receipt: -q cannot be combined with --json or --pretty",
+            file=sys.stderr,
+        )
+        return 2
+    if args.profile is not None and args.envelope is not None:
+        print(
+            "aqta-verify-receipt: use --profile or --envelope, not both",
+            file=sys.stderr,
+        )
+        return 2
+    if args.profile is not None and args.profile != "action-1":
+        print(
+            f"aqta-verify-receipt: unknown profile: {args.profile} "
+            "(the only accepted value is action-1)",
             file=sys.stderr,
         )
         return 2
@@ -220,15 +241,17 @@ def main(argv: list[str] | None = None) -> int:
         print("aqta-verify-receipt: receipt must be a JSON object", file=sys.stderr)
         return 2
 
+    action_profile = args.profile == "action-1"
     result = verify_receipt(
         receipt,
         trusted_public_key=args.key,
         allow_untrusted_embedded_key=args.integrity_only,
         strict_fields=not args.no_strict,
         envelope=args.envelope,
+        profile="ACTION-v1" if action_profile else None,
     )
 
-    rid = receipt.get("attestation_id", "?")
+    rid = receipt.get("action_id" if action_profile else "attestation_id", "?")
     if not isinstance(rid, str):
         rid = "?"
     outcome = receipt.get("outcome", "?")
@@ -242,25 +265,37 @@ def main(argv: list[str] | None = None) -> int:
 
     if not args.quiet:
         if args.json:
-            print(
-                json.dumps(
-                    {
-                        "valid": result.valid,
-                        "outcome": outcome,
-                        "attestation_id": rid,
-                        "key_source": result.key_source,
-                        "envelope": result.envelope,
-                        "reason": None if result.valid else (result.reason or "verification failed"),
-                    },
-                    separators=(",", ":"),
-                    ensure_ascii=False,
-                )
-            )
+            if action_profile:
+                out = {
+                    "valid": result.valid,
+                    "outcome": outcome,
+                    "action_id": rid,
+                    "key_source": result.key_source,
+                    "profile": "ACTION-v1",
+                    "reason": None if result.valid else (result.reason or "verification failed"),
+                }
+            else:
+                out = {
+                    "valid": result.valid,
+                    "outcome": outcome,
+                    "attestation_id": rid,
+                    "key_source": result.key_source,
+                    "envelope": result.envelope,
+                    "reason": None if result.valid else (result.reason or "verification failed"),
+                }
+            print(json.dumps(out, separators=(",", ":"), ensure_ascii=False))
         else:
             detail = trust if result.valid else (result.reason or "verification failed")
             # Name the envelope when it is not the default, so a valid line
             # never leaves the reader assuming ATTESTATION-v1 rules were applied.
-            if result.valid and result.envelope and result.envelope != "ATTESTATION-v1":
+            # Under --profile the caller has already named the rules, so no
+            # suffix is added there.
+            if (
+                result.valid
+                and not action_profile
+                and result.envelope
+                and result.envelope != "ATTESTATION-v1"
+            ):
                 detail = f"{detail}, envelope {result.envelope}"
             print(_compact_line(result.valid, outcome, rid, detail))
             if args.pretty:

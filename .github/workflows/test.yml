@@ -162,3 +162,10 @@ jobs:
           }
           console.log('All test vectors behave as specified (TypeScript).');
           JS
+
+      - name: ACTION-v1 cross-implementation interop sweep
+        # Every action vector through BOTH verifiers, verdicts and reason
+        # strings compared per file, plus un-vectored divergence probes.
+        # Normative per spec/ACTION-v1.md section 6: a single hardcoded
+        # fixture does not satisfy the interop requirement.
+        run: node scripts/action-interop-sweep.mjs

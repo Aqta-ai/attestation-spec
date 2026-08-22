@@ -1,0 +1,19 @@
+{
+  "action_id": "00000000-0000-0000-0000-000000000006",
+  "agent": "claude-code/2.1",
+  "args_hash": "8195fd1a5f2881870e56f68dac8279d80d5bec6a022bd97755409f31fd2740f9",
+  "intent_hash": "d119bff592df7060201aa6f9cf6dd12ba71edd692493baad4535e9d35161e066",
+  "org_id": "org-vector",
+  "outcome": "BLOCKED",
+  "policy_applied": [
+    "a_first",
+    "m_middle",
+    "z_last"
+  ],
+  "public_key": "pOaccW6Csyo1POtxjixPH80oux9--YC1tzzaENT4vQ0",
+  "session_id": "sess-vector-0006",
+  "signature": "8Oj2_AzhYZbuWLsJmFM7wz1v6hJ4Mxc-NA2OMps5ab1efDGnkRUziay0xM3UdQJb_3V3CcsylgBf26qruBb7DA",
+  "timestamp": "2026-08-22T14:03:11.412903+00:00",
+  "tool": "github.merge_pull_request",
+  "v": "action-1"
+}

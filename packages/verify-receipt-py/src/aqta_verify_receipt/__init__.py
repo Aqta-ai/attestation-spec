@@ -2,12 +2,15 @@
 aqta-verify-receipt
 ===================
 
-Independent verifier for Seal attestation receipts (ATTESTATION-v1).
+Independent verifier for Seal attestation receipts (ATTESTATION-v1) and
+action authorisation records (ACTION-v1, via :func:`verify_action_record` or
+the explicit ``profile`` option).
 
 Verifies the Ed25519 signature on an AI-enforcement attestation receipt using
 only the issuer's published public key: no dependency on Aqta's servers.
 
 Spec: https://github.com/Aqta-ai/attestation-spec/blob/main/spec/ATTESTATION-v1.md
+and spec/ACTION-v1.md in the same repository.
 
 Example
 -------
@@ -25,8 +28,14 @@ Example
 from .verifier import (
     VerifyResult,
     fetch_published_public_key,
+    verify_action_record,
     verify_receipt,
 )
 
-__all__ = ["verify_receipt", "fetch_published_public_key", "VerifyResult"]
-__version__ = "1.0.9"
+__all__ = [
+    "verify_receipt",
+    "verify_action_record",
+    "fetch_published_public_key",
+    "VerifyResult",
+]
+__version__ = "1.1.0"

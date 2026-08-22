@@ -1,0 +1,17 @@
+{
+  "action_id": "00000000-0000-0000-0000-00000000000a",
+  "agent": "claude-code/2.1",
+  "args_hash": "8195fd1a5f2881870e56f68dac8279d80d5bec6a022bd97755409f31fd2740f9",
+  "intent_hash": "",
+  "org_id": "org-vector",
+  "outcome": "ALLOWED",
+  "policy_applied": [
+    "change_window"
+  ],
+  "public_key": "pOaccW6Csyo1POtxjixPH80oux9--YC1tzzaENT4vQ0",
+  "session_id": "sess-vector-0010",
+  "signature": "tHxZkO-TL6CjlOG2gcqNBS0XEhbLekutA4jcwiO5S387DCNtj6fxjw3Ajec-2hHZq9F-fAKhkLQCAzHdRnR0AQ",
+  "timestamp": "2026-08-22T14:03:11.412903+00:00",
+  "tool": "cloud.eu-west-1.kubernetes.deployments.scale",
+  "v": "action-1"
+}

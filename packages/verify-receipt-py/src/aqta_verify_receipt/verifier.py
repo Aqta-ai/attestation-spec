@@ -42,6 +42,28 @@ REQUIRED_FIELDS = frozenset(
 )
 
 ALLOWED_OUTCOMES = frozenset({"ALLOWED", "BLOCKED", "SUPPRESSED", "PASSED"})
+
+# ACTION-v1 (spec/ACTION-v1.md). A separate record type, not a widening of
+# ATTESTATION-v1: its own required set, its own outcome set. Presence is
+# checked in this exact order in both reference implementations, so the two
+# emit the same reason for the same multiply-defective record.
+ACTION_REQUIRED_FIELDS = (
+    "v",
+    "action_id",
+    "org_id",
+    "session_id",
+    "intent_hash",
+    "agent",
+    "tool",
+    "args_hash",
+    "outcome",
+    "policy_applied",
+    "timestamp",
+    "public_key",
+    "signature",
+)
+_ACTION_REQUIRED_SET = frozenset(ACTION_REQUIRED_FIELDS)
+ACTION_ALLOWED_OUTCOMES = frozenset({"ALLOWED", "BLOCKED"})
 _HEX64 = re.compile(r"^[0-9a-f]{64}$")
 # Range-checks the calendar without parsing, and permits a leap second (:60),
 # which is legal RFC 3339. Character-for-character identical to the regex in
@@ -264,6 +286,119 @@ def _verify_signed_envelope(
     )
 
 
+def _verify_action_record(
+    record: Mapping[str, Any],
+    trusted_public_key: Optional[str],
+    allow_untrusted_embedded_key: bool,
+    strict_fields: bool,
+) -> "VerifyResult":
+    """ACTION-v1 profile verification (spec/ACTION-v1.md sections 4-7).
+
+    The check order is a cross-implementation contract: both reference
+    verifiers run this exact sequence and the first failure wins, so the two
+    emit identical reasons for identical bytes. The signature path is the
+    strict one: the strict base64url decoder, never the lenient foreign
+    envelope decoder.
+    """
+    # 2. Required-field presence, in the contract's order.
+    for field in ACTION_REQUIRED_FIELDS:
+        if field not in record:
+            return VerifyResult(False, f"missing required field: {field}")
+    # 3. Unknown top-level fields, spec section 4.
+    if strict_fields:
+        unknown = set(record.keys()) - _ACTION_REQUIRED_SET
+        if unknown:
+            return VerifyResult(
+                False, f"unknown top-level field: {sorted(unknown)[0]}"
+            )
+    # 4. Version tag. ATTESTATION-v1 uses the integer 1; this profile uses
+    # the string "action-1". The type is part of the discrimination.
+    if not isinstance(record["v"], str) or record["v"] != "action-1":
+        return VerifyResult(False, "v must be the string 'action-1'")
+    # 5. Types: every field except policy_applied is a string (there are no
+    # numeric fields in this profile, by design); policy_applied is an array.
+    for field in ACTION_REQUIRED_FIELDS:
+        if field == "policy_applied":
+            if not isinstance(record[field], list):
+                return VerifyResult(False, "policy_applied must be an array")
+        elif not isinstance(record[field], str):
+            return VerifyResult(False, f"{field} must be a string")
+    # 6-12. Semantic checks, spec section 7.
+    if record["outcome"] not in ACTION_ALLOWED_OUTCOMES:
+        return VerifyResult(False, "outcome must be ALLOWED or BLOCKED")
+    if record["tool"] == "":
+        return VerifyResult(False, "tool must be a non-empty string")
+    if not _HEX64.match(record["args_hash"]):
+        return VerifyResult(
+            False, "args_hash must be 64 lowercase hex characters"
+        )
+    if record["intent_hash"] != "" and not _HEX64.match(record["intent_hash"]):
+        return VerifyResult(
+            False, "intent_hash must be '' or 64 lowercase hex characters"
+        )
+    if record["intent_hash"] != "" and record["session_id"] == "":
+        return VerifyResult(
+            False, "intent_hash requires a non-empty session_id"
+        )
+    if not all(isinstance(p, str) for p in record["policy_applied"]):
+        return VerifyResult(False, "policy_applied must contain only strings")
+    if list(record["policy_applied"]) != sorted(record["policy_applied"]):
+        return VerifyResult(
+            False, "policy_applied must be in lexicographic order"
+        )
+    if not _RFC3339_OFFSET.match(record["timestamp"]):
+        return VerifyResult(
+            False,
+            "timestamp must be an RFC 3339 datetime with an explicit offset",
+        )
+
+    # 13. Key pinning, same rules and wording as ATTESTATION-v1.
+    if trusted_public_key is None and not allow_untrusted_embedded_key:
+        return VerifyResult(
+            False,
+            "trusted_public_key required "
+            "(pass allow_untrusted_embedded_key for integrity-only)",
+        )
+    if (
+        trusted_public_key is not None
+        and trusted_public_key != record["public_key"]
+    ):
+        return VerifyResult(False, "public_key does not match trusted key")
+
+    # Canonical payload, spec section 6: same shared canonicalisation as
+    # ATTESTATION-v1. No numeric fields exist to canonicalise, but the code
+    # path must be the shared one, not a profile-local reimplementation.
+    payload = {k: v for k, v in record.items() if k != "signature"}
+    try:
+        canonical = _canonical_bytes(payload)
+    except (ValueError, TypeError, OverflowError, UnicodeEncodeError) as e:
+        return VerifyResult(False, f"receipt is not canonicalisable: {e}")
+
+    # 14. Signature: strict base64url only.
+    try:
+        sig = _b64url_decode(record["signature"])
+        pub = _b64url_decode(record["public_key"])
+    except Exception as e:
+        return VerifyResult(False, f"signature decode error: {e}")
+    if len(sig) != 64:
+        return VerifyResult(False, "signature length != 64 bytes")
+    if len(pub) != 32:
+        return VerifyResult(False, "public key length != 32 bytes")
+
+    try:
+        Ed25519PublicKey.from_public_bytes(pub).verify(sig, canonical)
+    except InvalidSignature:
+        return VerifyResult(False, "signature check failed")
+    except Exception as e:
+        return VerifyResult(False, f"verification error: {e}")
+
+    return VerifyResult(
+        True,
+        key_source="pinned" if trusted_public_key is not None else "untrusted",
+        envelope="ACTION-v1",
+    )
+
+
 def verify_receipt(
     receipt: Mapping[str, Any],
     *,
@@ -271,6 +406,7 @@ def verify_receipt(
     allow_untrusted_embedded_key: bool = False,
     strict_fields: bool = True,
     envelope: Optional[str] = None,
+    profile: Optional[str] = None,
 ) -> VerifyResult:
     """
     Verify a Seal attestation receipt.
@@ -292,6 +428,12 @@ def verify_receipt(
         verifying. Foreign envelopes carry their own field sets, so none of
         ATTESTATION-v1's structural or semantic rules apply to them; naming one
         here is how a caller says it understands that.
+    profile
+        Explicit verification profile. The only accepted value is
+        ``"ACTION-v1"`` (spec/ACTION-v1.md), and it must be requested by the
+        caller: profiles are never auto-detected from the input's field shape
+        (spec section 7). Mutually exclusive with ``envelope``. See also
+        :func:`verify_action_record`.
 
     Returns
     -------
@@ -300,8 +442,31 @@ def verify_receipt(
         (or explicitly allowed embedded) public key. Never raises.
     """
     expect_envelope = envelope
+    # Profile selection runs before envelope detection: a profile is an
+    # explicit caller decision, never an inference from the input.
+    if profile is not None and expect_envelope is not None:
+        return VerifyResult(False, "profile and envelope are mutually exclusive")
+    if expect_envelope == "ACTION-v1":
+        # The foreign-envelope path is signature-only and uses the lenient
+        # decoder. Routing an ACTION record through it would skip every
+        # structural and semantic rule, so the misuse is named rather than
+        # silently honoured.
+        return VerifyResult(
+            False,
+            "ACTION-v1 is a profile, not a foreign envelope; "
+            "use the profile option",
+        )
     if not isinstance(receipt, Mapping):
         return VerifyResult(False, "receipt is not a mapping")
+    if profile is not None:
+        if profile != "ACTION-v1":
+            return VerifyResult(False, f"unknown profile: {profile}")
+        return _verify_action_record(
+            receipt,
+            trusted_public_key,
+            allow_untrusted_embedded_key,
+            strict_fields,
+        )
 
     envelope = detect_envelope(receipt)
     if envelope is None:
@@ -446,6 +611,30 @@ def verify_receipt(
         True,
         key_source="pinned" if trusted_public_key is not None else "untrusted",
         envelope="ATTESTATION-v1",
+    )
+
+
+def verify_action_record(
+    record: Mapping[str, Any],
+    *,
+    trusted_public_key: Optional[str] = None,
+    allow_untrusted_embedded_key: bool = False,
+    strict_fields: bool = True,
+) -> VerifyResult:
+    """
+    Verify a Seal ACTION-v1 action authorisation record.
+
+    Convenience wrapper for :func:`verify_receipt` with
+    ``profile="ACTION-v1"``. Same pinning rules: a trusted public key is
+    required unless ``allow_untrusted_embedded_key`` is set, in which case the
+    result is labelled ``key_source="untrusted"``. Never raises.
+    """
+    return verify_receipt(
+        record,
+        trusted_public_key=trusted_public_key,
+        allow_untrusted_embedded_key=allow_untrusted_embedded_key,
+        strict_fields=strict_fields,
+        profile="ACTION-v1",
     )
 
 

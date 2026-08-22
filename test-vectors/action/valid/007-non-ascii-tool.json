@@ -1,0 +1,17 @@
+{
+  "action_id": "00000000-0000-0000-0000-000000000007",
+  "agent": "claude-code/2.1",
+  "args_hash": "054910fb950bcb00a81309a231f4c0d275d38337381fc4a8a72312b84e5fa12a",
+  "intent_hash": "d119bff592df7060201aa6f9cf6dd12ba71edd692493baad4535e9d35161e066",
+  "org_id": "org-vector",
+  "outcome": "BLOCKED",
+  "policy_applied": [
+    "require_intent"
+  ],
+  "public_key": "pOaccW6Csyo1POtxjixPH80oux9--YC1tzzaENT4vQ0",
+  "session_id": "sess-vector-0007",
+  "signature": "0fnzU9NSgbTxge4APFVzHSyIIOoSZLw93Ce0wH5htsvVW2Iw4xTtIkhPKSwUV2De1UBSSXGfAO0lM78S1ukPDQ",
+  "timestamp": "2026-08-22T14:03:11.412903+00:00",
+  "tool": "dateien.l\u00f6schen",
+  "v": "action-1"
+}

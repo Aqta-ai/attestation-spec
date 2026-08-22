@@ -9,6 +9,43 @@ own versioning contract described in [CONFORMANCE.md](./CONFORMANCE.md).
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-08-22 (the ACTION-v1 profile: agent-action records)
+
+### Added
+
+- **ACTION-v1 profile** in both reference verifiers: verification of
+  agent-action authorisation records per the new
+  [`spec/ACTION-v1.md`](./spec/ACTION-v1.md) draft. A sibling record type,
+  not a new ATTESTATION version: string version tag `"action-1"`, fourteen
+  fields, outcomes `ALLOWED`/`BLOCKED` only, no numeric fields, and a
+  normative assertion-provenance table (spec §8).
+- Explicit profile selection everywhere, never auto-detection: library
+  option `profile: 'ACTION-v1'` (TS) / `profile='ACTION-v1'` (Py),
+  convenience exports `verifyActionRecord` / `verify_action_record`, CLI
+  flag `--profile action-1`. Passing `envelope='ACTION-v1'` is rejected so
+  an action record can never route through the signature-only
+  foreign-envelope path.
+- 25 new conformance vectors under `test-vectors/action/` (10 valid, 15
+  invalid), including a correctly signed ATTESTATION-v1 receipt that an
+  ACTION verifier MUST reject (anti-profile-sniffing) and a
+  `\uXXXX`-escaped-signing vector pinning the cross-language escaping trap.
+- `scripts/action-interop-sweep.mjs`: every action AND attestation vector
+  through both implementations with verdict and reason compared per file,
+  plus un-vectored divergence probes (type wording, option conflicts,
+  unknown profile). Wired into CI. Four pre-existing 1.0.10 wording-only
+  divergences are allowlisted explicitly; verdicts agree in all of them.
+- `examples/reference-action-issuer.py`, importing canonicalisation from
+  the ATTESTATION reference issuer so the two profiles cannot drift at the
+  byte level.
+
+### Notes
+
+- Published as `aqta-verify-receipt` **1.1.0** on both **npm** and **PyPI**
+  on 2026-08-22, which froze the ACTION-v1 wire format (spec §13). Before
+  publication the format was verified end to end against the production
+  issuer: live ALLOWED and BLOCKED records from api.aqta.ai verify offline
+  with both implementations, and a tampered record fails.
+
 ## [1.0.8] - 2026-08-02 (compact CLI default; --pretty / --json)
 
 ### Changed
