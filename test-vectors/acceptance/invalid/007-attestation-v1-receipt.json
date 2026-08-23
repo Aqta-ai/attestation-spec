@@ -1,0 +1,16 @@
+{
+  "attestation_id": "00000000-0000-0000-0000-0000000000s1",
+  "cost_prevented_eur": 0,
+  "model": "gpt-4o",
+  "org_id": "org-vector",
+  "outcome": "BLOCKED",
+  "policy_applied": [
+    "affordability_v3"
+  ],
+  "public_key": "j3Mkkm9t2FJCeuFwNfnFLJOQv_iqMit-2jLaiUuV8sE",
+  "request_hash": "8f3a7e2b9c4d5f6a1b0c9d8e7f6a5b4c3d2e1f0a9b8c7d6e5f4a3b2c1d0e9f8a",
+  "signature": "8aheD3s2UBrKiPGjkDDjfMTvGsHLOyPYK3z7eSiHrcW1pCsc_nOuLfIaDVZ4ZGB-oS9ca5YEqIidZ32MM48JBA",
+  "timestamp": "2026-08-23T09:12:44.108231+00:00",
+  "trace_id": "trace-vector-accept",
+  "v": 1
+}

@@ -1,0 +1,19 @@
+{
+  "acceptance_id": "00000000-0000-0000-0000-000000000008",
+  "decision": "OVERRIDDEN",
+  "org_id": "org-vector",
+  "policy_applied": [
+    "adverse_action",
+    "affordability_v3"
+  ],
+  "public_key": "j3Mkkm9t2FJCeuFwNfnFLJOQv_iqMit-2jLaiUuV8sE",
+  "reason_hash": "",
+  "reviewer_authority": "Kreditpr\u00fcfung, Gr\u00f6\u00dfenlimit",
+  "reviewer_ref": "pr\u00fcfer m-90a2",
+  "signature": "GepvxF88hRZXsNKjsJ5c-Mur62ACiBVluy62zST-f6TOwIqgE0vJQl28Sbwl8R7sB8oCrWHrRrya4jVf1zMsCw",
+  "subject_hash": "dab5c58fd6ddfff99428486705ba12d0ccf97cc8c9dfbdd7f058b40892731e1a",
+  "subject_id": "00000000-0000-0000-0000-0000000000s1",
+  "subject_v": "1",
+  "timestamp": "2026-08-23T09:12:44.108231+00:00",
+  "v": "accept-1"
+}

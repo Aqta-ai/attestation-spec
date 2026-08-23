@@ -1,0 +1,19 @@
+{
+  "acceptance_id": "00000000-0000-0000-0000-00000000001b",
+  "decision": "ACCEPTED",
+  "org_id": "org-vector",
+  "policy_applied": [
+    "adverse_action",
+    "affordability_v3"
+  ],
+  "public_key": "j3Mkkm9t2FJCeuFwNfnFLJOQv_iqMit-2jLaiUuV8sE",
+  "reason_hash": "",
+  "reviewer_authority": "SME credit, limit EUR 150000",
+  "reviewer_ref": "credit-officer c-1f8e",
+  "signature": "VqAdxK1bwvXQacpf7rXZD6CGM1N5T0rIdvXD_LFbg4ZzVqSpog7IZDtQzSvg87TL6VUgYXRQEzXHe2Z8VwbQDA",
+  "subject_hash": "DAB5C58FD6DDFFF99428486705BA12D0CCF97CC8C9DFBDD7F058B40892731E1A",
+  "subject_id": "00000000-0000-0000-0000-0000000000s1",
+  "subject_v": "1",
+  "timestamp": "2026-08-23T09:12:44.108231+00:00",
+  "v": "accept-1"
+}

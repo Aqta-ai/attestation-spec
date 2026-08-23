@@ -1,0 +1,18 @@
+{
+  "acceptance_id": "00000000-0000-0000-0000-000000000014",
+  "decision": "ACCEPTED",
+  "org_id": "org-vector",
+  "policy_applied": [
+    "adverse_action",
+    "affordability_v3"
+  ],
+  "public_key": "j3Mkkm9t2FJCeuFwNfnFLJOQv_iqMit-2jLaiUuV8sE",
+  "reason_hash": "",
+  "reviewer_ref": "credit-officer c-1f8e",
+  "signature": "W-fcxn4LIM2v32v3w4Vzj1ACG7ephJvfB3hQEG-GrN1hnVp8M5cvQn47mmdWZiM1m4C_Lz9HeS7VsIlNxtSqDQ",
+  "subject_hash": "dab5c58fd6ddfff99428486705ba12d0ccf97cc8c9dfbdd7f058b40892731e1a",
+  "subject_id": "00000000-0000-0000-0000-0000000000s1",
+  "subject_v": "1",
+  "timestamp": "2026-08-23T09:12:44.108231+00:00",
+  "v": "accept-1"
+}
