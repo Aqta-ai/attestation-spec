@@ -1,10 +1,14 @@
-# ATTESTATION-v1 Conformance
+# Conformance
 
 This document defines what it means for a third-party implementation to
-claim conformance with ATTESTATION-v1.
+claim conformance with the Seal record formats:
+[ATTESTATION-v1](./spec/ATTESTATION-v1.md) (model-call decisions) and
+[ACTION-v1](./spec/ACTION-v1.md) (agent tool actions).
 
 There are two kinds of conformant implementation: **issuers** and
-**verifiers**. They have different requirements.
+**verifiers**. They have different requirements. Conformance is claimed
+**per format**: an implementation may conform to one and not the other, and
+MUST say which.
 
 ---
 
@@ -86,6 +90,41 @@ Listed implementations must stay current with spec minor-version
 updates (for example, v1.1 additions). Implementations that fall
 behind may be removed from the list if they no longer pass the
 current vector suite.
+
+---
+
+## ACTION-v1 conformance
+
+Everything above applies, with these differences taken from
+[`spec/ACTION-v1.md`](./spec/ACTION-v1.md):
+
+1. **Structure and semantics** follow §4, §5 and §7 of that document: the
+   fourteen fields, the string version tag `"action-1"`, and outcomes
+   `ALLOWED` and `BLOCKED` only. `SUPPRESSED` and `PASSED` are not valid
+   here.
+2. **No numeric fields exist**, so the integer-coercion rule has nothing to
+   act on. A future minor version that introduces one MUST adopt the
+   ATTESTATION-v1 §6 rule unchanged.
+3. **Profile selection MUST be explicit.** A verifier MUST NOT decide which
+   format it is looking at by inspecting field shape. ACTION-v1 records
+   carry `signature` and `public_key` exactly as ATTESTATION-v1 receipts do,
+   so shape-sniffing cannot distinguish them and any implementation that
+   tries will misclassify. The caller names the profile.
+4. **A conformant ACTION-v1 verifier MUST reject a valid ATTESTATION-v1
+   receipt**, and the reverse. Vector `invalid/007-attestation-v1-receipt.json`
+   exists to catch exactly this, and an implementation that accepts it is not
+   conformant however well its signature checking works.
+5. **Assertion provenance (§8) is normative.** An implementation that
+   presents `agent` as verified identity, or presents an `ALLOWED` record as
+   proof that the action was subsequently executed, does not conform.
+6. **Vectors:** `test-vectors/action/valid` (10) MUST all verify and
+   `test-vectors/action/invalid` (15) MUST all fail, under the vector issuer
+   key named in that directory's README.
+7. **Interop:** the sweep in
+   [`scripts/action-interop-sweep.mjs`](./scripts/action-interop-sweep.mjs)
+   MUST pass across every vector, not a single fixture. One hardcoded
+   fixture value once hid a cross-language float defect for a whole release,
+   which is why this is stated as a requirement rather than a suggestion.
 
 ---
 

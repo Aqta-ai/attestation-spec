@@ -2,10 +2,11 @@
   <img src="https://aqta.ai/brand/seal-mark-512.png" alt="Seal" width="96" height="96" />
 </p>
 
-# ATTESTATION-v1
+# ATTESTATION-v1 · ACTION-v1
 
-Open format and reference verifiers for **Seal** enforcement receipts.
-Ed25519. Offline-verifiable. No call to the issuer required.
+Open formats and reference verifiers for **Seal** records: what an AI
+decided, and what an agent was allowed to do. Ed25519. Offline-verifiable.
+No call to the issuer required.
 
 [![CI](https://img.shields.io/github/actions/workflow/status/Aqta-ai/attestation-spec/test.yml?branch=main&label=CI)](https://github.com/Aqta-ai/attestation-spec/actions/workflows/test.yml)
 [![PyPI](https://img.shields.io/pypi/v/aqta-verify-receipt.svg)](https://pypi.org/project/aqta-verify-receipt/)
@@ -14,16 +15,35 @@ Ed25519. Offline-verifiable. No call to the issuer required.
 [![Code Apache-2.0](https://img.shields.io/badge/code-Apache--2.0-blue.svg)](./LICENSE)
 
 **[Check a receipt in the browser](https://aqta.ai/verify)** ·
-[Spec](./spec/ATTESTATION-v1.md) ·
+[ATTESTATION-v1](./spec/ATTESTATION-v1.md) ·
+[ACTION-v1](./spec/ACTION-v1.md) ·
 [5-minute walkthrough](./VERIFY-WALKTHROUGH.md)
 
 ## What this is
 
-A signed receipt that an AI gateway decided whether a model call was allowed
-to run. Anyone with the issuer's published public key can verify it offline.
+Two record formats in one family, signed by the same key and checked by the
+same verifiers:
 
-This repo is the **format**, two **reference verifiers**, a stand-alone
-**reference issuer**, and **test vectors**. It is not the managed Seal
+| Format | Answers | Fields |
+|---|---|---|
+| [**ATTESTATION-v1**](./spec/ATTESTATION-v1.md) | What did the gateway decide about this model call? | 12 |
+| [**ACTION-v1**](./spec/ACTION-v1.md) | What was this agent allowed to do? | 14 |
+
+`ACTION-v1` covers agent tool actions: a declared tool call authorised or
+refused under policy before it runs, bound to the session's registered
+intent, with the arguments hashed canonically. A refusal is a record in its
+own right. It is a **sibling format, not a new version**: the v1 receipt
+envelope is untouched and every existing receipt verifies exactly as before.
+Profile selection is always explicit, never guessed from field shape:
+
+```bash
+npx aqta-verify-receipt record.json --profile action-1 --key <key>
+```
+
+Anyone with the issuer's published public key can verify either offline.
+
+This repo is the **formats**, two **reference verifiers**, stand-alone
+**reference issuers**, and **50 test vectors**. It is not the managed Seal
 gateway ([app.aqta.ai](https://app.aqta.ai)).
 
 A valid signature proves what the gateway *said*, not what the provider's
