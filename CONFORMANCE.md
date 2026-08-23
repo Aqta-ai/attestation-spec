@@ -99,7 +99,7 @@ Everything above applies, with these differences taken from
 [`spec/ACTION-v1.md`](./spec/ACTION-v1.md):
 
 1. **Structure and semantics** follow §4, §5 and §7 of that document: the
-   fourteen fields, the string version tag `"action-1"`, and outcomes
+   thirteen fields, the string version tag `"action-1"`, and outcomes
    `ALLOWED` and `BLOCKED` only. `SUPPRESSED` and `PASSED` are not valid
    here.
 2. **No numeric fields exist**, so the integer-coercion rule has nothing to

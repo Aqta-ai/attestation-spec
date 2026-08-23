@@ -16,7 +16,7 @@ own versioning contract described in [CONFORMANCE.md](./CONFORMANCE.md).
 - **ACTION-v1 profile** in both reference verifiers: verification of
   agent-action authorisation records per the new
   [`spec/ACTION-v1.md`](./spec/ACTION-v1.md) draft. A sibling record type,
-  not a new ATTESTATION version: string version tag `"action-1"`, fourteen
+  not a new ATTESTATION version: string version tag `"action-1"`, thirteen
   fields, outcomes `ALLOWED`/`BLOCKED` only, no numeric fields, and a
   normative assertion-provenance table (spec §8).
 - Explicit profile selection everywhere, never auto-detection: library

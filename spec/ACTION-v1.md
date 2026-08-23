@@ -278,7 +278,7 @@ replay and `action_id` deduplication) apply unchanged. Additionally:
   `aqta-verify-receipt` 1.1.0 on npm and PyPI: both reference verifiers
   agree on all 25 conformance vectors and the cross-implementation interop
   sweep runs clean.
-- **1.0-draft (2026-08-22).** Initial draft: 14-field record (thirteen
+- **1.0-draft (2026-08-22).** Initial draft: 13-field record (twelve
   canonical fields plus signature), string version tag `"action-1"`, no
   numeric fields, normative assertion-provenance table (§8), authorisation
   scope only.
