@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "aqta-verify-receipt"
-version = "1.1.0"
+version = "1.1.1"
 description = "Offline CLI and library for Seal records: ATTESTATION-v1 for what an AI decided, ACTION-v1 for what an agent was allowed to do, refusals included. Ed25519, checked against a published key with no account and no Aqta server."
 readme = "README.md"
 requires-python = ">=3.9"
