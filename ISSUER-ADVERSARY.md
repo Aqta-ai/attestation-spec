@@ -98,6 +98,36 @@ complete-looking, and omits the inconvenient ones.
 independently, so that "these are all of them" becomes a checkable claim rather
 than an assertion.
 
+## What a hardware-rooted signer would and would not close
+
+Signing inside an attested enclave (GCP Confidential Space, AWS Nitro) or a
+secure element is often described as making "trust the issuer" unnecessary. It
+does not do that. It closes some of these classes hard, leaves others exactly
+where they are, and the difference is the interesting part.
+
+| Class | Effect of an enclave-held key | Why |
+|---|---|---|
+| **A5. Silent key substitution** | **Closed** | The key is generated inside the enclave and cannot be exported. Remote attestation binds it to a measured code image, so the issuer cannot rotate to an unpublished key it controls, because it cannot obtain one. This is the class hardware genuinely solves. |
+| **A3. Backdating** | **Substantially closed** | An enclave that stamps its own time and refuses a caller-supplied timestamp removes the operator's ability to choose it. Residual risk moves to the platform clock and is narrowed further by external anchoring. |
+| **A4. Retrospective reordering** | **Closed, conditionally** | Requires the enclave to hold a monotonic counter across invocations. Stateless attestation alone does not give this. |
+| **A1. Equivocation** | **Partially** | Only if the enclave holds per-decision state. A stateless signer asked twice with different inputs will sign both, and both will attest to a genuine enclave. |
+| **A2. Omission** | **Not closed** | The operator simply does not route the decision through the enclave. Hardware cannot make a call that never happened observable. |
+| **A6. Selective history disclosure** | **Not closed** | A disclosure problem, answered by inclusion proofs against an independently obtained tree head, not by where the key lives. |
+
+**The honest summary.** Hardware moves the trust boundary from *the operator's
+process* to *the operator's willingness to route through it*. That is a real and
+substantial reduction, and it is not the same as removing the issuer from the
+trust path. Anyone claiming an enclave makes their evidence
+issuer-independent should be asked about A2.
+
+**Where that leaves the open problem.** A2 remains the hard class, and hardware
+does not touch it. The direction with the most promise is **reconciliation
+against an independently produced record**: if a second party's log (a model
+provider's audit trail, a billing record) covers the same events, an action
+present there and absent from the issuer's records is an omission made visible.
+Neither record establishes it alone. This is unimplemented and is stated here as
+a research direction, not a capability.
+
 ## What is implemented today
 
 | Class | Mechanism present | Status |
