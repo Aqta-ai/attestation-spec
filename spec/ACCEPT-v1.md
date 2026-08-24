@@ -17,7 +17,11 @@ records what an agent was permitted to do. Both describe a machine.
 This document specifies the record for the other half of an accountable
 decision: **the moment a person takes responsibility for it.** A responsible
 human accepts a machine's recommendation, overrides it, or escalates it, and
-that act is bound to the exact machine record it responds to and signed.
+the issuer records that act, binds its record to the exact machine record being
+responded to, and signs **its own record of the act**. The reviewer does not
+sign anything here, and §8 states field by field what that does and does not
+establish. A reader who takes this paragraph alone should still arrive at the
+right model.
 
 A decision is not complete when the model answers. It is complete when
 someone accepts, overrides or escalates the answer. Until that act is
@@ -67,11 +71,11 @@ A record is a single JSON object with exactly the following top-level fields:
 | `v` | string | yes | MUST be the exact string `"accept-1"`. |
 | `acceptance_id` | string | yes | UUID v4, unique per record. |
 | `org_id` | string | yes | Identifier of the subject organisation. |
-| `subject_v` | string | yes | Version tag of the record being responded to: `"1"` for ATTESTATION-v1, `"action-1"` for ACTION-v1. |
+| `subject_v` | string | yes | Version tag of the record being responded to: `"1"` for ATTESTATION-v1, `"action-1"` for ACTION-v1. Note the asymmetry: ATTESTATION-v1's own `v` is the **integer** `1`, but this field is always a **string**, because this format carries no numeric values at all (§4). An implementer cross-checking the two documents will notice this; it is deliberate. |
 | `subject_id` | string | yes | The `attestation_id` or `action_id` of the subject record. |
 | `subject_hash` | string | yes | SHA-256 hex digest (64 lowercase hex chars) of the subject record's canonical signed bytes, signature excluded. See §6.1. |
 | `decision` | string | yes | One of the values listed in §5. |
-| `reason_hash` | string | yes | SHA-256 hex digest of the reviewer's stated reason, UTF-8 encoded. MUST be `""` when no reason was given. The reason text is never in the record. |
+| `reason_hash` | string | yes | SHA-256 hex digest of the reviewer's stated reason, UTF-8 encoded. MUST be `""` when no reason was given. The reason text is not carried in the record. This **binds** the reason, it does not **conceal** it: reasons are short and drawn from a small vocabulary, so an unsalted digest is open to a dictionary attack. An issuer needing confidentiality against guessing must commit with a salt held beside the reason. See §10. |
 | `reviewer_ref` | string | yes | Caller-supplied identifier for the reviewer. Recorded, never verified (§8). |
 | `reviewer_authority` | string | yes | Caller-supplied statement of the authority under which the reviewer acted, e.g. `"SME credit, limit EUR 150000"`. Recorded, never verified (§8). MAY be `""`. |
 | `policy_applied` | array | yes | Sorted JSON array of policy identifier strings. MAY be empty. |
@@ -189,7 +193,7 @@ presence of a valid signature.
   "org_id": "org-example",
   "subject_v": "1",
   "subject_id": "a3f2b1c4-9d87-4e6f-b012-34567890abcd",
-  "subject_hash": "8f3a7e2b9c4d5f6a1b0c9d8e7f6a5b4c3d2e1f0a9b8c7d6e5f4a3b2c1d0e9f8a",
+  "subject_hash": "9856b999a40666ef7d39172ec455adb69a347cf06a755c8e979c0d5f46758963",
   "decision": "OVERRIDDEN",
   "reason_hash": "b5bb9d8014a0f9b1d61e21e796d78dccdf1352f23cd32812f4850b878ae4944c",
   "reviewer_ref": "credit-officer c-1f8e",
