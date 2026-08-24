@@ -373,9 +373,17 @@ DORA, MiFID II, or EU AI Act long-retention obligations.
 
 For any deployment using ATTESTATION-v1, the residual risk is:
 
-- **No risk to receipt confidentiality.** v1 receipts contain no plaintext
-  prompt or response data. There is nothing for a quantum attacker to
-  decrypt later.
+- **No risk to receipt confidentiality from a quantum adversary.** v1 receipts
+  contain no plaintext prompt or response data. There is nothing for a quantum
+  attacker to decrypt later.
+- **A separate, present-day limit worth stating here.** `request_hash` is an
+  unsalted SHA-256 over content that is frequently low entropy: a short prompt,
+  or a small argument object. It **binds** that content; it does not **conceal**
+  it. A party who can guess the input can confirm the guess today, with no
+  quantum computer involved. An issuer that needs confidentiality against
+  guessing, rather than integrity, must salt or commit differently. This is a
+  property of hashing, not a defect in the format, but it should not be left for
+  a reader to infer from "contains no plaintext".
 - **Forgery risk in 2030+.** A CRQC available in the 2030s could forge
   receipts that appear to come from an issuer key that was active before
   migration. Audit-log retention requirements of 5 to 10 years (DORA, MiFID II)
