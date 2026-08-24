@@ -5,7 +5,7 @@
 **Last updated:** 2026-04-26
 **Last reviewed:** 2026-07-21
 **Reference issuer:** [examples/reference-issuer.py](../examples/reference-issuer.py)
-**Reference verifiers:** [`aqta-verify-receipt`](https://pypi.org/project/aqta-verify-receipt/) on PyPI and npm (**v1.0.4+**; pinning required by default).
+**Reference verifiers:** [`aqta-verify-receipt`](https://pypi.org/project/aqta-verify-receipt/) on PyPI and npm (pinning required by default; check the registries for the current version rather than quoting one from this document).
 
 ---
 
@@ -102,6 +102,20 @@ The canonical payload is produced by:
    identical across Python (where `json.dumps(0.0)` yields `"0.0"` by
    default) and JavaScript (where `JSON.stringify(0)` yields `"0"`). The
    reference issuer in `examples/reference-issuer.py` performs this coercion.
+4. **Non-integer number canonicalisation:** non-integer numbers MUST be
+   serialised using the ECMA-262 `Number::toString` algorithm, as required by
+   RFC 8785 section 3.2.2.3. Python's default `repr` for floats disagrees with
+   it across `0 < |x| < 1e-4`, which §4 permits for `cost_prevented_eur`: the
+   value `0.00001` serialises as `1e-05` under Python and as `0.00001` under
+   ECMA-262, producing different canonical bytes and therefore a signature one
+   implementation accepts and the other rejects.
+
+   This is not hypothetical. It shipped: the reference issuer minted receipts
+   that one published verifier rejected, and the defect was invisible until an
+   adversarial cross-implementation sweep. Both reference verifiers implement
+   the ECMA-262 rule. **An implementation that follows §4 and §6 without this
+   clause will reproduce that defect**, which is why it is stated normatively
+   here rather than left to the reference code.
 
 ### 6.1 String canonicalisation
 
@@ -181,7 +195,7 @@ A verifier MAY offer an **integrity-only** mode that checks the signature
 against the embedded `public_key` without a pin (useful for debugging). That
 mode MUST NOT be the default, and a successful integrity-only check MUST be
 labelled as untrusted (for example `keySource: "untrusted"`). The reference
-verifiers (`aqta-verify-receipt` v1.0.4+) require a pinned key unless the
+verifiers (`aqta-verify-receipt`) require a pinned key unless the
 caller explicitly opts into integrity-only.
 
 Verifiers SHOULD also perform the following semantic checks, though they are
@@ -211,7 +225,7 @@ compact canonical form of §6):
   "policy_applied": ["budget_guard", "loop_guard"],
   "cost_prevented_eur": 0,
   "timestamp": "2026-04-23T10:15:30.123456+00:00",
-  "public_key": "gUoUhIvptKAoLTnry3VrDtOQEWggGQveLrHFVrfNqmE"
+  "public_key": "EXAMPLE0KEY0DO0NOT0PIN0THIS0FETCH0THE0PUBLISHED0KEY"
 }
 ```
 
@@ -229,7 +243,7 @@ Signed receipt (same payload with signature appended):
   "policy_applied": ["budget_guard", "loop_guard"],
   "cost_prevented_eur": 0,
   "timestamp": "2026-04-23T10:15:30.123456+00:00",
-  "public_key": "gUoUhIvptKAoLTnry3VrDtOQEWggGQveLrHFVrfNqmE",
+  "public_key": "EXAMPLE0KEY0DO0NOT0PIN0THIS0FETCH0THE0PUBLISHED0KEY",
   "signature": "<64-byte Ed25519 sig, base64url, no padding>"
 }
 ```
@@ -375,6 +389,20 @@ For any deployment using ATTESTATION-v1, the residual risk is:
   with a known-compromised key.
 
 ## 13. Change Log
+
+- **Errata (2026-08-24).** Three corrections, none of which change the wire
+  format or invalidate any issued receipt:
+  - §6 now states the **non-integer number rule normatively** (ECMA-262
+    `Number::toString`, RFC 8785 §3.2.2.3). Both reference verifiers already
+    implemented it; the specification did not say so, so an independent
+    implementation following §4 and §6 would have reproduced the
+    cross-implementation divergence that shipped in verifier 1.0.8.
+  - §8's examples no longer show a real public key. They previously showed the
+    issuer key retired on 9 August 2026, and a specification example is exactly
+    where an implementer copies a pin from. Fetch the authoritative key from
+    the published key endpoint; never from a document.
+  - Removed version pins on the reference verifiers (`v1.0.4+`). Registry
+    versions move and a frozen document should not chase them.
 
 - **Editorial (2026-07-21):** Product name **Seal** on public surfaces. §7 now requires out-of-band key pinning for counsel-grade
   verification; integrity-only (embedded key) is optional, non-default, and
