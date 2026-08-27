@@ -135,13 +135,41 @@ Default: `https://app.aqta.ai/security/pubkey.txt`. Same material as
 
 ## Test vectors
 
-Conformance suite (6 valid + 8 invalid):
+Conformance suite, covering receipts, agent action records and transparency proofs:
 [`test-vectors/`](https://github.com/Aqta-ai/attestation-spec/tree/main/test-vectors).
+
+## Transparency proofs
+
+A receipt signature answers what the issuer asserted. It cannot answer whether
+that entry is in the issuer's log, or whether the log has only ever grown.
+Those are different questions, so they get a different command.
+
+```bash
+npx -p aqta-verify-receipt aqta-verify-proof inclusion.json
+npx -p aqta-verify-receipt aqta-verify-proof consistency.json
+npx -p aqta-verify-receipt aqta-verify-proof sth.json --key <pinned>
+```
+
+RFC 6962 inclusion and consistency verification, plus the signed-tree-head
+signature. Written separately in TypeScript and Python rather than ported, and
+checked against the transparency vectors in the repository. Adds no dependency:
+hashing uses the runtime.
+
+```ts
+import { verifyInclusionProof, verifyConsistencyProof } from 'aqta-verify-receipt';
+
+const result = verifyInclusionProof(proof);
+if (!result.valid) throw new Error(result.reason);
+```
+
+An inclusion proof establishes that what you were shown is genuinely in the
+log. It does not establish that what you were **not** shown is irrelevant.
+That is omission, and it is open.
 
 ## What this is not
 
 Not a governance dashboard. Not a cost router. Not a chain explorer.
-A small verifier for one signed model-call receipt. The novel part is the
+A small verifier for signed decision records and the log proofs that accompany them. The novel part is the
 receipt format and offline verification model, not ASCII theatre.
 
 ## Security

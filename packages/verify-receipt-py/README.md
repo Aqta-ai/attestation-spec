@@ -101,6 +101,27 @@ Pinning is required by default. Without `--key`, pass `--integrity-only`
 
 `cryptography` (>= 42) for constant-time Ed25519. Nothing else.
 
+## Transparency proofs
+
+A receipt signature answers what the issuer asserted. It cannot answer whether
+that entry is in the issuer's log, or whether the log has only ever grown.
+
+```python
+from aqta_verify_receipt import verify_inclusion_proof, verify_consistency_proof
+
+result = verify_inclusion_proof(proof)
+if not result.valid:
+    raise ValueError(result.reason)
+```
+
+RFC 6962 inclusion and consistency verification, plus the signed-tree-head
+signature. Written separately from the TypeScript implementation rather than
+ported, and checked against the transparency vectors in the repository.
+
+An inclusion proof establishes that what you were shown is genuinely in the
+log. It does not establish that what you were **not** shown is irrelevant.
+That is omission, and it is open.
+
 ## What this is not
 
 Not a governance dashboard. Not a cost router. A small verifier for one

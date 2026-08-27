@@ -1,6 +1,6 @@
 {
   "name": "aqta-verify-receipt",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "description": "Offline CLI and library for Seal records: ATTESTATION-v1 for what an AI decided, ACTION-v1 for what an agent was allowed to do, refusals included. Ed25519, checked against a published key with no account and no Aqta server.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
