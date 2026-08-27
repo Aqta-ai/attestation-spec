@@ -9,6 +9,8 @@ own versioning contract described in [CONFORMANCE.md](./CONFORMANCE.md).
 
 ## [Unreleased]
 
+## [1.1.2] - 2026-08-27 (strict signature spelling)
+
 ### Fixed
 
 - **Signature spelling was not fixed, so one receipt had several accepted
@@ -51,6 +53,11 @@ own versioning contract described in [CONFORMANCE.md](./CONFORMANCE.md).
   over mutated genuine receipts (structural, duplicate member names, numeric
   band, unicode, signature spelling, document bytes). Exits non-zero on any
   disagreement. Run it before publishing either package.
+
+### Notes
+
+- Conformance vectors: **52** (27 ATTESTATION-v1, 25 ACTION-v1), both
+  implementations agreeing on all of them.
 
 ## [1.1.0] - 2026-08-22 (the ACTION-v1 profile: agent-action records)
 
