@@ -163,6 +163,13 @@ jobs:
           console.log('All test vectors behave as specified (TypeScript).');
           JS
 
+      - name: Differential fuzz (encoding and structure malleability)
+        # Mutates real vectors (padding, alphabet, whitespace, key order,
+        # numeric spelling, field drops) and requires both verifiers to
+        # return the same verdict on every mutant. Added after 1.1.1 accepted
+        # three spellings of one signature in TypeScript and none in Python.
+        run: node scripts/differential-fuzz.mjs
+
       - name: ACTION-v1 cross-implementation interop sweep
         # Every action vector through BOTH verifiers, verdicts and reason
         # strings compared per file, plus un-vectored divergence probes.
