@@ -23,6 +23,8 @@ CATEGORY = {
     "policy-not-sorted": "Canonical ordering", "policy-not-strings": "Type violation",
     "timestamp-no-offset": "Timestamp violation", "timestamp-not-datetime": "Timestamp violation",
     "negative-cost": "Range violation", "boolean-version": "Type violation",
+    "signature-padded": "Encoding violation",
+    "signature-standard-base64-alphabet": "Encoding violation",
     "uncoerced-integer-float": "Number canonicalisation",
 }
 

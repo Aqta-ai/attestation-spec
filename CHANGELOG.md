@@ -9,6 +9,49 @@ own versioning contract described in [CONFORMANCE.md](./CONFORMANCE.md).
 
 ## [Unreleased]
 
+### Fixed
+
+- **Signature spelling was not fixed, so one receipt had several accepted
+  byte strings (TypeScript verifier).** `base64urlDecode` padded its input
+  and rewrote `-_` as `+/` before decoding, so a genuine receipt whose
+  `signature` carried appended `=` padding, or the standard base64 alphabet,
+  still returned `valid: true`. The Python verifier rejected both as
+  `not base64url`, per spec §4. Two consequences, and the second is the
+  reason this is not cosmetic:
+  1. **Verifier divergence.** The two published implementations returned
+     different verdicts on identical bytes, which is the one thing the format
+     cannot afford: a record whose verifiers disagree cannot settle a dispute.
+  2. **Receipt malleability.** `signature` is the only field the signature
+     does not cover, so lenient decoding made the accepted spelling a free
+     variable: at minimum three byte-distinct forms of every receipt (no
+     padding, `=`, `==`), multiplied by 2^k for the k `-_` characters in the
+     signature. A transparency log keyed on receipt bytes sees one decision
+     as several leaves. Same failure shape as the non-canonical scalar bug
+     fixed earlier, reached through the encoding rather than the curve.
+
+  Both strict paths (ATTESTATION-v1 and ACTION-v1) now require
+  `^[A-Za-z0-9_-]+$` before decoding and emit Python's exact reason string;
+  the foreign-envelope path stays lenient and bounded, mirroring Python's
+  `_b64_any_decode`. New vectors
+  [`invalid/016-signature-padded.json`](./test-vectors/invalid/016-signature-padded.json)
+  and
+  [`invalid/017-signature-standard-base64-alphabet.json`](./test-vectors/invalid/017-signature-standard-base64-alphabet.json)
+  pin the class; both are accepted by the pre-fix verifier and rejected by
+  this one.
+
+  Found by [`scripts/differential-fuzz.mjs`](./scripts/differential-fuzz.mjs), a
+  differential fuzz of the two verifiers, on 27 August 2026. No receipt issued
+  by the Seal gateway was affected: the issuer has always emitted unpadded
+  base64url. What was affected is what a reviewer running
+  `npx aqta-verify-receipt` would have accepted from a third party.
+
+### Added
+
+- `scripts/differential-fuzz.mjs`: differential fuzz of the two reference verifiers
+  over mutated genuine receipts (structural, duplicate member names, numeric
+  band, unicode, signature spelling, document bytes). Exits non-zero on any
+  disagreement. Run it before publishing either package.
+
 ## [1.1.0] - 2026-08-22 (the ACTION-v1 profile: agent-action records)
 
 ### Added

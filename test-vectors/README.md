@@ -59,6 +59,8 @@ Each file encodes exactly one failure mode. A verifier MUST reject.
 | [`invalid/013-negative-cost.json`](./invalid/013-negative-cost.json) | `cost_prevented_eur` is negative | Semantic check fails: the field is non-negative |
 | [`invalid/014-boolean-version.json`](./invalid/014-boolean-version.json) | `v: true` | Unsupported version: `true` is not `1` |
 | [`invalid/015-uncoerced-integer-float.json`](./invalid/015-uncoerced-integer-float.json) | `cost_prevented_eur` signed as `1.0`, uncoerced by the issuer | Canonical bytes mismatch: §6(3) puts integer coercion on the issuer, so the signature check fails |
+| [`invalid/016-signature-padded.json`](./invalid/016-signature-padded.json) | Genuine signature with base64 padding appended | Not base64url per spec 4; the signature field is not covered by the signature, so lenient decoding makes one receipt several byte strings |
+| [`invalid/017-signature-standard-base64-alphabet.json`](./invalid/017-signature-standard-base64-alphabet.json) | Genuine signature respelled in the standard base64 alphabet | Same class: spec 4 fixes the alphabet, and accepting both spellings diverged from the Python verifier |
 
 ## Cases that cannot be shipped as vectors
 

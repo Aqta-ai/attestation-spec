@@ -4,11 +4,11 @@
 
 | | |
 |---|---|
-| Release | 1.0.10 |
-| Generated | 2026-08-14 |
-| Vectors | 25 (10 valid, 15 adversarial) |
-| Implementations agree | **25/25** |
-| Verdicts match specification | **25/25** |
+| Release | 1.1.2 |
+| Generated | 2026-08-27 |
+| Vectors | 27 (10 valid, 17 adversarial) |
+| Implementations agree | **27/27** |
+| Verdicts match specification | **27/27** |
 
 Two independently written verifiers, TypeScript (npm) and Python (PyPI), run
 against the same published vectors with the same pinned key.
@@ -19,6 +19,7 @@ against the same published vectors with the same pinned key.
 
 | Failure class | Vectors |
 |---|---:|
+| Encoding violation | 2 |
 | Schema violation | 2 |
 | Timestamp violation | 2 |
 | Type violation | 2 |
@@ -61,6 +62,8 @@ against the same published vectors with the same pinned key.
 | `013-negative-cost.json` | invalid | reject | reject | yes |
 | `014-boolean-version.json` | invalid | reject | reject | yes |
 | `015-uncoerced-integer-float.json` | invalid | reject | reject | yes |
+| `016-signature-padded.json` | invalid | reject | reject | yes |
+| `017-signature-standard-base64-alphabet.json` | invalid | reject | reject | yes |
 
 ## Reproducing this
 

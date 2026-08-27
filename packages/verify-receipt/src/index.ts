@@ -161,6 +161,25 @@ function base64urlDecode(s: string): Uint8Array {
   return naclUtil.decodeBase64(b64);
 }
 
+/** Spec §4 spelling for `signature` and `public_key`: base64url, no padding. */
+const B64URL_STRICT = /^[A-Za-z0-9_-]+$/;
+
+/** Foreign envelopes carry standard base64, optionally padded (anchor-v1). */
+const B64_ANY = /^[A-Za-z0-9_+/-]+=*$/;
+
+/**
+ * Reject a signature or public key not spelled as base64url without padding
+ * (spec §4). `base64urlDecode` pads and re-alphabets before decoding, so it
+ * would otherwise accept padded or standard-alphabet spellings of the same
+ * bytes; `signature` is not covered by the signature, so each accepted
+ * spelling is a distinct byte string for one decision. The Python verifier is
+ * strict here, and the reason string matches so both agree byte for byte.
+ */
+function base64urlStrictReason(sig: unknown, pub: unknown): string | null {
+  const bad = (s: unknown) => typeof s !== 'string' || !B64URL_STRICT.test(s);
+  return bad(sig) || bad(pub) ? 'signature decode error: not base64url' : null;
+}
+
 /**
  * Canonical JSON serialisation per ATTESTATION-v1 §6.
  *
@@ -345,6 +364,12 @@ function verifySignedEnvelope(
     return { valid: false, reason: `failed to canonicalise: ${String(e)}` };
   }
 
+  // Foreign envelopes carry standard base64, so the alphabet and padding are
+  // relaxed here and nowhere else, matching Python's _b64_any_decode.
+  const anyBad = (v: unknown) => typeof v !== 'string' || !B64_ANY.test(v);
+  if (anyBad(r[fields.signature]) || anyBad(embeddedKey)) {
+    return { valid: false, reason: 'signature decode error: not base64' };
+  }
   try {
     const sig = base64urlDecode(r[fields.signature] as string);
     const pub = base64urlDecode(embeddedKey);
@@ -520,6 +545,8 @@ export function verifyReceipt(
   }
 
   // Ed25519 verification
+  const spelling = base64urlStrictReason(r.signature, r.public_key);
+  if (spelling !== null) return { valid: false, reason: spelling };
   try {
     const sig = base64urlDecode(r.signature as string);
     const pub = base64urlDecode(r.public_key as string);
@@ -655,6 +682,8 @@ function verifyActionV1(
   }
 
   // Ed25519 verification
+  const spelling = base64urlStrictReason(r.signature, r.public_key);
+  if (spelling !== null) return { valid: false, reason: spelling };
   try {
     const sig = base64urlDecode(r.signature as string);
     const pub = base64urlDecode(r.public_key as string);
