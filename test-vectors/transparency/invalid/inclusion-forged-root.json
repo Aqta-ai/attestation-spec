@@ -1,0 +1,13 @@
+{
+  "_note": "a genuine path checked against a root it does not produce",
+  "audit_path": [
+    "49d41432bea06f3af1c84bdc41ffe49884ea8304fa5e60ae3a8222adfba022db",
+    "66a52337ac80e718de897134e6de26cd7922813c0da4e88fe276050d7a7916c3",
+    "366822adfeec41edd01a334a58bae2559a5b078840e949fd168d86d2ee15e3c4",
+    "4dd9dbd5e65f950a248141c1667d2450c939e25626323cd7e7ef8d2dd73de3b2"
+  ],
+  "leaf_hash": "e92c382ecec075a6caa0360296d61501d44518626fef170cc8b8fd9d5a757ab2",
+  "leaf_index": 5,
+  "root_hash": "037cd58e442b9092905ea522f83f7246380a6fbb9ca484e5891d30ae8f0d3b4d",
+  "tree_size": 11
+}

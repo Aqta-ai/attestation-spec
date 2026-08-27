@@ -39,3 +39,11 @@ __all__ = [
     "VerifyResult",
 ]
 __version__ = "1.1.2"
+
+from .transparency import (  # noqa: E402,F401
+    ProofResult,
+    leaf_hash,
+    verify_consistency_proof,
+    verify_inclusion_proof,
+    verify_signed_tree_head,
+)

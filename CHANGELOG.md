@@ -9,6 +9,58 @@ own versioning contract described in [CONFORMANCE.md](./CONFORMANCE.md).
 
 ## [Unreleased]
 
+## [1.2.1] - 2026-08-27 (packaging fix)
+
+### Fixed
+
+- **1.2.0 on npm could not load at all.** `package.json` whitelisted `dist`
+  files one by one, so the new `dist/transparency.js` was omitted from the
+  tarball and every entry point that imports it, which after 1.2.0 includes
+  `index.js`, threw `MODULE_NOT_FOUND`. Receipt verification was broken too,
+  not only the new proof CLI. Caught by running the published package rather
+  than the local build; the local build passed every test. `files` now ships
+  `dist/` as a directory so adding a module can never again publish a package
+  that cannot load itself. 1.2.0 is deprecated on npm.
+
+## [1.2.0] - 2026-08-27 (transparency proof verification)
+
+### Added
+
+- **Inclusion and consistency proof verification (RFC 6962)** in both
+  reference implementations, plus a signed-tree-head signature check. A
+  receipt signature answers what an issuer asserted; these answer whether the
+  entry is in the issuer's log and whether that log has only ever grown.
+  Written separately in each language rather than ported, for the same reason
+  the receipt verifiers are: two implementations that agree are evidence, one
+  translated twice is not.
+- **`aqta-verify-proof`**, a second CLI. Kept separate from
+  `aqta-verify-receipt` because conflating the two invites a reader to think a
+  valid signature answered the log question. It does not.
+- **17 transparency conformance vectors** (7 valid, 10 adversarial) over an
+  eleven-leaf tree, deliberately not a power of two so the awkward paths are
+  exercised. Adversarial cases include a rewritten history, a shrunk log, an
+  equivocated head at unchanged size, truncated and over-long paths, reordered
+  siblings and an out-of-tree index.
+- **`scripts/transparency-interop-sweep.mjs`**, wired into the gate: every
+  vector through both implementations with verdicts compared. The vectors were
+  additionally checked against the gateway's own Merkle implementation, which
+  was written before and separately from both verifiers; all three agree on
+  all 17.
+
+### Notes
+
+- The proof generator's consistency path initially emitted RFC 6962 §2.1.2's
+  subproof and left-subtree root in the wrong order. Both verifiers rejected
+  the resulting vector and agreed it was invalid, which is how it was caught.
+  Only an old size that is neither a power of two nor a trivial case reaches
+  that branch, which is why the vector set covers 1, 4 and 7.
+- Adds no third-party dependency: hashing uses the Node runtime and the Python
+  standard library. A verifier is worth less the more code a reviewer has to
+  trust.
+- These proofs establish that what you were shown is in the log. They do not
+  establish that what you were not shown is irrelevant. Omission stays open
+  and is documented as open.
+
 ## [1.1.2] - 2026-08-27 (strict signature spelling)
 
 ### Fixed

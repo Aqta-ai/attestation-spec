@@ -751,3 +751,22 @@ export async function fetchPublishedPublicKey(
   }
   return (await res.text()).trim();
 }
+
+/**
+ * Transparency proof verification (RFC 6962). A receipt signature answers what
+ * the issuer asserted; these answer whether the entry is in the issuer's log
+ * and whether that log has only ever grown. Node-only: proof checking is a CLI
+ * and server job, and the receipt surface above stays isomorphic.
+ */
+export {
+  verifyInclusionProof,
+  verifyConsistencyProof,
+  verifySignedTreeHead,
+  leafHash,
+} from './transparency.js';
+export type {
+  InclusionProof,
+  ConsistencyProof,
+  SignedTreeHead,
+  ProofResult,
+} from './transparency.js';

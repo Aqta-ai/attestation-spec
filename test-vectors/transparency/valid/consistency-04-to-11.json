@@ -1,0 +1,11 @@
+{
+  "_note": "genuine append-only extension from 4 to 11 entries",
+  "consistency_path": [
+    "b936f060c7e9682c71548f416f55210bfc22a90bdb81d28dbea16c9e4ead7912",
+    "4dd9dbd5e65f950a248141c1667d2450c939e25626323cd7e7ef8d2dd73de3b2"
+  ],
+  "new_root": "c69575aa1630d353df27a0e9ad6a7fc29e43988d44bfae3259b75d47f1fab175",
+  "new_size": 11,
+  "old_root": "366822adfeec41edd01a334a58bae2559a5b078840e949fd168d86d2ee15e3c4",
+  "old_size": 4
+}

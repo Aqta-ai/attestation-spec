@@ -1,0 +1,14 @@
+{
+  "_note": "new_size smaller than old_size: a log that shrank is not append-only",
+  "consistency_path": [
+    "54063d0f999ab84639366c9b20208a0a0d7098aafc9d32b39654ec48a5da35dc",
+    "12ff4ba20a3bb6c62ea0c570fb6620da8f2a8d97351a8e431879a7a25c43e9b2",
+    "262f65c1bdabcf3527817bc95568b2f7bfb58c63a1c6aeff7c1f348fde62b7ac",
+    "366822adfeec41edd01a334a58bae2559a5b078840e949fd168d86d2ee15e3c4",
+    "4dd9dbd5e65f950a248141c1667d2450c939e25626323cd7e7ef8d2dd73de3b2"
+  ],
+  "new_root": "c69575aa1630d353df27a0e9ad6a7fc29e43988d44bfae3259b75d47f1fab175",
+  "new_size": 7,
+  "old_root": "be27842706f07df6f2a0d1299fb2c48ec119a515b9a6b925d53ffef684f6bb4d",
+  "old_size": 11
+}

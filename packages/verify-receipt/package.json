@@ -1,22 +1,16 @@
 {
   "name": "aqta-verify-receipt",
-  "version": "1.1.2",
+  "version": "1.2.1",
   "description": "Offline CLI and library for Seal records: ATTESTATION-v1 for what an AI decided, ACTION-v1 for what an agent was allowed to do, refusals included. Ed25519, checked against a published key with no account and no Aqta server.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {
-    "aqta-verify-receipt": "bin/aqta-verify-receipt.js"
+    "aqta-verify-receipt": "bin/aqta-verify-receipt.js",
+    "aqta-verify-proof": "dist/verify-proof.js"
   },
   "files": [
     "bin/",
-    "dist/cli.js",
-    "dist/cli.js.map",
-    "dist/cli.d.ts",
-    "dist/cli.d.ts.map",
-    "dist/index.js",
-    "dist/index.js.map",
-    "dist/index.d.ts",
-    "dist/index.d.ts.map",
+    "dist/",
     "README.md",
     "LICENSE"
   ],
