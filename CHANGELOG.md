@@ -33,8 +33,26 @@ own versioning contract described in [CONFORMANCE.md](./CONFORMANCE.md).
   receipts carry fixed ASCII field names and are unaffected; the divergence
   was reachable through nested values and foreign envelopes. Reported through
   the forgery bounty.
+- **Size domain diverged past 2^53 (found in-house while auditing the class,
+  not reported).** The TypeScript proof verifier capped sizes at
+  `Number.isSafeInteger`, but the Python verifier had no ceiling, so a valid
+  inclusion proof for a tree larger than 2^53 verified in Python and was
+  rejected by TypeScript. Above 2^53 a JSON size cannot round-trip through the
+  JavaScript parser without losing precision, so both now share that domain:
+  Python rejects sizes over 2^53 - 1. A boundary vector pins it.
 - The Python package reported `__version__` 1.1.2 from the 1.2.2 wheel; the
   version string now tracks the release.
+
+### Testing
+
+- **The differential fuzz never exercised the proof verifiers, and the
+  transparency vectors ran in no CI job.** Both reported divergences lived in
+  code no automated gate reached. Added `scripts/proof-fuzz.py` (valid
+  inclusion and consistency proofs minted across the 2^31, 2^32 and 2^53
+  boundaries, mutated, and required to agree across both implementations), and
+  wired both the transparency interop sweep and the proof fuzz into CI on every
+  push and into the release gates. Verified the key-ordering fix holds across
+  the BMP, private-use, and astral planes up to U+10FFFF.
 
 
 ## [1.2.1] - 2026-08-27 (packaging fix)

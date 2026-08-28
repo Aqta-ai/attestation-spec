@@ -16,6 +16,8 @@ echo "== gates"
 python3 -m pytest packages -q | tail -1
 node scripts/differential-fuzz.mjs | tail -1
 node scripts/action-interop-sweep.mjs | tail -1
+node scripts/transparency-interop-sweep.mjs | tail -1
+python3 scripts/proof-fuzz.py | tail -1
 python3 scripts/conformance-report.py | tail -1
 
 echo "== versions"
