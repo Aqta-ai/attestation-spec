@@ -1,0 +1,10 @@
+{
+  "_note": "32-bit cursor trap: leaf 0 in a tree of 2^32+1 with a 1-node path (33 required). JS `>>=` truncates the 2^32 cursor to 0 and accepts. Reported through the forgery bounty, 28 Aug 2026.",
+  "audit_path": [
+    "e277e9375c7c56b60cc4dca7ba73a05bdb0ebc989b03c53b37e2ca538a3ba28b"
+  ],
+  "leaf_hash": "e277e9375c7c56b60cc4dca7ba73a05bdb0ebc989b03c53b37e2ca538a3ba28b",
+  "leaf_index": 0,
+  "root_hash": "501e0309d0b357d9000cf75d079a686a8874c6689088770a154b3ced23f7c9eb",
+  "tree_size": 4294967297
+}

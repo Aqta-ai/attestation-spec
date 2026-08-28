@@ -9,6 +9,34 @@ own versioning contract described in [CONFORMANCE.md](./CONFORMANCE.md).
 
 ## [Unreleased]
 
+## [1.2.3] - 2026-08-28 (two externally reported verifier divergences)
+
+### Fixed
+
+- **TypeScript proof verification used 32-bit cursor arithmetic.** The RFC
+  6962 walk in `verifyInclusionProof` and `verifyConsistencyProof` halved its
+  cursors with `>>=`, and JavaScript coerces bitwise operands to 32 bits, so a
+  claimed tree size of 2^32 + 1 truncated the cursor to zero after one step
+  and a proof 32 nodes short passed the exact-consumption check. Python's
+  arbitrary-precision arithmetic rejected the same bytes, a verdict the
+  independent oracle agreed with. Cursors now halve with integer-preserving
+  division and the power-of-two check no longer uses 32-bit `&`. Two vectors
+  pin the trap at 2^32 + 1 for both proof kinds; the sweep runs them on every
+  push. Reported through the forgery bounty.
+- **Member-name ordering diverged between the two implementations outside
+  ASCII.** Python sorted object keys by Unicode code point while TypeScript's
+  default sort compares UTF-16 code units; the orders reverse for names above
+  the BMP against names in U+E000..U+FFFF, so each implementation signed and
+  verified a different canonical byte string for the same parsed object.
+  RFC 8785 3.2.3 specifies UTF-16 code-unit order, so the Python verifier now
+  sorts by UTF-16 code units and the spec text says so explicitly. Real Seal
+  receipts carry fixed ASCII field names and are unaffected; the divergence
+  was reachable through nested values and foreign envelopes. Reported through
+  the forgery bounty.
+- The Python package reported `__version__` 1.1.2 from the 1.2.2 wheel; the
+  version string now tracks the release.
+
+
 ## [1.2.1] - 2026-08-27 (packaging fix)
 
 ### Fixed

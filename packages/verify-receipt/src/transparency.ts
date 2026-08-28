@@ -96,6 +96,21 @@ function isSafeSize(n: unknown): n is number {
   return typeof n === 'number' && Number.isSafeInteger(n) && n >= 0;
 }
 
+// Cursor arithmetic must stay in double-precision integer operations: the JS
+// bitwise operators coerce their operands to 32 bits, so `n >>= 1` maps 2^32
+// to 0 and lets an audit path 32 nodes short satisfy the exact-consumption
+// check below. isSafeSize admits sizes up to 2^53. Division by 2 plus floor
+// is exact for every integer in that range.
+function halve(n: number): number {
+  return Math.floor(n / 2);
+}
+
+function isPowerOfTwo(n: number): boolean {
+  if (n < 1) return false;
+  while (n % 2 === 0) n /= 2;
+  return n === 1;
+}
+
 /**
  * Verify that a leaf is in a tree of the stated size with the stated root.
  *
@@ -142,14 +157,14 @@ export function verifyInclusionProof(proof: unknown): ProofResult {
     if (fn % 2 === 1 || fn === sn) {
       r = nodeHash(sibling, r);
       while (fn !== 0 && fn % 2 === 0) {
-        fn >>= 1;
-        sn >>= 1;
+        fn = halve(fn);
+        sn = halve(sn);
       }
     } else {
       r = nodeHash(r, sibling);
     }
-    fn >>= 1;
-    sn >>= 1;
+    fn = halve(fn);
+    sn = halve(sn);
   }
 
   if (sn !== 0) return { valid: false, reason: 'audit_path is shorter than the tree requires' };
@@ -205,14 +220,14 @@ export function verifyConsistencyProof(proof: unknown): ProofResult {
 
   // When old_size is an exact power of two its root is the first node of the
   // path, and RFC 6962 omits it because the verifier already holds it.
-  if ((oldSize & (oldSize - 1)) === 0) nodes = [oldRoot, ...nodes];
+  if (isPowerOfTwo(oldSize)) nodes = [oldRoot, ...nodes];
   if (nodes.length === 0) return { valid: false, reason: 'consistency_path is empty' };
 
   let fn = oldSize - 1;
   let sn = newSize - 1;
   while (fn % 2 === 1) {
-    fn >>= 1;
-    sn >>= 1;
+    fn = halve(fn);
+    sn = halve(sn);
   }
 
   let fr = nodes[0];
@@ -224,14 +239,14 @@ export function verifyConsistencyProof(proof: unknown): ProofResult {
       fr = nodeHash(node, fr);
       sr = nodeHash(node, sr);
       while (fn !== 0 && fn % 2 === 0) {
-        fn >>= 1;
-        sn >>= 1;
+        fn = halve(fn);
+        sn = halve(sn);
       }
     } else {
       sr = nodeHash(sr, node);
     }
-    fn >>= 1;
-    sn >>= 1;
+    fn = halve(fn);
+    sn = halve(sn);
   }
 
   if (sn !== 0) return { valid: false, reason: 'consistency_path is shorter than the trees require' };

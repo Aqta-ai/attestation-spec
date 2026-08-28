@@ -166,3 +166,15 @@ def test_cli_rejects_json5_constants(tmp_path: Path, capsys, token: str) -> None
     # receipt, and the TypeScript CLI reports it the same way.
     assert main([str(path), "--integrity-only"]) == 2
     assert "not valid JSON" in capsys.readouterr().err
+
+
+def test_canonical_member_order_is_utf16_code_units():
+    """RFC 8785 3.2.3: names sort by UTF-16 code units, so an astral-plane
+    name (surrogate pair, first unit in 0xD800..0xDBFF) sorts before a
+    private-use BMP name at U+E000, although its code point is larger.
+    JavaScript's default sort already behaves this way; this pins the
+    Python side to the same byte string."""
+    from aqta_verify_receipt.verifier import _canonical
+
+    obj = {"": "bmp", "\U00010000": "astral"}
+    assert _canonical(obj) == '{"\U00010000":"astral","":"bmp"}'

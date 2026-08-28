@@ -90,7 +90,10 @@ The canonical payload is produced by:
 
 1. Removing the `signature` field (if present).
 2. Serialising the remaining fields to JSON with:
-   - All object keys sorted lexicographically.
+   - All object keys sorted lexicographically by UTF-16 code unit (RFC 8785
+     section 3.2.3), the order JavaScript's default string sort produces.
+     Sorting by Unicode code point disagrees for member names above the
+     Basic Multilingual Plane and MUST NOT be used.
    - No whitespace between tokens (`","` and `":"` separators).
    - UTF-8 encoding of the resulting string to bytes.
    - Non-ASCII characters emitted literally as UTF-8, never as `\uXXXX`
