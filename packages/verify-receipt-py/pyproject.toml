@@ -43,6 +43,7 @@ dependencies = [
 
 [project.scripts]
 aqta-verify-receipt = "aqta_verify_receipt.__main__:main"
+aqta-verify-proof = "aqta_verify_receipt.verify_proof:main"
 
 [project.urls]
 Homepage = "https://aqta.ai/verify"

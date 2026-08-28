@@ -43,6 +43,16 @@ own versioning contract described in [CONFORMANCE.md](./CONFORMANCE.md).
 - The Python package reported `__version__` 1.1.2 from the 1.2.2 wheel; the
   version string now tracks the release.
 
+### Added
+
+- **`aqta-verify-proof` is now a console command in the Python package too.** It
+  shipped as an npm bin in 1.2.1 but PyPI users had only the library API, so a
+  researcher reproducing a transparency claim had to hand-write a wrapper, which
+  is exactly what happened in the first bounty report. Verdicts, reason strings,
+  exit codes and `--json` output are byte-identical to the TypeScript command
+  across every transparency vector. A bounty class that is harder to exercise in
+  one of the two published implementations is not equally claimable in both.
+
 ### Testing
 
 - **The differential fuzz never exercised the proof verifiers, and the
