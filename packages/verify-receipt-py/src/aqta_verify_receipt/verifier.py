@@ -150,7 +150,15 @@ def _canonical(value) -> str:
             "{"
             + ",".join(
                 f"{_canonical(str(k))}:{_canonical(value[k])}"
-                for k in sorted(value.keys())
+                # RFC 8785 3.2.3: member names sort by UTF-16 code units, the
+                # order JavaScript's default string sort produces. Plain
+                # sorted() compares code points, which reverses astral-plane
+                # names against U+E000..U+FFFF. surrogatepass keeps the sort
+                # key total; lone surrogates still fail inside _canonical.
+                for k in sorted(
+                    value.keys(),
+                    key=lambda k: str(k).encode("utf-16-be", "surrogatepass"),
+                )
             )
             + "}"
         )

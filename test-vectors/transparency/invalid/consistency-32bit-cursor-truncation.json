@@ -1,0 +1,10 @@
+{
+  "_note": "32-bit cursor trap, consistency: old 1 -> new 2^32+1 with one path node. The 2^32 cursor truncates to 0 under `>>=` and the short path is accepted.",
+  "consistency_path": [
+    "c9adad831bb5c5d145ad8ed1cd68a822c9cad8b61a1da38ad8e592a2ec6947e6"
+  ],
+  "new_root": "5274a634148ddff087ac6dafe8b85f61e553d0bce0e5bf9506303b2ccee4c82f",
+  "new_size": 4294967297,
+  "old_root": "e86bbe4444310d5bcee885be6eee588cdbcd0a25598797482956ee0e8a724443",
+  "old_size": 1
+}
