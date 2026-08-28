@@ -176,3 +176,16 @@ jobs:
         # Normative per spec/ACTION-v1.md section 6: a single hardcoded
         # fixture does not satisfy the interop requirement.
         run: node scripts/action-interop-sweep.mjs
+
+      - name: Transparency proof cross-implementation sweep
+        # Every RFC 6962 inclusion and consistency vector through BOTH proof
+        # verifiers, verdict compared per file. This subtree of test-vectors is
+        # not covered by the receipt vector jobs above.
+        run: node scripts/transparency-interop-sweep.mjs
+
+      - name: Transparency proof differential fuzz (size and cursor boundaries)
+        # Mints valid proofs across 2^31, 2^32 and 2^53 and mutates them, then
+        # requires both proof verifiers to agree. Added after two reported
+        # divergences (32-bit cursor truncation; size domain past 2^53) that
+        # the receipt fuzz could not reach.
+        run: python3 scripts/proof-fuzz.py

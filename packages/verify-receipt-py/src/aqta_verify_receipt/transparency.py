@@ -54,10 +54,24 @@ def _unhex(value: Any) -> bytes:
     return bytes.fromhex(value)
 
 
+# Sizes and indices must share the domain both implementations can represent
+# exactly. JavaScript numbers are IEEE 754 binary64, so its verifier caps sizes
+# at Number.isSafeInteger (2**53 - 1); above that a JSON size cannot round-trip
+# through the JS parser without losing precision. Python has no such ceiling, so
+# without this bound a valid proof for a tree larger than 2**53 verifies in
+# Python and is rejected by the JavaScript verifier: a divergence. The public
+# log will never approach 2**53 leaves; this only closes that gap.
+_MAX_SAFE_SIZE = 2**53 - 1
+
+
 def _is_size(value: Any) -> bool:
     # bool is an int subclass in Python, so exclude it explicitly or True
     # would pass as the integer 1 and a tree could have a size of "true".
-    return isinstance(value, int) and not isinstance(value, bool) and value >= 0
+    return (
+        isinstance(value, int)
+        and not isinstance(value, bool)
+        and 0 <= value <= _MAX_SAFE_SIZE
+    )
 
 
 def verify_inclusion_proof(proof: Mapping[str, Any]) -> ProofResult:
