@@ -267,7 +267,26 @@ export function verifySignedTreeHead(head: unknown, trustedPublicKey: string): P
     return { valid: false, reason: 'head is not an object' };
   }
   const h = head as Record<string, unknown>;
-  if (typeof h.org_id !== 'string' || !isSafeSize(h.tree_size)) {
+
+  /* Two logs, two signed prefixes, deliberately different so a head from one
+     can never be presented as the other. Discriminate on log === "public",
+     never on the absence of org_id: an attacker who strips org_id must not be
+     able to change which preimage is checked. A public head that also carries
+     an org_id is a contradiction and is refused.
+     Must stay byte-identical in reasoning and wording to the Python verifier;
+     the two must return the same verdict on the same head. */
+  const isPublic = h.log === 'public';
+  if (isPublic) {
+    if (h.org_id !== undefined && h.org_id !== null) {
+      return { valid: false, reason: 'a public head must not carry org_id' };
+    }
+    if (!isSafeSize(h.tree_size)) {
+      return { valid: false, reason: 'head must carry an integer tree_size' };
+    }
+    if (typeof h.timestamp !== 'string' || h.timestamp.length === 0) {
+      return { valid: false, reason: 'a public head must carry a timestamp' };
+    }
+  } else if (typeof h.org_id !== 'string' || !isSafeSize(h.tree_size)) {
     return { valid: false, reason: 'head must carry org_id and an integer tree_size' };
   }
   if (typeof h.root_hash !== 'string' || typeof h.signature !== 'string') {
@@ -285,10 +304,21 @@ export function verifySignedTreeHead(head: unknown, trustedPublicKey: string): P
   }
   if (root.length !== 32) return { valid: false, reason: 'root_hash must be 32 bytes' };
 
-  const prefix = new TextEncoder().encode(`aqta-sth-v1|${h.org_id}|${h.tree_size}|`);
-  const signed = new Uint8Array(prefix.length + root.length);
-  signed.set(prefix, 0);
-  signed.set(root, prefix.length);
+  let signed: Uint8Array;
+  if (isPublic) {
+    // PUBLIC_STH_PREFIX || ascii(tree_size) || "|" || root || "|" || ts
+    const head0 = new TextEncoder().encode(`aqta-sth-public-v1|${h.tree_size}|`);
+    const tail = new TextEncoder().encode(`|${h.timestamp as string}`);
+    signed = new Uint8Array(head0.length + root.length + tail.length);
+    signed.set(head0, 0);
+    signed.set(root, head0.length);
+    signed.set(tail, head0.length + root.length);
+  } else {
+    const prefix = new TextEncoder().encode(`aqta-sth-v1|${h.org_id}|${h.tree_size}|`);
+    signed = new Uint8Array(prefix.length + root.length);
+    signed.set(prefix, 0);
+    signed.set(root, prefix.length);
+  }
 
   const b64url = (s: string) => new Uint8Array(Buffer.from(s, 'base64url'));
 

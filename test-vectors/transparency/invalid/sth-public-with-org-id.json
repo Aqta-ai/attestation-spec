@@ -1,0 +1,18 @@
+{
+  "_note": "a public head that also carries org_id. Refused on the field rule, not on the signature: the discriminator is log == public, so an attacker cannot steer which preimage is checked by adding or stripping org_id.",
+  "_trusted_public_key": "9Y3Eiq6V8QjRDUM5nPqSwKIOPQaoEU4SbagfYFdvWa4",
+  "algorithm": "Ed25519",
+  "consistency": "/v1/public/transparency/consistency?old_size=N",
+  "hash": "RFC 6962: leaf = SHA-256(0x00 || entry), node = SHA-256(0x01 || left || right)",
+  "key_id": "aqta-att-01269bb4b6a7d950",
+  "log": "public",
+  "org_id": "org-impostor",
+  "proof": "/v1/public/transparency/proof/{attestation_id}",
+  "public_key": "9Y3Eiq6V8QjRDUM5nPqSwKIOPQaoEU4SbagfYFdvWa4",
+  "root_hash": "ff2abc4fcfbe09fdeaa189e2f2637a3cd3b3b0df221272a2e72f9e24493f23af",
+  "signature": "vl78YQTTgxmM4KKGfOqOsUwsBPJppkXOon5CJzGv0V2oMHgrR9TtE6D0RRB_QFtsKf64OGHkRZJ4dwGHDORHCA",
+  "signed_over": "aqta-sth-public-v1|<tree_size>|<root_hash bytes>|<timestamp>",
+  "timestamp": "2026-09-01T12:52:55Z",
+  "tree_size": 155,
+  "v": 1
+}

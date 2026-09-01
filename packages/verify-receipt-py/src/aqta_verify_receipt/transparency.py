@@ -210,7 +210,26 @@ def verify_signed_tree_head(head: Mapping[str, Any], trusted_public_key: str) ->
     """
     if not isinstance(head, Mapping):
         return ProofResult(False, "head is not an object")
-    if not isinstance(head.get("org_id"), str) or not _is_size(head.get("tree_size")):
+
+    # Two logs, two signed prefixes, and they are deliberately different so a
+    # head from one can never be presented as the other. A per-org head names
+    # its org; the public head does not exist per org at all and instead binds
+    # its own signing timestamp, so two heads with the same size and root stay
+    # distinct commitments.
+    #
+    # Discriminate on log == "public", never on the absence of org_id: an
+    # attacker who strips org_id must not be able to change which preimage is
+    # checked. A public head that also carries an org_id is a contradiction and
+    # is refused.
+    is_public = head.get("log") == "public"
+    if is_public:
+        if head.get("org_id") is not None:
+            return ProofResult(False, "a public head must not carry org_id")
+        if not _is_size(head.get("tree_size")):
+            return ProofResult(False, "head must carry an integer tree_size")
+        if not isinstance(head.get("timestamp"), str) or not head["timestamp"]:
+            return ProofResult(False, "a public head must carry a timestamp")
+    elif not isinstance(head.get("org_id"), str) or not _is_size(head.get("tree_size")):
         return ProofResult(False, "head must carry org_id and an integer tree_size")
     if not isinstance(head.get("root_hash"), str) or not isinstance(head.get("signature"), str):
         return ProofResult(False, "head must carry root_hash and signature")
@@ -224,7 +243,18 @@ def verify_signed_tree_head(head: Mapping[str, Any], trusted_public_key: str) ->
     if len(root) != 32:
         return ProofResult(False, "root_hash must be 32 bytes")
 
-    signed = b"aqta-sth-v1|" + head["org_id"].encode("utf-8") + b"|" + str(head["tree_size"]).encode() + b"|" + root
+    if is_public:
+        # PUBLIC_STH_PREFIX || ascii(tree_size) || "|" || root || "|" || ts
+        signed = (
+            b"aqta-sth-public-v1|"
+            + str(head["tree_size"]).encode()
+            + b"|"
+            + root
+            + b"|"
+            + head["timestamp"].encode("utf-8")
+        )
+    else:
+        signed = b"aqta-sth-v1|" + head["org_id"].encode("utf-8") + b"|" + str(head["tree_size"]).encode() + b"|" + root
 
     import base64
 
