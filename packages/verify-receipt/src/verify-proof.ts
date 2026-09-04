@@ -79,8 +79,15 @@ function main(): void {
     process.exit(2);
   }
 
-  // Some endpoints wrap the proof in an envelope; accept either shape.
-  const inner = (doc.proof ?? doc.inclusion_proof ?? doc.consistency_proof ?? doc) as Record<string, unknown>;
+  // Some endpoints wrap the proof in an envelope; accept either shape. Only
+  // an object counts as an envelope: a signed tree head carries a string
+  // "proof" hint naming the endpoint, and unwrapping that crashed the check
+  // (4 Sep 2026). A document is its own envelope unless a nested object says
+  // otherwise.
+  const isEnvelope = (v: unknown): v is Record<string, unknown> =>
+    typeof v === 'object' && v !== null && !Array.isArray(v);
+  const candidate = [doc.proof, doc.inclusion_proof, doc.consistency_proof].find(isEnvelope);
+  const inner = (candidate ?? doc) as Record<string, unknown>;
 
   let kind: string;
   let result: { valid: boolean; reason?: string };

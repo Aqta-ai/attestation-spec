@@ -88,11 +88,13 @@ def main(argv: Optional[list] = None) -> None:
         sys.stderr.write("aqta-verify-proof: input must be a JSON object\n")
         raise SystemExit(2)
 
-    # Some endpoints wrap the proof in an envelope; accept either shape.
-    inner = doc.get("proof") or doc.get("inclusion_proof") or doc.get("consistency_proof") or doc
-    if not isinstance(inner, Mapping):
-        sys.stderr.write("aqta-verify-proof: input must be a JSON object\n")
-        raise SystemExit(2)
+    # Some endpoints wrap the proof in an envelope; accept either shape. Only
+    # a mapping counts as an envelope: a signed tree head carries a string
+    # "proof" hint naming the endpoint, and treating that as the document
+    # refused a valid head (4 Sep 2026). The TypeScript build crashed on the
+    # same bytes; both now fall through to the document itself.
+    candidates = (doc.get("proof"), doc.get("inclusion_proof"), doc.get("consistency_proof"))
+    inner = next((c for c in candidates if isinstance(c, Mapping)), doc)
 
     if "audit_path" in inner:
         kind = "inclusion proof"

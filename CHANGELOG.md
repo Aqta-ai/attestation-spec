@@ -9,6 +9,25 @@ own versioning contract described in [CONFORMANCE.md](./CONFORMANCE.md).
 
 ## [Unreleased]
 
+## [1.2.4] - unreleased (CLI crashed on the live signed tree head)
+
+Found 4 September 2026 while verifying a gateway change with the published
+CLI. Library verdicts were correct throughout; the defect was in the
+command-line wrapper both packages ship.
+
+- `aqta-verify-proof` unwrapped any `proof`, `inclusion_proof` or
+  `consistency_proof` field as an envelope. The public signed tree head
+  carries a string `proof` hint naming the proof endpoint, so the TypeScript
+  CLI threw a TypeError and the Python CLI refused a valid head as "not a JSON
+  object". Same bytes, two different wrong behaviours. Both now unwrap only
+  when the candidate is an object and otherwise verify the document itself.
+- The interop sweep now runs every vector through both CLIs as well as both
+  libraries. A run that produces no JSON verdict is a failure in its own right.
+  Against the previous build the sweep reports `CRASH valid/sth-public-live.json`,
+  which is the test the defect needed and did not have.
+- No vector changed: `sth-public-live.json` already carried the string hint.
+  The gap was that nothing exercised the CLI path.
+
 ## [1.2.3] - 2026-08-28 (two externally reported verifier divergences)
 
 ### Fixed
