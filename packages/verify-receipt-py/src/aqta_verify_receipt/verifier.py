@@ -86,7 +86,7 @@ def _utf16_order(values):
     involved: U+E000 sorts after U+1F600 by code point, and before it by code unit, because
     the emoji begins with the surrogate 0xD83D. That made the two reference verifiers return
     different verdicts on the same signed bytes, which is the one property this format exists
-    to guarantee. Reported by Ranvir Jat, 9 September 2026.
+    to guarantee. Reported through the standing bounty, 9 September 2026.
 
     ATTESTATION-v1 section 5 and ACTION-v1 section 6 both define canonical order as
     "lexicographically by UTF-16 code unit (RFC 8785)" for object keys. This applies the same
