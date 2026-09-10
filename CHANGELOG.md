@@ -9,6 +9,8 @@ own versioning contract described in [CONFORMANCE.md](./CONFORMANCE.md).
 
 ## [Unreleased]
 
+## [1.2.5] - 2026-09-10 (verifier divergence on `policy_applied` ordering)
+
 ### Fixed
 
 - **Verifier divergence on `policy_applied` ordering (non-BMP identifiers).** The TypeScript
@@ -40,9 +42,7 @@ own versioning contract described in [CONFORMANCE.md](./CONFORMANCE.md).
   build. They now assert a floor, which still catches a loader that finds nothing without
   penalising a suite whose job is to grow.
 
-## [Unreleased]
-
-## [1.2.4] - unreleased (CLI crashed on the live signed tree head)
+## [1.2.4] - never published separately, shipped inside 1.2.5 (CLI crashed on the live signed tree head)
 
 Found 4 September 2026 while verifying a gateway change with the published
 CLI. Library verdicts were correct throughout; the defect was in the
