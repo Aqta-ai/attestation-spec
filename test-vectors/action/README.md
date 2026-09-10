@@ -25,6 +25,7 @@ reference verifiers before release.
 | 003-no-session | `session_id` and `intent_hash` both `""` (action outside a session). |
 | 004-session-no-intent | Session present, no registered intent (`intent_hash` `""`). |
 | 005-empty-policy | `policy_applied` is `[]`, which is permitted. |
+| 006-policy-non-bmp-sorted | Non-BMP `policy_applied` in UTF-16 code-unit order. Both verifiers must accept; Python's default code-point sort would order it the other way. |
 | 006-multi-policy | Three policies, lexicographic order. |
 | 007-non-ascii-tool | Non-ASCII in `tool`, signed as literal UTF-8 (§6). |
 | 008-non-utc-offset | Timestamp with a `+02:00` offset instead of `Z`. |
@@ -50,6 +51,7 @@ reference verifiers before release.
 | 013-empty-tool | `tool` is `""`; MUST be non-empty. |
 | 014-intent-without-session | `intent_hash` set while `session_id` is `""` (§7 semantic rule). |
 | 015-escaped-unicode-signing | Signed over `\uXXXX`-escaped bytes; a §6-conformant verifier reconstructs literal UTF-8 and the signature fails. The cross-language escaping trap, pinned as a vector. |
+| 016-policy-code-point-order | `policy_applied` sorted by Unicode code point instead of UTF-16 code unit. The signature is valid; only the ordering check may reject it. Signed directly rather than through the reference issuer, which now corrects the order. |
 
 ## Regenerating
 

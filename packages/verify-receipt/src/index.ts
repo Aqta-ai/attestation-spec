@@ -485,6 +485,11 @@ export function verifyReceipt(
   if (!r.policy_applied.every((p: unknown) => typeof p === 'string')) {
     return { valid: false, reason: 'policy_applied must contain only strings' };
   }
+  // Default .sort() compares UTF-16 code units, which is what the spec means by
+  // lexicographic order (ATTESTATION-v1 s5 / ACTION-v1 s6, RFC 8785). Do NOT replace this
+  // with localeCompare or a code-point comparator: the Python verifier was changed to match
+  // THIS behaviour after the two implementations split on a non-BMP identifier.
+  // Reported by Ranvir Jat, 9 September 2026.
   const sorted = [...(r.policy_applied as string[])].sort();
   if ((r.policy_applied as string[]).some((p, i) => p !== sorted[i])) {
     return { valid: false, reason: 'policy_applied must be in lexicographic order' };
@@ -638,6 +643,11 @@ function verifyActionV1(
   if (!(r.policy_applied as unknown[]).every((p) => typeof p === 'string')) {
     return { valid: false, reason: 'policy_applied must contain only strings' };
   }
+  // Default .sort() compares UTF-16 code units, which is what the spec means by
+  // lexicographic order (ATTESTATION-v1 s5 / ACTION-v1 s6, RFC 8785). Do NOT replace this
+  // with localeCompare or a code-point comparator: the Python verifier was changed to match
+  // THIS behaviour after the two implementations split on a non-BMP identifier.
+  // Reported by Ranvir Jat, 9 September 2026.
   const sorted = [...(r.policy_applied as string[])].sort();
   if ((r.policy_applied as string[]).some((p, i) => p !== sorted[i])) {
     return { valid: false, reason: 'policy_applied must be in lexicographic order' };

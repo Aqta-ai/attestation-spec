@@ -77,6 +77,24 @@ _B64URL = re.compile(r"^[A-Za-z0-9_-]+$")
 _LONE_SURROGATE = re.compile(r"[\ud800-\udfff]")
 
 
+
+def _utf16_order(values):
+    """Sort strings by UTF-16 code unit, which is what the spec means by lexicographic.
+
+    Python's sorted() compares code points and JavaScript's Array.sort() compares UTF-16
+    code units. They agree across the BMP and disagree the moment a non-BMP character is
+    involved: U+E000 sorts after U+1F600 by code point, and before it by code unit, because
+    the emoji begins with the surrogate 0xD83D. That made the two reference verifiers return
+    different verdicts on the same signed bytes, which is the one property this format exists
+    to guarantee. Reported by Ranvir Jat, 9 September 2026.
+
+    ATTESTATION-v1 section 5 and ACTION-v1 section 6 both define canonical order as
+    "lexicographically by UTF-16 code unit (RFC 8785)" for object keys. This applies the same
+    rule to policy_applied, which the spec previously left to the implementer. Encoding to
+    UTF-16 big-endian and comparing bytes is exactly code-unit order.
+    """
+    return sorted(values, key=lambda v: v.encode("utf-16-be"))
+
 def _js_number(x: float) -> str:
     """ECMA-262 Number::toString, which is what RFC 8785 (JCS) 3.2.2.3 requires.
 
@@ -350,7 +368,7 @@ def _verify_action_record(
         )
     if not all(isinstance(p, str) for p in record["policy_applied"]):
         return VerifyResult(False, "policy_applied must contain only strings")
-    if list(record["policy_applied"]) != sorted(record["policy_applied"]):
+    if list(record["policy_applied"]) != _utf16_order(record["policy_applied"]):
         return VerifyResult(
             False, "policy_applied must be in lexicographic order"
         )
@@ -534,7 +552,7 @@ def verify_receipt(
     # 2026-08-05; vectors 009-013 now cover these.
     if not all(isinstance(p, str) for p in receipt["policy_applied"]):
         return VerifyResult(False, "policy_applied must contain only strings")
-    if list(receipt["policy_applied"]) != sorted(receipt["policy_applied"]):
+    if list(receipt["policy_applied"]) != _utf16_order(receipt["policy_applied"]):
         return VerifyResult(
             False, "policy_applied must be in lexicographic order"
         )
