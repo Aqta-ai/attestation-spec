@@ -119,7 +119,10 @@ class ReferenceActionIssuer:
             "tool": tool,
             "args_hash": args_hash,
             "outcome": outcome,
-            "policy_applied": sorted(policy_applied),
+            "policy_applied": sorted(policy_applied, key=lambda v: v.encode("utf-16-be")),
+            # UTF-16 code unit order, matching the verifiers. Python's default sorted()
+            # compares code points and would emit an order the TypeScript verifier
+            # rejects for any non-BMP policy identifier.
             "timestamp": timestamp or datetime.now(timezone.utc).isoformat(),
             "public_key": self.public_key_b64,
         }

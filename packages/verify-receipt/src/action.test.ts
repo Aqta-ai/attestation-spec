@@ -27,7 +27,11 @@ function loadVectors(kind: 'valid' | 'invalid'): Array<[string, unknown]> {
 
 test('every valid action vector verifies under the pinned vector key', () => {
   const vectors = loadVectors('valid');
-  assert.equal(vectors.length, 10, 'expected 10 valid action vectors');
+  assert.ok(vectors.length >= 10,
+    // A floor, not an exact count. The point is to catch a loader that found
+    // nothing; pinning the number means every new conformance vector breaks the
+    // build, which is the wrong incentive for a suite whose job is to grow.
+    'expected at least 10 vectors, got ' + vectors.length);
   for (const [name, record] of vectors) {
     const result = verifyReceipt(record, {
       trustedPublicKey: ACTION_VECTOR_KEY,
@@ -41,7 +45,11 @@ test('every valid action vector verifies under the pinned vector key', () => {
 
 test('every invalid action vector is rejected', () => {
   const vectors = loadVectors('invalid');
-  assert.equal(vectors.length, 15, 'expected 15 invalid action vectors');
+  assert.ok(vectors.length >= 15,
+    // A floor, not an exact count. The point is to catch a loader that found
+    // nothing; pinning the number means every new conformance vector breaks the
+    // build, which is the wrong incentive for a suite whose job is to grow.
+    'expected at least 15 vectors, got ' + vectors.length);
   for (const [name, record] of vectors) {
     const result = verifyReceipt(record, {
       trustedPublicKey: ACTION_VECTOR_KEY,

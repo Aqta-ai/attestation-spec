@@ -74,7 +74,7 @@ A record is a single JSON object with exactly the following top-level fields:
 | `tool`           | string | yes      | Namespaced identifier of the proposed action, e.g. `github.merge_pull_request`. Non-empty. |
 | `args_hash`      | string | yes      | SHA-256 hex digest (64 lowercase hex chars) of the canonical byte serialisation (§6 rules) of the proposed action's argument object. |
 | `outcome`        | string | yes      | One of the values listed in §5. |
-| `policy_applied` | array  | yes      | Sorted JSON array of policy identifier strings. MUST be sorted lexicographically. MAY be empty. |
+| `policy_applied` | array  | yes      | Sorted JSON array of policy identifier strings. MUST be sorted lexicographically **by UTF-16 code unit**, the same order section 6 requires for object keys. MAY be empty. |
 | `timestamp`      | string | yes      | ISO 8601 datetime with explicit timezone offset (`Z` for UTC). |
 | `public_key`     | string | yes      | Base64url-encoded raw 32-byte Ed25519 public key of the issuer (no padding). |
 | `signature`      | string | yes      | Base64url-encoded 64-byte Ed25519 signature (no padding). Omitted from the canonical payload (§6). |

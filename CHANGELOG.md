@@ -9,6 +9,39 @@ own versioning contract described in [CONFORMANCE.md](./CONFORMANCE.md).
 
 ## [Unreleased]
 
+### Fixed
+
+- **Verifier divergence on `policy_applied` ordering (non-BMP identifiers).** The TypeScript
+  verifier compared with JavaScript's default `.sort()`, which orders by UTF-16 code unit, while
+  the Python verifier used `sorted()`, which orders by Unicode code point. The two agree across the
+  BMP and disagree the moment a non-BMP character is present: `["\uE000", "\U0001F600"]` is sorted
+  by code point and unsorted by code unit, because the emoji begins with the surrogate `0xD83D`.
+  The result was two reference implementations returning different verdicts on the same signed
+  bytes, which is the one property this format exists to guarantee. Python now sorts by UTF-16 code
+  unit, matching the order both specifications already require for object keys under RFC 8785.
+  `examples/reference-action-issuer.py` used the same code-point sort and could emit an order the
+  TypeScript verifier rejected; it is fixed too.
+  Reported by **Ranvir Jat**, 9 September 2026, under the verifier-divergence class of the standing
+  bounty.
+
+### Added
+
+- `test-vectors/action/valid/006-policy-non-bmp-sorted.json` and
+  `invalid/016-policy-code-point-order.json`, pinning both directions of the case above. Every
+  earlier multi-policy vector used ASCII identifiers, where the two orderings agree, which is why
+  the suite never reached it.
+- `spec/ACTION-v1.md` and `spec/ATTESTATION-v1.md` now state that `policy_applied` order is by
+  UTF-16 code unit. ACTION-v1 previously said only "lexicographically" and left the comparator to
+  the implementer.
+
+### Changed
+
+- The action vector tests asserted an exact vector count, so adding a conformance vector broke the
+  build. They now assert a floor, which still catches a loader that finds nothing without
+  penalising a suite whose job is to grow.
+
+## [Unreleased]
+
 ## [1.2.4] - unreleased (CLI crashed on the live signed tree head)
 
 Found 4 September 2026 while verifying a gateway change with the published

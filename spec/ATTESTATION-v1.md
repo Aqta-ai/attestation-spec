@@ -64,7 +64,7 @@ A receipt is a single JSON object with exactly the following top-level fields:
 | `request_hash`       | string  | yes      | SHA-256 hex digest of the canonicalised request body. 64 lowercase hex chars. |
 | `model`              | string  | yes      | Provider-qualified model identifier, e.g. `gpt-4o`, `claude-3-5-sonnet`. |
 | `outcome`            | string  | yes      | One of the values listed in §5. |
-| `policy_applied`     | array   | yes      | Sorted JSON array of ASCII policy identifiers, e.g. `["budget_guard","loop_guard"]`. MUST be sorted lexicographically. |
+| `policy_applied`     | array   | yes      | Sorted JSON array of ASCII policy identifiers, e.g. `["budget_guard","loop_guard"]`. MUST be sorted lexicographically. Order is by UTF-16 code unit, as for object keys in section 5; ASCII identifiers make the two orderings identical, and the restriction to ASCII is what keeps them so. |
 | `cost_prevented_eur` | number  | yes      | Issuer accounting estimate of spend avoided by a BLOCKED or SUPPRESSED outcome, in EUR. Non-negative, 6 digits of precision. MUST be `0` when not computed. Covered by the signature for wire stability; not an audit finding and not evidence of savings for a third party. |
 | `timestamp`          | string  | yes      | ISO 8601 datetime with explicit timezone offset (`Z` for UTC). |
 | `public_key`         | string  | yes      | Base64url-encoded raw 32-byte Ed25519 public key of the issuer (no padding). |

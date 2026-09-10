@@ -126,6 +126,18 @@ def generate_valid() -> None:
         session_id="sess-vector-0010", intent_hash="",
     ))
 
+    # Non-BMP policy identifiers, in UTF-16 code-unit order. Python's sorted()
+    # would place these the other way round because it compares code points:
+    # U+E000 < U+1F600 by code point, but the emoji begins with the surrogate
+    # 0xD83D so it comes FIRST by code unit. The two reference verifiers split
+    # on exactly this until 10 Sep 2026. Every earlier multi-policy vector was
+    # ASCII, where both orderings agree, which is why nothing caught it.
+    # Reported by Ranvir Jat, 9 September 2026.
+    _write(VALID, "006-policy-non-bmp-sorted.json", _sign(
+        6, outcome="ALLOWED", policy_applied=["\U0001F600", "\uE000"],
+        session_id="sess-vector-0001", intent_hash=INTENT,
+    ))
+
 
 def generate_invalid() -> None:
     print("invalid/")
@@ -213,6 +225,27 @@ def generate_invalid() -> None:
     payload["signature"] = _b64.urlsafe_b64encode(sig).decode().rstrip("=")
     _write(INVALID, "015-escaped-unicode-signing.json", payload)
 
+
+    # The same identifiers in code-point order, which is what Python's default
+    # sorted() produces. A conformant verifier MUST reject it: order is by
+    # UTF-16 code unit. This is the vector for the divergence class itself, so
+    # both implementations are pinned to the same answer on the same bytes.
+    # Built by signing directly rather than through ISSUER.sign(), because the
+    # reference issuer now sorts by code unit and would silently correct the
+    # very order this vector exists to test. The signature is VALID: only the
+    # semantic ordering check may reject it, which is exactly the shape of the
+    # reported divergence.
+    import base64 as _b64x
+    payload = {k: v for k, v in _sign(
+        0x20, outcome="ALLOWED", policy_applied=["\U0001F600"],
+        session_id="sess-vector-0001", intent_hash=INTENT,
+    ).items() if k != "signature"}
+    payload["policy_applied"] = ["\uE000", "\U0001F600"]  # code-point order
+    canonical = json.dumps(payload, sort_keys=True, separators=(",", ":"),
+                           ensure_ascii=False).encode("utf-8")
+    payload["signature"] = _b64x.urlsafe_b64encode(
+        ISSUER.private_key.sign(canonical)).decode().rstrip("=")
+    _write(INVALID, "016-policy-code-point-order.json", payload)
 
 if __name__ == "__main__":
     print(f"ACTION-v1 vector key: {ISSUER.public_key_b64}")
