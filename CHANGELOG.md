@@ -23,8 +23,8 @@ own versioning contract described in [CONFORMANCE.md](./CONFORMANCE.md).
   unit, matching the order both specifications already require for object keys under RFC 8785.
   `examples/reference-action-issuer.py` used the same code-point sort and could emit an order the
   TypeScript verifier rejected; it is fixed too.
-  Reported by **Ranvir Jat**, 9 September 2026, under the verifier-divergence class of the standing
-  bounty.
+  Reported through the standing bounty, 9 September 2026, under the verifier-divergence class. The
+  reporter is credited by name once they agree to it.
 
 ### Added
 
