@@ -138,9 +138,10 @@ above had a working mechanism and no vector, so a third-party implementation cla
 conformance was claiming envelope conformance only. `test-vectors/transparency/adversary/`
 now carries history bundles for A1, A3, A4 and A6 and for two malformed cases, each with the
 verdict a verifier must reach; both reference implementations and both command-line tools are
-held to the same verdict by the interop sweep. Two of those bundles exist to pin limits rather
+held to the same verdict by the interop sweep. Three of those bundles exist to pin limits rather
 than detections: `a3-lag-is-not-backdating` (absence from an earlier head is not evidence, because
-log order is submission order) and the absence of any A2 bundle at all. A5 is exercised by the
+log order is submission order), `a3-timestamp-grammar-is-strict` (verifiers compare fixed-width UTC
+strings and never parse dates), and the absence of any A2 bundle at all. A5 is exercised by the
 key-pinning cases in the receipt suite rather than here.
 
 The gap is not the cryptography. It is that these mechanisms have no adversarial
