@@ -176,6 +176,12 @@ jobs:
         # Normative per spec/ACTION-v1.md section 6: a single hardcoded
         # fixture does not satisfy the interop requirement.
         run: node scripts/action-interop-sweep.mjs
+
+      - name: Byte-level interop sweep
+        # Inputs that are not valid UTF-8, so they cannot be JSON vectors and the
+        # library-level sweeps never see them. Added 12 Sep 2026 after a bounty
+        # report: the TypeScript CLI decoded with replacement and accepted bytes
+        # that were never signed, while Python rejected the same file.
         run: node scripts/bytes-interop-sweep.mjs
 
       - name: Transparency proof cross-implementation sweep
