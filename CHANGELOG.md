@@ -7,6 +7,34 @@ and this repository adheres to [Semantic Versioning](https://semver.org/spec/v2.
 at the repository-release level. The ATTESTATION format itself has its
 own versioning contract described in [CONFORMANCE.md](./CONFORMANCE.md).
 
+## [1.2.6] - Unreleased
+
+### Fixed
+
+- The TypeScript CLIs decoded input with replacement: `readFileSync(file, 'utf8')` turns any
+  invalid byte sequence into U+FFFD instead of failing. A receipt whose signed `model` was
+  U+FFFD, with the three signed bytes `EF BF BD` replaced on disk by the single invalid byte
+  `80`, therefore decoded back onto the signed payload and verified as valid, while the Python
+  CLI rejected the same bytes as not UTF-8. Bytes that were never signed produced a valid
+  verdict on one implementation and malformed on the other. Both CLIs, `aqta-verify-receipt`
+  and `aqta-verify-proof`, now read bytes and decode with a fatal, BOM-preserving decoder;
+  invalid UTF-8 exits 2 with `not valid UTF-8`, and a byte order mark is left in the text so
+  JSON parsing rejects it, as Python already did. The same lossy decode existed in the browser
+  verifiers on aqta.ai and app.aqta.ai (`file.text()`, `readAsText`) and is fixed in those repos.
+  Reported through the standing bounty, 12 September 2026, under the verifier-divergence class,
+  the second confirmed report in that class. The reporter is credited by name once they agree
+  to it.
+
+### Added
+
+- `test-vectors/bytes/`: seven byte-level vectors that cannot be expressed as JSON because they
+  are not valid UTF-8 (the reported case, a BOM, a truncated sequence, an overlong encoding, an
+  encoded surrogate, an invalid byte inside an ASCII value, and a clean control), with
+  `expected.json` pinning the exit code. `scripts/bytes-interop-sweep.mjs` runs both CLIs over
+  each file and fails on any disagreement. `scripts/differential-fuzz.mjs` claimed byte-level
+  coverage but wrote JavaScript strings, which cannot contain an invalid byte; the new sweep is
+  where that class now lives.
+
 ## [Unreleased]
 
 ## [1.2.5] - 2026-09-10 (verifier divergence on `policy_applied` ordering)

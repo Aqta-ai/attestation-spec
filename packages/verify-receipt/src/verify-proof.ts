@@ -61,8 +61,17 @@ function main(): void {
 
   let raw: string;
   try {
-    raw = file === '-' ? readFileSync(0, 'utf8') : readFileSync(file, 'utf8');
-  } catch {
+    // Bytes first, then a fatal decoder. readFileSync(…, 'utf8') replaced invalid
+    // sequences with U+FFFD, so a file that was never signed could decode back onto
+    // the signed payload and verify. ignoreBOM keeps a BOM in the text so JSON.parse
+    // rejects it, as Python does. Reported under the bounty, 12 September 2026.
+    const bytes = file === '-' ? readFileSync(0) : readFileSync(file);
+    raw = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(bytes);
+  } catch (err) {
+    if (err instanceof TypeError) {
+      process.stderr.write(`aqta-verify-proof: cannot read ${file === '-' ? 'stdin' : file}: not valid UTF-8\n`);
+      process.exit(2);
+    }
     process.stderr.write(`aqta-verify-proof: cannot read ${file === '-' ? 'stdin' : file}\n`);
     process.exit(2);
   }
