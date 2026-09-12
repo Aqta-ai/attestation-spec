@@ -24,6 +24,7 @@ import sys
 from typing import Any, Mapping, Optional
 
 from .transparency import (
+    assess_history,
     verify_consistency_proof,
     verify_inclusion_proof,
     verify_signed_tree_head,
@@ -35,6 +36,8 @@ USAGE = """aqta-verify-proof <file|-> [--key <base64url>] [--json] [-q]
     audit_path        an RFC 6962 inclusion proof
     consistency_path  an RFC 6962 consistency proof
     signature         a signed tree head, which needs --key
+    heads             a history bundle (several heads, consistency and
+                      inclusion proofs), which needs --key
 
   A proof establishes that what you were shown is in the log. It does not
   establish that what you were not shown is irrelevant.
@@ -96,7 +99,13 @@ def main(argv: Optional[list] = None) -> None:
     candidates = (doc.get("proof"), doc.get("inclusion_proof"), doc.get("consistency_proof"))
     inner = next((c for c in candidates if isinstance(c, Mapping)), doc)
 
-    if "audit_path" in inner:
+    if "heads" in inner:
+        kind = "history bundle"
+        if not key:
+            sys.stderr.write("aqta-verify-proof: a history bundle needs --key <published key>\n")
+            raise SystemExit(2)
+        result = assess_history(inner, key)
+    elif "audit_path" in inner:
         kind = "inclusion proof"
         result = verify_inclusion_proof(inner)
     elif "consistency_path" in inner:
@@ -125,6 +134,7 @@ def main(argv: Optional[list] = None) -> None:
                         "valid": result.valid,
                         "kind": kind,
                         "reason": None if result.valid else (result.reason or "verification failed"),
+                        **({"verdict": result.verdict} if getattr(result, "verdict", None) else {}),
                     },
                     # Compact separators so this is byte-identical to the
                     # TypeScript command's JSON.stringify output. Two commands
@@ -135,7 +145,8 @@ def main(argv: Optional[list] = None) -> None:
             )
         else:
             mark = "✓ valid" if result.valid else "✕ invalid"
-            detail = kind if result.valid else f"{kind}: {result.reason or 'verification failed'}"
+            verdict = f" [{result.verdict}]" if getattr(result, "verdict", None) else ""
+            detail = f"{kind}{verdict}" if result.valid else f"{kind}{verdict}: {result.reason or 'verification failed'}"
             sys.stdout.write(f"{mark}  {detail}\n")
 
     raise SystemExit(0 if result.valid else 1)

@@ -1,0 +1,34 @@
+{
+  "_class": "A6",
+  "_note": "an inclusion proof that verifies, against a root no head in the bundle signed: a proof about a tree that is not in evidence",
+  "expect": {
+    "verdict": "unsigned_root"
+  },
+  "heads": [
+    {
+      "log": "public",
+      "root_hash": "c69575aa1630d353df27a0e9ad6a7fc29e43988d44bfae3259b75d47f1fab175",
+      "signature": "yQ9d-NR3drLkNGKP5sXkgSNNAjZ17Qqkx4_JI4vGuS_0MiUBVQ5HH6GwV3cxUCRLK4YGiGuKRR7Cf5RIpSwrAw",
+      "timestamp": "2026-09-12T18:11:00Z",
+      "tree_size": 11,
+      "v": 1
+    }
+  ],
+  "inclusions": [
+    {
+      "proof": {
+        "audit_path": [
+          "50dac7506683c1060dabb867d124e18c90553a0167603d2b149620700b20b3ad",
+          "5d17708f4fb50ec89850277dabb639609263ffc6856d450f28caa9ba60915dec",
+          "b936f060c7e9682c71548f416f55210bfc22a90bdb81d28dbea16c9e4ead7912",
+          "26024f3fb571db7f91e65da76b3a83fcffabbb6478b5ac9422a29903e8610ce9"
+        ],
+        "leaf_hash": "cc680c0bb6e02a921f05762bbf518744f812c2df978520705867db73e4857c61",
+        "leaf_index": 2,
+        "root_hash": "8bcbdab90330b346d3fd4915aad6c3f0ff8209d25e95f00a8707f9c55fcb1843",
+        "tree_size": 9
+      }
+    }
+  ],
+  "trusted_public_key": "A6EHv_POEL4dcN0Y50vAmWfk1jCbpQ1fHdyGZBJVMbg"
+}

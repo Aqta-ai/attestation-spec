@@ -278,3 +278,104 @@ def verify_signed_tree_head(head: Mapping[str, Any], trusted_public_key: str) ->
     except Exception as exc:
         return ProofResult(False, f"verification error: {exc}")
     return ProofResult(True)
+
+
+# --------------------------------------------------------------------------
+# History bundles: adversary-class checks composed from the primitives.
+# --------------------------------------------------------------------------
+#
+# Written from the verdict contract in ISSUER-ADVERSARY.md and the vectors,
+# not ported from the TypeScript module, for the same reason the primitives
+# are not: two implementations that agree are evidence.
+#
+# Verdicts in precedence order, because a bundle can carry more than one fault
+# and both implementations must name the same one:
+#   invalid_head, equivocation, unsigned_root, fork, invalid_proof,
+#   timestamp_contradiction, consistent.
+#
+# Absence from an earlier head is NOT treated as backdating. Log order is
+# submission order; a record can be created before a head and submitted after
+# it. The vector a3-lag-is-not-backdating pins that this returns consistent.
+
+_TIMESTAMP = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$")
+
+
+@dataclass
+class HistoryResult:
+    valid: bool
+    verdict: str
+    reason: Optional[str] = None
+
+
+def assess_history(bundle: Mapping[str, Any], trusted_public_key: str) -> HistoryResult:
+    """Assess several heads, consistency proofs and inclusion proofs together."""
+
+    def fail(verdict: str, reason: str) -> HistoryResult:
+        return HistoryResult(False, verdict, reason)
+
+    if not isinstance(bundle, Mapping):
+        return fail("invalid_head", "bundle is not an object")
+    raw_heads = bundle.get("heads")
+    if not isinstance(raw_heads, Sequence) or isinstance(raw_heads, (str, bytes)) or not raw_heads:
+        return fail("invalid_head", "bundle must carry at least one head")
+
+    # 1. Every head verifies, and is a public head, because only public heads
+    #    carry the signing timestamp the A3 rule needs.
+    heads = []
+    for i, h in enumerate(raw_heads):
+        if not isinstance(h, Mapping) or h.get("log") != "public":
+            return fail("invalid_head", f"head {i}: history bundles require public heads with timestamps")
+        r = verify_signed_tree_head(h, trusted_public_key)
+        if not r.valid:
+            return fail("invalid_head", f"head {i}: {r.reason or 'verification failed'}")
+        if not _TIMESTAMP.match(h["timestamp"]):
+            return fail("invalid_head", f"head {i}: timestamp must be YYYY-MM-DDTHH:MM:SSZ")
+        heads.append((h["tree_size"], h["root_hash"].lower(), h["timestamp"]))
+
+    # 2. Equivocation: one size, two roots, both signed.
+    for i in range(len(heads)):
+        for j in range(i + 1, len(heads)):
+            if heads[i][0] == heads[j][0] and heads[i][1] != heads[j][1]:
+                return fail("equivocation", f"heads {i} and {j} are both signed at size {heads[i][0]} with different roots")
+
+    def head_for(size: Any, root: Any):
+        if not isinstance(root, str):
+            return None
+        for h in heads:
+            if h[0] == size and h[1] == root.lower():
+                return h
+        return None
+
+    # 3. Consistency proofs between signed heads.
+    cons = bundle.get("consistency") or []
+    for i, c in enumerate(cons):
+        if not isinstance(c, Mapping):
+            return fail("unsigned_root", f"consistency {i}: not an object")
+        if head_for(c.get("old_size"), c.get("old_root")) is None or head_for(c.get("new_size"), c.get("new_root")) is None:
+            return fail("unsigned_root", f"consistency {i}: an endpoint is not a signed head in this bundle")
+        r = verify_consistency_proof(c)
+        if not r.valid:
+            return fail("fork", f"consistency {i}: {r.reason or 'verification failed'}")
+
+    # 4. Inclusion proofs against signed heads, and 5. the A3 rule.
+    contradiction: Optional[str] = None
+    for i, entry in enumerate(bundle.get("inclusions") or []):
+        p = entry.get("proof") if isinstance(entry, Mapping) else None
+        if not isinstance(p, Mapping):
+            return fail("invalid_proof", f"inclusion {i}: no proof object")
+        head = head_for(p.get("tree_size"), p.get("root_hash"))
+        if head is None:
+            return fail("unsigned_root", f"inclusion {i}: proof targets a root no head in this bundle signed")
+        r = verify_inclusion_proof(p)
+        if not r.valid:
+            return fail("invalid_proof", f"inclusion {i}: {r.reason or 'verification failed'}")
+        ts = entry.get("record_timestamp")
+        if ts is not None:
+            if not isinstance(ts, str) or not _TIMESTAMP.match(ts):
+                return fail("invalid_proof", f"inclusion {i}: record_timestamp must be YYYY-MM-DDTHH:MM:SSZ")
+            # Fixed-width UTC strings compare correctly as strings.
+            if ts > head[2] and contradiction is None:
+                contradiction = f"inclusion {i}: record claims {ts}, after the head at {head[2]} that already includes it"
+    if contradiction is not None:
+        return fail("timestamp_contradiction", contradiction)
+    return HistoryResult(True, "consistent")
