@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+# One release, in the order that keeps the CHANGELOG true: packages first, repo
+# after, so "the published verifiers are fixed" is a fact when the commit
+# claiming it lands. Every gate runs again immediately before publishing,
+# because a green run from yesterday is not evidence about today's bytes.
+#
+# 1.2.6 carries the invalid-UTF-8 decode fix. The TypeScript package is the one that
+# changes behaviour: until it is on npm, a file that was never signed can still verify
+# as valid for every npx user. Python ships unchanged so both registries stay at parity.
+#
+#   npm login                       # or export NPM_TOKEN
+#   export TWINE_USERNAME=__token__ # project-scoped PyPI token
+#   export TWINE_PASSWORD=pypi-...
+#   bash scripts/release-1.2.6.sh
+set -euo pipefail
+cd "$(dirname "$0")/.."
+export PYTHONPATH=packages/verify-receipt-py/src
+
+echo "== gates"
+( cd packages/verify-receipt && npm run build >/dev/null && npm test 2>&1 | grep -E "^ℹ (pass|fail)" )
+python3 -m pytest packages -q -p no:fast_array_utils | tail -1
+node scripts/differential-fuzz.mjs | tail -1
+node scripts/action-interop-sweep.mjs | tail -1
+node scripts/bytes-interop-sweep.mjs | tail -1
+node scripts/transparency-interop-sweep.mjs | tail -1
+python3 scripts/proof-fuzz.py | tail -1
+python3 scripts/conformance-report.py | tail -1
+
+echo "== versions"
+grep -m1 '"version"' packages/verify-receipt/package.json
+grep -m1 '^version' packages/verify-receipt-py/pyproject.toml
+
+echo "== npm"
+npm whoami
+( cd packages/verify-receipt && npm publish --access public )
+
+echo "== pypi"
+( cd packages/verify-receipt-py && rm -rf dist && python3 -m build && python3 -m twine upload dist/* )
+
+echo "== confirm both registries serve 1.2.6, then push"
+npm view aqta-verify-receipt version
+# curl, not urllib: this machine's python has no CA bundle for pypi.org, and on
+# 10 Sep 2026 that aborted the script AFTER both uploads had succeeded, leaving
+# the repo unpushed and the run looking like a failed release.
+echo -n 'pypi: '; curl -sf https://pypi.org/pypi/aqta-verify-receipt/json | python3 -c "import sys,json;print(json.load(sys.stdin)['info']['version'])"
+git push origin main
+echo "done: packages published, repo pushed"
