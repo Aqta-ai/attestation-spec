@@ -176,6 +176,7 @@ jobs:
         # Normative per spec/ACTION-v1.md section 6: a single hardcoded
         # fixture does not satisfy the interop requirement.
         run: node scripts/action-interop-sweep.mjs
+        run: node scripts/bytes-interop-sweep.mjs
 
       - name: Transparency proof cross-implementation sweep
         # Every RFC 6962 inclusion and consistency vector through BOTH proof

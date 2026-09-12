@@ -1,0 +1,40 @@
+{
+  "trusted_public_key": "alWzEnrA_z9McN9z_MFfQCnH9mVgOwRZ26wrI7oix4E",
+  "vectors": {
+    "000-clean-non-ascii.bin": {
+      "expected_exit": 0,
+      "sha256": "c0bc0411ac6275decbb3f97fa1be4678f46babdcbaf03c0f7005ca30b0fcebf1",
+      "note": "control: signed U+FFFD as a valid three-byte sequence; must verify"
+    },
+    "001-invalid-continuation-byte.bin": {
+      "expected_exit": 2,
+      "sha256": "2e7752a4e99258eb373a67b20a5e8a7b6d7c7260fb8194e444c3288e269b29f2",
+      "note": "the reported case: EF BF BD replaced by lone 0x80; a replacing decoder maps it back onto the signed payload"
+    },
+    "002-utf8-bom.bin": {
+      "expected_exit": 2,
+      "sha256": "729e46b9d98edf537ece51fbed4507c06aae1d3bbe2d916959122b6139b1a81f",
+      "note": "BOM before the document; a decoder that strips it accepts, one that keeps it rejects"
+    },
+    "003-truncated-multibyte.bin": {
+      "expected_exit": 2,
+      "sha256": "a55ec9049a6c2913ab593e200bb6170c687e1b3922b7426e70b480a70c98a313",
+      "note": "three-byte sequence cut short"
+    },
+    "004-overlong-encoding.bin": {
+      "expected_exit": 2,
+      "sha256": "215ec937c4226784cb530bbcb65fc269995b219ebf8686c3f3df8fd60bc58171",
+      "note": "overlong form of U+002F, forbidden by RFC 3629"
+    },
+    "005-surrogate-in-utf8.bin": {
+      "expected_exit": 2,
+      "sha256": "9e635944b30dca196e171b1709bc942db48ebe8557dcf12d9f4521c2adccc7d5",
+      "note": "UTF-16 surrogate D800 encoded in UTF-8, forbidden"
+    },
+    "006-invalid-byte-in-ascii-value.bin": {
+      "expected_exit": 2,
+      "sha256": "12cafc0ef36a78a793602f8f55f5e3f2ab9415a66236e4c07c58de989508e5de",
+      "note": "invalid byte where the signed value was ASCII; both must say malformed, not one invalid and one malformed"
+    }
+  }
+}

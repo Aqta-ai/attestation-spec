@@ -23,6 +23,9 @@ Derived deterministically from the seed `sha256("attestation-spec/test-vectors/v
 Use it as the `trustedPublicKey` parameter to your verifier, or compare
 against the `public_key` field in each receipt.
 
+Byte-level inputs that are not valid UTF-8, and therefore cannot be JSON, are in
+[`bytes/`](./bytes) with their own manifest of expected exit codes.
+
 ## Valid vectors
 
 | File | Outcome | Notes |

@@ -5,7 +5,7 @@
 | | |
 |---|---|
 | Release | 1.2.5 |
-| Generated | 2026-09-10 |
+| Generated | 2026-09-12 |
 | Vectors | 27 (10 valid, 17 adversarial) |
 | Implementations agree | **27/27** |
 | Verdicts match specification | **27/27** |
