@@ -16,9 +16,10 @@ own versioning contract described in [CONFORMANCE.md](./CONFORMANCE.md).
   (`invalid_head`, `equivocation`, `unsigned_root`, `fork`, `invalid_proof`,
   `timestamp_contradiction`, `consistent`), in a fixed precedence both implementations share.
   `aqta-verify-proof` recognises a document carrying `heads` as a bundle and needs `--key`;
-  its `--json` output gains `verdict`. Eleven bundles in `test-vectors/transparency/adversary/`
-  pin the adversary classes A1, A3, A4 and A6 from ISSUER-ADVERSARY.md, including two that pin
-  limits rather than detections. The interop sweep covers the new bucket.
+  its `--json` output gains `verdict`. Twelve bundles in `test-vectors/transparency/adversary/`
+  pin the adversary classes A1, A3, A4 and A6 from ISSUER-ADVERSARY.md, including three that pin
+  limits rather than detections: lag is not backdating, no A2 bundle exists, and the timestamp
+  grammar is strict (`YYYY-MM-DDTHH:MM:SSZ`; builders normalise, verifiers never parse dates). The interop sweep covers the new bucket.
 
 ## [1.2.6] - 2026-09-12
 

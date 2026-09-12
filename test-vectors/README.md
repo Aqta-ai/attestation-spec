@@ -112,6 +112,15 @@ implementation must name the same one: `invalid_head`, `equivocation`, `unsigned
 | `a6-side-head` | A6 | `fork` | A correctly signed head over a tree the live log never contained: a history built for one reviewer |
 | `invalid-head-signature` | A5 | `invalid_head` | One head fails under the trusted key; nothing below it counts |
 | `unsigned-root-target` | A6 | `unsigned_root` | A proof that verifies, against a root no head signed: a tree not in evidence |
+| `a3-timestamp-grammar-is-strict` | A3 | `invalid_proof` | A `record_timestamp` with fractional seconds and an offset is refused, not parsed |
+
+**Timestamps in a bundle.** `record_timestamp` and a head's `timestamp` are `YYYY-MM-DDTHH:MM:SSZ`,
+deliberately narrower than the RFC 3339 a receipt carries, so the two implementations compare
+fixed-width strings and never depend on a date parser agreeing. Whoever builds a bundle converts
+the receipt's signed timestamp to UTC and floors it to the second. Flooring can only make a record
+look earlier, so it cannot manufacture a `timestamp_contradiction` the signed value would not also
+produce; keep the signed value beside it (`record_timestamp_as_signed`) so a reviewer can check the
+conversion. A leap second (`:60`) is kept verbatim.
 
 Not shipped, by design: any vector claiming to detect **A2, omission**. A record that was never
 written leaves nothing to verify, and a bundle cannot pin the absence of evidence.
