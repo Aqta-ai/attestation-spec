@@ -1,0 +1,69 @@
+{
+  "_class": "A6",
+  "_note": "a pack head at 6 obtained from the issuer and a live head at 11 fetched independently; the pack head is a prefix of the live log and every pack proof verifies against it",
+  "consistency": [
+    {
+      "consistency_path": [
+        "262f65c1bdabcf3527817bc95568b2f7bfb58c63a1c6aeff7c1f348fde62b7ac",
+        "66a52337ac80e718de897134e6de26cd7922813c0da4e88fe276050d7a7916c3",
+        "366822adfeec41edd01a334a58bae2559a5b078840e949fd168d86d2ee15e3c4",
+        "4dd9dbd5e65f950a248141c1667d2450c939e25626323cd7e7ef8d2dd73de3b2"
+      ],
+      "new_root": "c69575aa1630d353df27a0e9ad6a7fc29e43988d44bfae3259b75d47f1fab175",
+      "new_size": 11,
+      "old_root": "7855d27172c45c1580698e3e0d374ba20d725e8762c19b922e0a9af08ec70b82",
+      "old_size": 6
+    }
+  ],
+  "expect": {
+    "verdict": "consistent"
+  },
+  "heads": [
+    {
+      "log": "public",
+      "root_hash": "7855d27172c45c1580698e3e0d374ba20d725e8762c19b922e0a9af08ec70b82",
+      "signature": "29te8agUvtvOkjYZnHZRy87Gpce3ZKdj4EGkXtWt6IEyHjGC_WLdqbZaEaRRx2Pgd-4vgK4yPTOmp0PA10v2Ag",
+      "timestamp": "2026-09-12T18:06:00Z",
+      "tree_size": 6,
+      "v": 1
+    },
+    {
+      "log": "public",
+      "root_hash": "c69575aa1630d353df27a0e9ad6a7fc29e43988d44bfae3259b75d47f1fab175",
+      "signature": "yQ9d-NR3drLkNGKP5sXkgSNNAjZ17Qqkx4_JI4vGuS_0MiUBVQ5HH6GwV3cxUCRLK4YGiGuKRR7Cf5RIpSwrAw",
+      "timestamp": "2026-09-12T18:11:00Z",
+      "tree_size": 11,
+      "v": 1
+    }
+  ],
+  "inclusions": [
+    {
+      "proof": {
+        "audit_path": [
+          "abb213dcf45cf8bde26e214f402d8f8e390dd8a0fb9a5b79a6cb5a6a8e009bd0",
+          "36ad3026f402196b0b792c5af5e750a85d0b6a4af5a221a78a6050415366a420",
+          "262f65c1bdabcf3527817bc95568b2f7bfb58c63a1c6aeff7c1f348fde62b7ac"
+        ],
+        "leaf_hash": "423c2c5eb301b5064f6c47d2457c72aadd5e806c2adeb570c8b72c0432c67262",
+        "leaf_index": 1,
+        "root_hash": "7855d27172c45c1580698e3e0d374ba20d725e8762c19b922e0a9af08ec70b82",
+        "tree_size": 6
+      },
+      "record_timestamp": "2026-09-12T18:01:00Z"
+    },
+    {
+      "proof": {
+        "audit_path": [
+          "49d41432bea06f3af1c84bdc41ffe49884ea8304fa5e60ae3a8222adfba022db",
+          "366822adfeec41edd01a334a58bae2559a5b078840e949fd168d86d2ee15e3c4"
+        ],
+        "leaf_hash": "e92c382ecec075a6caa0360296d61501d44518626fef170cc8b8fd9d5a757ab2",
+        "leaf_index": 5,
+        "root_hash": "7855d27172c45c1580698e3e0d374ba20d725e8762c19b922e0a9af08ec70b82",
+        "tree_size": 6
+      },
+      "record_timestamp": "2026-09-12T18:05:00Z"
+    }
+  ],
+  "trusted_public_key": "A6EHv_POEL4dcN0Y50vAmWfk1jCbpQ1fHdyGZBJVMbg"
+}

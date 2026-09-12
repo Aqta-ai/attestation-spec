@@ -1,0 +1,41 @@
+{
+  "_class": "A1",
+  "_note": "a head at 7 and a head at 11 whose tree does not contain the first seven entries as they were: the consistency proof cannot rebuild the earlier root",
+  "consistency": [
+    {
+      "consistency_path": [
+        "54063d0f999ab84639366c9b20208a0a0d7098aafc9d32b39654ec48a5da35dc",
+        "12ff4ba20a3bb6c62ea0c570fb6620da8f2a8d97351a8e431879a7a25c43e9b2",
+        "262f65c1bdabcf3527817bc95568b2f7bfb58c63a1c6aeff7c1f348fde62b7ac",
+        "ccb1306d0cd533b49fa261e2cd1220151aa87d0cb86f31bb18d12f6fb3910ba3",
+        "4dd9dbd5e65f950a248141c1667d2450c939e25626323cd7e7ef8d2dd73de3b2"
+      ],
+      "new_root": "2c0ccff3b8e332ead0293ac7d695f89040bc0b422b9412e515f526bba6785d6e",
+      "new_size": 11,
+      "old_root": "be27842706f07df6f2a0d1299fb2c48ec119a515b9a6b925d53ffef684f6bb4d",
+      "old_size": 7
+    }
+  ],
+  "expect": {
+    "verdict": "fork"
+  },
+  "heads": [
+    {
+      "log": "public",
+      "root_hash": "be27842706f07df6f2a0d1299fb2c48ec119a515b9a6b925d53ffef684f6bb4d",
+      "signature": "D4H6st5kmHBFPD77pFsfHr61wdBkv3njCgk4GZgSZV_3Rye-7UMafTcmbWLKxZnT1MOOshFH7zcPfklCTo5pAg",
+      "timestamp": "2026-09-12T18:07:00Z",
+      "tree_size": 7,
+      "v": 1
+    },
+    {
+      "log": "public",
+      "root_hash": "2c0ccff3b8e332ead0293ac7d695f89040bc0b422b9412e515f526bba6785d6e",
+      "signature": "NOTm7jvXUvzvojH5aNczy6K3oMW3loGZL_0V2zXyc2aaw8OXOECisL2Q7I03Y9h-ByaNAMEnTtmAikkvD8e7Aw",
+      "timestamp": "2026-09-12T18:11:00Z",
+      "tree_size": 11,
+      "v": 1
+    }
+  ],
+  "trusted_public_key": "A6EHv_POEL4dcN0Y50vAmWfk1jCbpQ1fHdyGZBJVMbg"
+}

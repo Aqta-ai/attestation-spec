@@ -18,7 +18,7 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const VECTORS = join(ROOT, 'test-vectors/transparency');
 const PY = join(ROOT, 'packages/verify-receipt-py/src');
 
-const { verifyInclusionProof, verifyConsistencyProof, verifySignedTreeHead } = await import(
+const { verifyInclusionProof, verifyConsistencyProof, verifySignedTreeHead, assessHistory } = await import(
   join(ROOT, 'packages/verify-receipt/dist/transparency.js')
 );
 
@@ -27,8 +27,11 @@ function pyVerify(kind, proof, key) {
 import json, sys
 sys.path.insert(0, ${JSON.stringify(PY)})
 from aqta_verify_receipt.transparency import (
-    verify_inclusion_proof, verify_consistency_proof, verify_signed_tree_head)
+    verify_inclusion_proof, verify_consistency_proof, verify_signed_tree_head, assess_history)
 data = json.load(sys.stdin)
+if data["kind"] == "history":
+    r = assess_history(data["proof"], data["key"])
+    print(json.dumps({"valid": r.valid, "reason": r.reason, "verdict": r.verdict})); raise SystemExit(0)
 if data["kind"] == "sth":
     r = verify_signed_tree_head(data["proof"], data["key"])
 else:
@@ -115,6 +118,43 @@ for (const bucket of ['valid', 'invalid']) {
     if (!agree) problems.push(`DIVERGENCE ${bucket}/${file}: ts=${ts.valid} (${ts.reason ?? ''}) py=${py.valid} (${py.reason ?? ''})`);
     else if (!correct) problems.push(`WRONG VERDICT ${bucket}/${file}: both returned ${ts.valid}, expected ${expected}`);
     else console.log(`  ok   ${bucket}/${file}: valid=${ts.valid}${ts.reason ? ` reason="${ts.reason}"` : ''}`);
+  }
+}
+
+/* Adversary bundles (12 Sep 2026). A primitive vector asks one question of one
+   object. These ask the questions ISSUER-ADVERSARY.md actually poses, which are
+   only visible across objects, and the answer is a named verdict rather than a
+   boolean. Both libraries and both CLIs must name the same verdict, and it must
+   be the one the bundle expects. */
+const ADV = join(VECTORS, 'adversary');
+if (existsSync(ADV)) {
+  for (const file of readdirSync(ADV).filter((f) => f.endsWith('.json')).sort()) {
+    const bundle = JSON.parse(readFileSync(join(ADV, file), 'utf8'));
+    const key = bundle.trusted_public_key ?? '';
+    const expected = bundle.expect?.verdict;
+    if (!key || !expected) { problems.push(`MALFORMED adversary/${file}: needs trusted_public_key and expect.verdict`); continue; }
+    const ts = assessHistory(bundle, key);
+    const py = pyVerify('history', bundle, key);
+    const file_ = join(ADV, file);
+    const tsCli = (() => {
+      const r = spawnSync('node', [TS_CLI, file_, '--json', '--key', key], { encoding: 'utf8' });
+      try { const out = JSON.parse(r.stdout.trim().split('\n').pop()); return { verdict: out.verdict, valid: out.valid === true, crashed: false }; }
+      catch { return { verdict: undefined, valid: false, crashed: true, reason: `exit ${r.status} ${String(r.stderr).trim().split('\n')[0]}` }; }
+    })();
+    const pyCli = (() => {
+      const r = spawnSync('python3', ['-m', 'aqta_verify_receipt.verify_proof', file_, '--json', '--key', key], { encoding: 'utf8', env: PY_ENV });
+      try { const out = JSON.parse(r.stdout.trim().split('\n').pop()); return { verdict: out.verdict, valid: out.valid === true, crashed: false }; }
+      catch { return { verdict: undefined, valid: false, crashed: true, reason: `exit ${r.status} ${String(r.stderr).trim().split('\n')[0]}` }; }
+    })();
+    checked++;
+    if (ts.verdict !== py.verdict) problems.push(`DIVERGENCE adversary/${file}: ts=${ts.verdict} (${ts.reason ?? ''}) py=${py.verdict} (${py.reason ?? ''})`);
+    else if (ts.verdict !== expected) problems.push(`WRONG VERDICT adversary/${file}: both say ${ts.verdict}, expected ${expected}`);
+    else console.log(`  ok   adversary/${file}: verdict=${ts.verdict}${ts.reason ? ` reason="${ts.reason}"` : ''}`);
+    for (const [name, v] of [['ts-cli', tsCli], ['py-cli', pyCli]]) {
+      if (v.crashed) problems.push(`CRASH adversary/${file}: ${name} gave no verdict (${v.reason})`);
+      else if (v.verdict !== ts.verdict) problems.push(`CLI DIVERGENCE adversary/${file}: ${name}=${v.verdict} library=${ts.verdict}`);
+      else if (v.valid !== (ts.verdict === 'consistent')) problems.push(`CLI DIVERGENCE adversary/${file}: ${name} valid=${v.valid} for verdict ${v.verdict}`);
+    }
   }
 }
 

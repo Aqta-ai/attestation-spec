@@ -44,3 +44,8 @@ jobs:
       # Block 3, verbatim from README.md
       - name: Cross-implementation interop
         run: node scripts/make-interop-fixture.mjs
+
+      # Block 4 (12 Sep 2026): both verifiers and both CLIs must reach the same
+      # verdict on every transparency vector, adversary bundles included.
+      - name: Transparency interop sweep
+        run: node scripts/transparency-interop-sweep.mjs

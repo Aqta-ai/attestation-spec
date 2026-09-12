@@ -7,6 +7,19 @@ and this repository adheres to [Semantic Versioning](https://semver.org/spec/v2.
 at the repository-release level. The ATTESTATION format itself has its
 own versioning contract described in [CONFORMANCE.md](./CONFORMANCE.md).
 
+## [Unreleased]
+
+### Added
+
+- History bundles: `assessHistory` (TypeScript) and `assess_history` (Python) assess several
+  signed heads, consistency proofs and inclusion proofs together and return a named verdict
+  (`invalid_head`, `equivocation`, `unsigned_root`, `fork`, `invalid_proof`,
+  `timestamp_contradiction`, `consistent`), in a fixed precedence both implementations share.
+  `aqta-verify-proof` recognises a document carrying `heads` as a bundle and needs `--key`;
+  its `--json` output gains `verdict`. Eleven bundles in `test-vectors/transparency/adversary/`
+  pin the adversary classes A1, A3, A4 and A6 from ISSUER-ADVERSARY.md, including two that pin
+  limits rather than detections. The interop sweep covers the new bucket.
+
 ## [1.2.6] - 2026-09-12
 
 ### Fixed

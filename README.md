@@ -130,6 +130,7 @@ pytest packages/verify-receipt-py/tests/ -q
 
 # Cross-implementation check: every test vector, both verifiers, same verdict.
 node scripts/make-interop-fixture.mjs
+node scripts/transparency-interop-sweep.mjs
 ```
 
 ## Attribution

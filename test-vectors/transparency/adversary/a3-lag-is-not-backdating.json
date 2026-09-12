@@ -1,0 +1,57 @@
+{
+  "_class": "A3",
+  "_note": "a record claiming 18:03 sits at index 8, so it is absent from the head at size 5 signed at 18:05. That is NOT evidence of backdating: log order is submission order, and a record can be created before a head and submitted after it. A verifier that flags this is wrong",
+  "consistency": [
+    {
+      "consistency_path": [
+        "49d41432bea06f3af1c84bdc41ffe49884ea8304fa5e60ae3a8222adfba022db",
+        "e92c382ecec075a6caa0360296d61501d44518626fef170cc8b8fd9d5a757ab2",
+        "66a52337ac80e718de897134e6de26cd7922813c0da4e88fe276050d7a7916c3",
+        "366822adfeec41edd01a334a58bae2559a5b078840e949fd168d86d2ee15e3c4",
+        "4dd9dbd5e65f950a248141c1667d2450c939e25626323cd7e7ef8d2dd73de3b2"
+      ],
+      "new_root": "c69575aa1630d353df27a0e9ad6a7fc29e43988d44bfae3259b75d47f1fab175",
+      "new_size": 11,
+      "old_root": "270af5539f0b3ad22974b1ba15fc7502930eeb573bfc00f8d5f2f3a591b22ee5",
+      "old_size": 5
+    }
+  ],
+  "expect": {
+    "verdict": "consistent"
+  },
+  "heads": [
+    {
+      "log": "public",
+      "root_hash": "270af5539f0b3ad22974b1ba15fc7502930eeb573bfc00f8d5f2f3a591b22ee5",
+      "signature": "ZU5tEsk0H8Qk87NibIkFX9tOxCgwavF9AJUS9sv4Ba-uD3z_n-c3zjqjfBo9seQnpjeQkosQBc_ZfjxrzfKrCw",
+      "timestamp": "2026-09-12T18:05:00Z",
+      "tree_size": 5,
+      "v": 1
+    },
+    {
+      "log": "public",
+      "root_hash": "c69575aa1630d353df27a0e9ad6a7fc29e43988d44bfae3259b75d47f1fab175",
+      "signature": "yQ9d-NR3drLkNGKP5sXkgSNNAjZ17Qqkx4_JI4vGuS_0MiUBVQ5HH6GwV3cxUCRLK4YGiGuKRR7Cf5RIpSwrAw",
+      "timestamp": "2026-09-12T18:11:00Z",
+      "tree_size": 11,
+      "v": 1
+    }
+  ],
+  "inclusions": [
+    {
+      "proof": {
+        "audit_path": [
+          "fa2549292ac16be2f7e05a6791f4fa988d80f2d920aceed9038fd7668729829a",
+          "e12451d7e0b818bcdb132d5e99c9b4ec8644955a018ed7ace37968cee5fd19a5",
+          "ef7a2fbba8414b8fa0c076c90218c3492683c4334610d98cad1a2e03d4217c06"
+        ],
+        "leaf_hash": "26024f3fb571db7f91e65da76b3a83fcffabbb6478b5ac9422a29903e8610ce9",
+        "leaf_index": 8,
+        "root_hash": "c69575aa1630d353df27a0e9ad6a7fc29e43988d44bfae3259b75d47f1fab175",
+        "tree_size": 11
+      },
+      "record_timestamp": "2026-09-12T18:03:00Z"
+    }
+  ],
+  "trusted_public_key": "A6EHv_POEL4dcN0Y50vAmWfk1jCbpQ1fHdyGZBJVMbg"
+}

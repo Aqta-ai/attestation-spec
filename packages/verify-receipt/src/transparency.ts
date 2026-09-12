@@ -337,3 +337,129 @@ export function verifySignedTreeHead(head: unknown, trustedPublicKey: string): P
   }
   return { valid: true };
 }
+
+
+/* ------------------------------------------------------------------------ */
+/* History bundles: adversary-class checks composed from the primitives.    */
+/* ------------------------------------------------------------------------ */
+
+/**
+ * A history bundle is what a reviewer actually holds after a dispute: several
+ * signed heads obtained at different times, consistency proofs between them,
+ * and inclusion proofs for the records in question, each with the time the
+ * record claims for itself. The primitives above check one object each. The
+ * adversary classes in ISSUER-ADVERSARY.md are only visible across objects:
+ * two valid heads at one size, a later head that does not extend a pinned
+ * one, a record that claims a time after a head that already contains it.
+ *
+ * Verdict vocabulary, in precedence order, because a bundle can carry more
+ * than one fault and both implementations must name the same one:
+ *
+ *   invalid_head             a head does not verify under the trusted key, so
+ *                            nothing below it can be relied on
+ *   equivocation             two verified heads, one size, two roots (A1)
+ *   unsigned_root            a proof targets a root no head in the bundle signed
+ *   fork                     a consistency proof between two verified heads
+ *                            fails: the later head does not extend the earlier
+ *                            one (A4 reordering and an A6 side head look the
+ *                            same from outside, and that is the point)
+ *   invalid_proof            an inclusion proof fails against its head
+ *   timestamp_contradiction  a record claims a time after the timestamp of a
+ *                            head that already includes it (A3)
+ *   consistent               nothing above applied
+ *
+ * What this deliberately does not do: treat absence from an earlier head as
+ * evidence of backdating. Log order is submission order, and a record can be
+ * created before a head and submitted after it. The vector
+ * a3-lag-is-not-backdating pins that this returns `consistent`.
+ */
+export interface HistoryBundle {
+  heads: unknown[];
+  consistency?: unknown[];
+  inclusions?: Array<{ proof: unknown; record_timestamp?: string }>;
+}
+
+export type HistoryVerdict =
+  | 'invalid_head'
+  | 'equivocation'
+  | 'unsigned_root'
+  | 'fork'
+  | 'invalid_proof'
+  | 'timestamp_contradiction'
+  | 'consistent';
+
+export interface HistoryResult {
+  valid: boolean;
+  verdict: HistoryVerdict;
+  reason?: string;
+}
+
+const TIMESTAMP = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/;
+
+export function assessHistory(bundle: unknown, trustedPublicKey: string): HistoryResult {
+  const fail = (verdict: HistoryVerdict, reason: string): HistoryResult => ({ valid: false, verdict, reason });
+  if (typeof bundle !== 'object' || bundle === null) return fail('invalid_head', 'bundle is not an object');
+  const b = bundle as Record<string, unknown>;
+  if (!Array.isArray(b.heads) || b.heads.length === 0) return fail('invalid_head', 'bundle must carry at least one head');
+
+  // 1. Every head verifies, and every head is a public head, because only
+  //    public heads carry the signing timestamp the A3 rule needs.
+  const heads: Array<{ tree_size: number; root_hash: string; timestamp: string }> = [];
+  for (let i = 0; i < b.heads.length; i++) {
+    const h = b.heads[i] as Record<string, unknown>;
+    if (typeof h !== 'object' || h === null || h.log !== 'public') {
+      return fail('invalid_head', `head ${i}: history bundles require public heads with timestamps`);
+    }
+    const r = verifySignedTreeHead(h, trustedPublicKey);
+    if (!r.valid) return fail('invalid_head', `head ${i}: ${r.reason ?? 'verification failed'}`);
+    if (!TIMESTAMP.test(h.timestamp as string)) return fail('invalid_head', `head ${i}: timestamp must be YYYY-MM-DDTHH:MM:SSZ`);
+    heads.push({ tree_size: h.tree_size as number, root_hash: (h.root_hash as string).toLowerCase(), timestamp: h.timestamp as string });
+  }
+
+  // 2. Equivocation: one size, two roots, both signed.
+  for (let i = 0; i < heads.length; i++) {
+    for (let j = i + 1; j < heads.length; j++) {
+      if (heads[i].tree_size === heads[j].tree_size && heads[i].root_hash !== heads[j].root_hash) {
+        return fail('equivocation', `heads ${i} and ${j} are both signed at size ${heads[i].tree_size} with different roots`);
+      }
+    }
+  }
+  const headFor = (size: unknown, root: unknown) =>
+    heads.find((h) => h.tree_size === size && typeof root === 'string' && h.root_hash === root.toLowerCase());
+
+  // 3. Consistency proofs between signed heads. An endpoint nobody signed is
+  //    not a fork, it is a proof about a tree that is not in evidence.
+  const cons = Array.isArray(b.consistency) ? b.consistency : [];
+  for (let i = 0; i < cons.length; i++) {
+    const c = cons[i] as Record<string, unknown>;
+    if (typeof c !== 'object' || c === null) return fail('unsigned_root', `consistency ${i}: not an object`);
+    if (!headFor(c.old_size, c.old_root) || !headFor(c.new_size, c.new_root)) {
+      return fail('unsigned_root', `consistency ${i}: an endpoint is not a signed head in this bundle`);
+    }
+    const r = verifyConsistencyProof(c);
+    if (!r.valid) return fail('fork', `consistency ${i}: ${r.reason ?? 'verification failed'}`);
+  }
+
+  // 4. Inclusion proofs, each against a signed head, and 5. the A3 rule.
+  const incs = Array.isArray(b.inclusions) ? b.inclusions : [];
+  let contradiction: string | undefined;
+  for (let i = 0; i < incs.length; i++) {
+    const entry = incs[i] as Record<string, unknown>;
+    const p = (typeof entry === 'object' && entry !== null ? entry.proof : undefined) as Record<string, unknown> | undefined;
+    if (typeof p !== 'object' || p === null) return fail('invalid_proof', `inclusion ${i}: no proof object`);
+    const head = headFor(p.tree_size, p.root_hash);
+    if (!head) return fail('unsigned_root', `inclusion ${i}: proof targets a root no head in this bundle signed`);
+    const r = verifyInclusionProof(p);
+    if (!r.valid) return fail('invalid_proof', `inclusion ${i}: ${r.reason ?? 'verification failed'}`);
+    const ts = entry.record_timestamp;
+    if (ts !== undefined) {
+      if (typeof ts !== 'string' || !TIMESTAMP.test(ts)) return fail('invalid_proof', `inclusion ${i}: record_timestamp must be YYYY-MM-DDTHH:MM:SSZ`);
+      // Fixed-width UTC strings compare correctly as strings.
+      if (ts > head.timestamp && contradiction === undefined) {
+        contradiction = `inclusion ${i}: record claims ${ts}, after the head at ${head.timestamp} that already includes it`;
+      }
+    }
+  }
+  if (contradiction !== undefined) return fail('timestamp_contradiction', contradiction);
+  return { valid: true, verdict: 'consistent' };
+}

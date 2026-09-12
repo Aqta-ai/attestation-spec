@@ -1,0 +1,57 @@
+{
+  "_class": "A4",
+  "_note": "a pinned head at 5, then a head at 11 over the same entries with two of them swapped. The inclusion proof for the moved record verifies on its own against the new head; only the consistency proof from the pinned head catches the reordering",
+  "consistency": [
+    {
+      "consistency_path": [
+        "49d41432bea06f3af1c84bdc41ffe49884ea8304fa5e60ae3a8222adfba022db",
+        "e92c382ecec075a6caa0360296d61501d44518626fef170cc8b8fd9d5a757ab2",
+        "66a52337ac80e718de897134e6de26cd7922813c0da4e88fe276050d7a7916c3",
+        "dade4fdd0e5229c88db6f7908b80190af6ccc2cc8cd4efed40994663265be6b6",
+        "4dd9dbd5e65f950a248141c1667d2450c939e25626323cd7e7ef8d2dd73de3b2"
+      ],
+      "new_root": "3360f3754b4fc170a41d6bbfffd57c8a60df55868fa873b825697df2a94c89ed",
+      "new_size": 11,
+      "old_root": "270af5539f0b3ad22974b1ba15fc7502930eeb573bfc00f8d5f2f3a591b22ee5",
+      "old_size": 5
+    }
+  ],
+  "expect": {
+    "verdict": "fork"
+  },
+  "heads": [
+    {
+      "log": "public",
+      "root_hash": "270af5539f0b3ad22974b1ba15fc7502930eeb573bfc00f8d5f2f3a591b22ee5",
+      "signature": "ZU5tEsk0H8Qk87NibIkFX9tOxCgwavF9AJUS9sv4Ba-uD3z_n-c3zjqjfBo9seQnpjeQkosQBc_ZfjxrzfKrCw",
+      "timestamp": "2026-09-12T18:05:00Z",
+      "tree_size": 5,
+      "v": 1
+    },
+    {
+      "log": "public",
+      "root_hash": "3360f3754b4fc170a41d6bbfffd57c8a60df55868fa873b825697df2a94c89ed",
+      "signature": "sv95XdbkkTF0lV-GkNZPAcljvdPMht--9XTZohxElTNoL5TgqYuGi7hsb402HW6UNWoXvb61y5tbjNm-c6OWCw",
+      "timestamp": "2026-09-12T18:11:00Z",
+      "tree_size": 11,
+      "v": 1
+    }
+  ],
+  "inclusions": [
+    {
+      "proof": {
+        "audit_path": [
+          "50dac7506683c1060dabb867d124e18c90553a0167603d2b149620700b20b3ad",
+          "5d17708f4fb50ec89850277dabb639609263ffc6856d450f28caa9ba60915dec",
+          "b936f060c7e9682c71548f416f55210bfc22a90bdb81d28dbea16c9e4ead7912",
+          "4dd9dbd5e65f950a248141c1667d2450c939e25626323cd7e7ef8d2dd73de3b2"
+        ],
+        "leaf_hash": "cc680c0bb6e02a921f05762bbf518744f812c2df978520705867db73e4857c61",
+        "leaf_index": 3,
+        "root_hash": "3360f3754b4fc170a41d6bbfffd57c8a60df55868fa873b825697df2a94c89ed",
+        "tree_size": 11
+      }
+    }
+  ],
+  "trusted_public_key": "A6EHv_POEL4dcN0Y50vAmWfk1jCbpQ1fHdyGZBJVMbg"
+}
