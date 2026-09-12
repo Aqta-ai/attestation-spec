@@ -38,7 +38,7 @@ __all__ = [
     "fetch_published_public_key",
     "VerifyResult",
 ]
-__version__ = "1.2.3"
+__version__ = "1.2.6"
 
 from .transparency import (  # noqa: E402,F401
     ProofResult,
