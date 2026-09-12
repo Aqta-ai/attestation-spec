@@ -134,6 +134,18 @@ def main():
           consistency=[consistency(honest, 5, 11)],
           inclusions=[inclusion(honest, 8, record_minute=3)])
 
+    strict = inclusion(honest, 4)
+    strict["record_timestamp"] = "2026-09-12T18:04:00.000000+00:00"
+    write("a3-timestamp-grammar-is-strict.json", "A3",
+          "a record_timestamp carrying fractional seconds and an offset. The bundle grammar is "
+          "YYYY-MM-DDTHH:MM:SSZ, deliberately narrower than RFC 3339, so the two implementations never "
+          "depend on a date parser agreeing. Builders convert to UTC and floor to the second, which can "
+          "only make a record look earlier and so cannot manufacture a contradiction; the signed value "
+          "travels beside it. A verifier that parses this instead of refusing it is wrong",
+          "invalid_proof",
+          heads=[head(honest, 11)],
+          inclusions=[strict])
+
     # ---- A4 retrospective reordering ---------------------------------------
     write("a4-reordered-history.json", "A4",
           "a pinned head at 5, then a head at 11 over the same entries with two of them swapped. The "
