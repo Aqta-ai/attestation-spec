@@ -7,7 +7,7 @@ and this repository adheres to [Semantic Versioning](https://semver.org/spec/v2.
 at the repository-release level. The ATTESTATION format itself has its
 own versioning contract described in [CONFORMANCE.md](./CONFORMANCE.md).
 
-## [1.2.6] - Unreleased
+## [1.2.6] - 2026-09-12
 
 ### Fixed
 
