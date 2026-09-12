@@ -47,3 +47,5 @@ from .transparency import (  # noqa: E402,F401
     verify_inclusion_proof,
     verify_signed_tree_head,
 )
+
+from .transparency import HistoryResult, assess_history  # noqa: E402,F401

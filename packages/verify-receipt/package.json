@@ -16,7 +16,7 @@
   ],
   "scripts": {
     "build": "tsc",
-    "test": "node --test dist/index.test.js dist/envelope.test.js dist/action.test.js",
+    "test": "node --test dist/index.test.js dist/envelope.test.js dist/action.test.js dist/transparency-history.test.js",
     "prepublishOnly": "npm run build"
   },
   "keywords": [

@@ -133,6 +133,16 @@ a research direction, not a capability.
 Mechanisms addressing five of the six classes are implemented in the Seal
 gateway. **A2, omission, is open: not solved, and not claimed.**
 
+**Conformance vectors for the classes (added 12 September 2026).** Until this date every class
+above had a working mechanism and no vector, so a third-party implementation claiming
+conformance was claiming envelope conformance only. `test-vectors/transparency/adversary/`
+now carries history bundles for A1, A3, A4 and A6 and for two malformed cases, each with the
+verdict a verifier must reach; both reference implementations and both command-line tools are
+held to the same verdict by the interop sweep. Two of those bundles exist to pin limits rather
+than detections: `a3-lag-is-not-backdating` (absence from an earlier head is not evidence, because
+log order is submission order) and the absence of any A2 bundle at all. A5 is exercised by the
+key-pinning cases in the receipt suite rather than here.
+
 The gap is not the cryptography. It is that these mechanisms have no adversarial
 conformance vectors, so any implementation claiming conformance today, ours
 included, is claiming envelope conformance only.

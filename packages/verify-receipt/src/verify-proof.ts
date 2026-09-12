@@ -17,6 +17,7 @@
  */
 import { readFileSync } from 'fs';
 import {
+  assessHistory,
   verifyConsistencyProof,
   verifyInclusionProof,
   verifySignedTreeHead,
@@ -28,6 +29,8 @@ const USAGE = `aqta-verify-proof <file|-> [--key <base64url>] [--json] [-q]
     audit_path        an RFC 6962 inclusion proof
     consistency_path  an RFC 6962 consistency proof
     signature         a signed tree head, which needs --key
+    heads             a history bundle (several heads, consistency and
+                      inclusion proofs), which needs --key
 
   A proof establishes that what you were shown is in the log. It does not
   establish that what you were not shown is irrelevant.
@@ -99,9 +102,16 @@ function main(): void {
   const inner = (candidate ?? doc) as Record<string, unknown>;
 
   let kind: string;
-  let result: { valid: boolean; reason?: string };
+  let result: { valid: boolean; reason?: string; verdict?: string };
 
-  if ('audit_path' in inner) {
+  if ('heads' in inner) {
+    kind = 'history bundle';
+    if (!key) {
+      process.stderr.write('aqta-verify-proof: a history bundle needs --key <published key>\n');
+      process.exit(2);
+    }
+    result = assessHistory(inner, key);
+  } else if ('audit_path' in inner) {
     kind = 'inclusion proof';
     result = verifyInclusionProof(inner);
   } else if ('consistency_path' in inner) {
@@ -128,11 +138,13 @@ function main(): void {
           valid: result.valid,
           kind,
           reason: result.valid ? null : result.reason ?? 'verification failed',
+          ...(result.verdict ? { verdict: result.verdict } : {}),
         }) + '\n'
       );
     } else {
       const mark = result.valid ? '✓ valid' : '✕ invalid';
-      const detail = result.valid ? kind : `${kind}: ${result.reason ?? 'verification failed'}`;
+      const verdict = result.verdict ? ` [${result.verdict}]` : '';
+      const detail = result.valid ? `${kind}${verdict}` : `${kind}${verdict}: ${result.reason ?? 'verification failed'}`;
       process.stdout.write(`${mark}  ${detail}\n`);
     }
   }
