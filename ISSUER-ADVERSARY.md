@@ -16,8 +16,17 @@ is not defective. The defect is in the set, or in what is missing from it.
 This document names those classes, states what is required to detect each, and
 says plainly which ones we can detect today. It exists because a conformance
 suite that only tests envelopes will certify a verifier that cannot see any of
-this, and because our own research claim is that the interesting adversary is
-the party issuing the evidence.
+this, and because the interesting adversary is the party issuing the evidence.
+
+**That framing is not ours.** Sello / Notarized Agents (arXiv 2606.04193,
+June 2026) states it plainly: *"the entity producing the activity log is the
+same entity whose activity is being logged."* Sello's remedy inverts the trust
+model, having the receiving service countersign the observed action with its own
+key, and its own stated open problem is the adoption incentive: why a
+counterparty would agree to sign at all. What this document adds is narrower and
+we claim only that: an enumeration of the classes, each mapped to what a verifier
+would need in order to detect it, and an explicit statement of which one we have
+not solved.
 
 ## Why single-receipt verification cannot help
 
