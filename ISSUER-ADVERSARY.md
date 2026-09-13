@@ -153,9 +153,12 @@ log order is submission order), `a3-timestamp-grammar-is-strict` (verifiers comp
 strings and never parse dates), and the absence of any A2 bundle at all. A5 is exercised by the
 key-pinning cases in the receipt suite rather than here.
 
-The gap is not the cryptography. It is that these mechanisms have no adversarial
-conformance vectors, so any implementation claiming conformance today, ours
-included, is claiming envelope conformance only.
+The gap is not the cryptography, and until 12 September 2026 it was that these
+mechanisms had no adversarial conformance vectors, so any implementation
+claiming conformance was claiming envelope conformance only. The remaining gap
+is narrower: the bundles pin the verdicts, and what is still missing is a second
+independent history verifier held to them, in the way the two envelope verifiers
+are already held to each other.
 
 
 ## What a second conformance dimension would look like
