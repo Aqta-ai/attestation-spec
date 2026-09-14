@@ -10,7 +10,7 @@
 | Implementations agree | **27/27** |
 | Verdicts match specification | **27/27** |
 
-Two independently written verifiers, TypeScript (npm) and Python (PyPI), run
+Two separately written verifiers, TypeScript (npm) and Python (PyPI), run
 against the same published vectors with the same pinned key.
 
 > Both implementations produced identical verdicts for every published vector.
