@@ -132,7 +132,7 @@ def generate_valid() -> None:
     # 0xD83D so it comes FIRST by code unit. The two reference verifiers split
     # on exactly this until 10 Sep 2026. Every earlier multi-policy vector was
     # ASCII, where both orderings agree, which is why nothing caught it.
-    # Reported through the standing bounty, 9 September 2026.
+    # Reported through the forgery bounty, 9 September 2026.
     _write(VALID, "006-policy-non-bmp-sorted.json", _sign(
         6, outcome="ALLOWED", policy_applied=["\U0001F600", "\uE000"],
         session_id="sess-vector-0001", intent_hash=INTENT,

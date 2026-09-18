@@ -19,4 +19,4 @@ of implementations returns the **same** code for every file here, and it must ma
 | `006-invalid-byte-in-ascii-value.bin` | 2 | invalid byte where the signed value was ASCII; both must say malformed, not one invalid and one malformed |
 
 Regenerate with `python3 test-vectors/bytes/generate.py`; run with
-`node scripts/bytes-interop-sweep.mjs`. Found through the standing bounty, 12 September 2026.
+`node scripts/bytes-interop-sweep.mjs`. Found through the forgery bounty, 12 September 2026.

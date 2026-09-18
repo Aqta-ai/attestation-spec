@@ -9,7 +9,7 @@ as .json files and are written as .bin with a manifest of expected exit codes.
 
 Verdict is the CLI exit code: 0 valid, 1 invalid, 2 malformed. Both reference
 verifiers must return the SAME code for every file here, and it must match
-expected.json. Found through the standing bounty, 12 September 2026: the
+expected.json. Found through the forgery bounty, 12 September 2026: the
 TypeScript CLI decoded with replacement, so 000 mutated into 001 verified as
 valid while the Python CLI rejected it as not UTF-8.
 

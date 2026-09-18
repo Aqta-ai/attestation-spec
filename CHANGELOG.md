@@ -35,7 +35,7 @@ own versioning contract described in [CONFORMANCE.md](./CONFORMANCE.md).
   invalid UTF-8 exits 2 with `not valid UTF-8`, and a byte order mark is left in the text so
   JSON parsing rejects it, as Python already did. The same lossy decode existed in the browser
   verifiers on aqta.ai and app.aqta.ai (`file.text()`, `readAsText`) and is fixed in those repos.
-  Reported through the standing bounty, 12 September 2026, under the verifier-divergence class,
+  Reported through the forgery bounty, 12 September 2026, under the verifier-divergence class,
   the second confirmed report in that class. The reporter is credited by name once they agree
   to it.
 
@@ -65,7 +65,7 @@ own versioning contract described in [CONFORMANCE.md](./CONFORMANCE.md).
   unit, matching the order both specifications already require for object keys under RFC 8785.
   `examples/reference-action-issuer.py` used the same code-point sort and could emit an order the
   TypeScript verifier rejected; it is fixed too.
-  Reported through the standing bounty, 9 September 2026, under the verifier-divergence class. The
+  Reported through the forgery bounty, 9 September 2026, under the verifier-divergence class. The
   reporter is credited by name once they agree to it.
 
 ### Added

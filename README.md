@@ -43,7 +43,7 @@ npx aqta-verify-receipt record.json --profile action-1 --key <key>
 Anyone with the issuer's published public key can verify either offline.
 
 This repo is the **formats**, two **reference verifiers**, stand-alone
-**reference issuers**, and **50 test vectors**. It is not the managed Seal
+**reference issuers**, and **54 test vectors**. It is not the managed Seal
 gateway ([app.aqta.ai](https://app.aqta.ai)).
 
 A valid signature proves what the gateway *said*, not what the provider's
