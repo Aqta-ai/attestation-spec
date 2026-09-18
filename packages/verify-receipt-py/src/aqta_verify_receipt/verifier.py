@@ -86,7 +86,7 @@ def _utf16_order(values):
     involved: U+E000 sorts after U+1F600 by code point, and before it by code unit, because
     the emoji begins with the surrogate 0xD83D. That made the two reference verifiers return
     different verdicts on the same signed bytes, which is the one property this format exists
-    to guarantee. Reported through the standing bounty, 9 September 2026.
+    to guarantee. Reported through the forgery bounty, 9 September 2026.
 
     ATTESTATION-v1 section 5 and ACTION-v1 section 6 both define canonical order as
     "lexicographically by UTF-16 code unit (RFC 8785)" for object keys. This applies the same
@@ -537,8 +537,8 @@ def verify_receipt(
     # Semantic sanity
     # isinstance excluding bool is required, not stylistic: bool subclasses
     # int in Python, so True == 1 and a receipt carrying "v": true passed this
-    # gate while the TypeScript verifier's strict !== rejected it. Reported by
-    # Michael Msebenzi, 2026-08-05.
+    # gate while the TypeScript verifier's strict !== rejected it. Reported externally,
+    # 2026-08-05.
     if not isinstance(receipt["v"], int) or isinstance(receipt["v"], bool) or receipt["v"] != 1:
         return VerifyResult(False, f"unsupported version: {receipt['v']!r}")
     if receipt["outcome"] not in ALLOWED_OUTCOMES:
@@ -548,7 +548,7 @@ def verify_receipt(
     # Draft 6 step 1 specifies three further checks that neither verifier
     # implemented, because no test vector exercised them: the conformance
     # suite derived its invalid vectors by mutating a signed receipt, so
-    # every one failed on the signature first. Reported by Michael Msebenzi
+    # every one failed on the signature first. Reported externally,
     # 2026-08-05; vectors 009-013 now cover these.
     if not all(isinstance(p, str) for p in receipt["policy_applied"]):
         return VerifyResult(False, "policy_applied must contain only strings")

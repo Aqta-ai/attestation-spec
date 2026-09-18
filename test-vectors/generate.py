@@ -83,8 +83,8 @@ def _sign_raw(payload: dict) -> dict:
     failed on the signature before the defect it is named for was ever
     reached. A verifier that checked nothing but the signature scored 15/15 on
     the published suite, which means the suite could not distinguish a
-    conformant verifier from a signature-only one. Reported by Michael
-    Msebenzi, 2026-08-05, and reproduced.
+    conformant verifier from a signature-only one. Reported externally,
+    2026-08-05, and reproduced.
 
     The issuer's sign() rejects invalid outcomes and malformed hashes by
     design, so it cannot mint these. This signs the exact bytes given.

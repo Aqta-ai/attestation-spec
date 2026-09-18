@@ -117,8 +117,8 @@ Everything above applies, with these differences taken from
 5. **Assertion provenance (§8) is normative.** An implementation that
    presents `agent` as verified identity, or presents an `ALLOWED` record as
    proof that the action was subsequently executed, does not conform.
-6. **Vectors:** `test-vectors/action/valid` (10) MUST all verify and
-   `test-vectors/action/invalid` (15) MUST all fail, under the vector issuer
+6. **Vectors:** `test-vectors/action/valid` (11) MUST all verify and
+   `test-vectors/action/invalid` (16) MUST all fail, under the vector issuer
    key named in that directory's README.
 7. **Interop:** the sweep in
    [`scripts/action-interop-sweep.mjs`](./scripts/action-interop-sweep.mjs)
