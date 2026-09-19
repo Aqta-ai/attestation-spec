@@ -27,7 +27,7 @@ same verifiers:
 | Format | Answers | Fields |
 |---|---|---|
 | [**ATTESTATION-v1**](./spec/ATTESTATION-v1.md) | What did the gateway decide about this model call? | 12 |
-| [**ACTION-v1**](./spec/ACTION-v1.md) | What was this agent allowed to do? | 14 |
+| [**ACTION-v1**](./spec/ACTION-v1.md) | What was this agent allowed to do? | 13 |
 
 `ACTION-v1` covers agent tool actions: a declared tool call authorised or
 refused under policy before it runs, bound to the session's registered
@@ -120,12 +120,12 @@ Run the whole suite from a clean checkout. Each block is independent, so you can
 paste them one at a time or all together.
 
 ```bash
-# Python verifier: 38 tests
+# Python verifier
 pip install -e packages/verify-receipt-py
 pip install pytest cryptography
 pytest packages/verify-receipt-py/tests/ -q
 
-# TypeScript verifier: 11 tests. The build step is required, dist/ is not committed.
+# TypeScript verifier. The build step is required, dist/ is not committed.
 (cd packages/verify-receipt && npm ci && npm run build && npm test)
 
 # Cross-implementation check: every test vector, both verifiers, same verdict.
