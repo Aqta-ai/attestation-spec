@@ -35,9 +35,12 @@ own versioning contract described in [CONFORMANCE.md](./CONFORMANCE.md).
   invalid UTF-8 exits 2 with `not valid UTF-8`, and a byte order mark is left in the text so
   JSON parsing rejects it, as Python already did. The same lossy decode existed in the browser
   verifiers on aqta.ai and app.aqta.ai (`file.text()`, `readAsText`) and is fixed in those repos.
-  Reported through the forgery bounty, 12 September 2026, under the verifier-divergence class,
-  the second confirmed report in that class. The reporter is credited by name once they agree
-  to it.
+  Reported through the forgery bounty, 12 September 2026, under the verifier-divergence class.
+  The reporter is credited by name once they agree to it.
+  *Correction, 22 September 2026: this entry previously read "the second confirmed report in that
+  class". That counted from the 9 September report and was inaccurate. The class was first claimed
+  on 28 August 2026 (two reports, both fixed in 1.2.3); the 9 September and 12 September reports
+  were the third and fourth confirmed reports in it. Recorded here rather than silently edited.*
 
 ### Added
 
