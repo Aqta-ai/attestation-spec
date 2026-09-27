@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security report
+    url: https://github.com/Aqta-ai/attestation-spec/blob/main/SECURITY.md
+    about: Send anything security-related to security@aqta.ai, not a public issue. We do not pay for reports.

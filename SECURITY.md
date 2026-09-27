@@ -21,8 +21,10 @@ Email **security@aqta.ai** with:
 - Whether you have already tested the behaviour against an issuer other
   than the reference implementation.
 
-We aim to acknowledge reports within two working days and to publish a
-remediation plan within ten working days for confirmed issues.
+We read every report. We do not promise a response time, and we do not
+pay for reports: the forgery bounty closed on 12 September 2026. Valid
+reports are fixed, published as test vectors where they apply, and
+credited in the advisory if the reporter wishes.
 
 ### What counts as a security issue
 
