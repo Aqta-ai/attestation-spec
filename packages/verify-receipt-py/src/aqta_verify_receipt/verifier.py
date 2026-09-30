@@ -64,16 +64,29 @@ ACTION_REQUIRED_FIELDS = (
 )
 _ACTION_REQUIRED_SET = frozenset(ACTION_REQUIRED_FIELDS)
 ACTION_ALLOWED_OUTCOMES = frozenset({"ALLOWED", "BLOCKED"})
-_HEX64 = re.compile(r"^[0-9a-f]{64}$")
+# Every format pattern below is written character for character as in the
+# TypeScript verifier, but the two engines do not read that text alike by
+# default. In JavaScript `\d` is ASCII only and `$` (no m flag) matches only at
+# the end of the input. In Python `\d` matches any Unicode decimal digit unless
+# re.ASCII is set, and `$` also matches just before a final line feed. So each
+# pattern is compiled with re.ASCII and applied with fullmatch(), never match()
+# or search(). Until 1.2.7 this verifier accepted a request_hash, args_hash,
+# intent_hash or timestamp ending in a line feed, and a timestamp written in
+# fullwidth or Arabic-Indic digits, which the TypeScript verifier rejected.
+# Found in internal adversarial review, 29 September 2026.
+_HEX64 = re.compile(r"^[0-9a-f]{64}$", re.ASCII)
 # Range-checks the calendar without parsing, and permits a leap second (:60),
 # which is legal RFC 3339. Character-for-character identical to the regex in
 # the TypeScript verifier: the two must agree on what a timestamp is.
 _RFC3339_OFFSET = re.compile(
     r"^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])"
     r"[Tt ]([01]\d|2[0-3]):[0-5]\d:([0-5]\d|60)(\.\d+)?"
-    r"([Zz]|[+-]([01]\d|2[0-3]):[0-5]\d)$"
+    r"([Zz]|[+-]([01]\d|2[0-3]):[0-5]\d)$",
+    re.ASCII,
 )
-_B64URL = re.compile(r"^[A-Za-z0-9_-]+$")
+_B64URL = re.compile(r"^[A-Za-z0-9_-]+$", re.ASCII)
+# Foreign envelopes carry standard base64, optionally padded (anchor-v1).
+_B64_ANY = re.compile(r"^[A-Za-z0-9_+/-]+=*$", re.ASCII)
 _LONE_SURROGATE = re.compile(r"[\ud800-\udfff]")
 
 
@@ -93,7 +106,11 @@ def _utf16_order(values):
     rule to policy_applied, which the spec previously left to the implementer. Encoding to
     UTF-16 big-endian and comparing bytes is exactly code-unit order.
     """
-    return sorted(values, key=lambda v: v.encode("utf-16-be"))
+    # surrogatepass keeps the key total. A lone surrogate is one code unit to
+    # JavaScript and sorts as one; a plain utf-16-be encode raised on it, so this
+    # threw on input the TypeScript verifier handled. Canonicalisation still
+    # rejects such a string later, in both verifiers.
+    return sorted(values, key=lambda v: v.encode("utf-16-be", "surrogatepass"))
 
 def _js_number(x: float) -> str:
     """ECMA-262 Number::toString, which is what RFC 8785 (JCS) 3.2.2.3 requires.
@@ -213,7 +230,7 @@ def _b64url_decode(s: str) -> bytes:
     genuine signature and the receipt still passed a pinned check here while
     failing in JavaScript.
     """
-    if not isinstance(s, str) or not _B64URL.match(s):
+    if not isinstance(s, str) or not _B64URL.fullmatch(s):
         raise ValueError("not base64url")
     return base64.urlsafe_b64decode(s + "=" * (-len(s) % 4))
 
@@ -224,7 +241,7 @@ def _b64_any_decode(s: str) -> bytes:
     Kept separate so ATTESTATION-v1 stays strict. Only the alphabet is
     relaxed here; anything outside it is still rejected.
     """
-    if not isinstance(s, str) or not re.match(r"^[A-Za-z0-9_+/-]+=*$", s):
+    if not isinstance(s, str) or not _B64_ANY.fullmatch(s):
         raise ValueError("not base64")
     t = s.rstrip("=").replace("+", "-").replace("/", "_")
     return base64.urlsafe_b64decode(t + "=" * (-len(t) % 4))
@@ -354,11 +371,11 @@ def _verify_action_record(
         return VerifyResult(False, "outcome must be ALLOWED or BLOCKED")
     if record["tool"] == "":
         return VerifyResult(False, "tool must be a non-empty string")
-    if not _HEX64.match(record["args_hash"]):
+    if not _HEX64.fullmatch(record["args_hash"]):
         return VerifyResult(
             False, "args_hash must be 64 lowercase hex characters"
         )
-    if record["intent_hash"] != "" and not _HEX64.match(record["intent_hash"]):
+    if record["intent_hash"] != "" and not _HEX64.fullmatch(record["intent_hash"]):
         return VerifyResult(
             False, "intent_hash must be '' or 64 lowercase hex characters"
         )
@@ -372,7 +389,7 @@ def _verify_action_record(
         return VerifyResult(
             False, "policy_applied must be in lexicographic order"
         )
-    if not _RFC3339_OFFSET.match(record["timestamp"]):
+    if not _RFC3339_OFFSET.fullmatch(record["timestamp"]):
         return VerifyResult(
             False,
             "timestamp must be an RFC 3339 datetime with an explicit offset",
@@ -541,6 +558,11 @@ def verify_receipt(
     # 2026-08-05.
     if not isinstance(receipt["v"], int) or isinstance(receipt["v"], bool) or receipt["v"] != 1:
         return VerifyResult(False, f"unsupported version: {receipt['v']!r}")
+    # A list or object is unhashable, so the set lookup raised TypeError and the
+    # never-raises contract broke on input TypeScript rejected. The type is its
+    # own check, worded as ACTION-v1 words it, in both verifiers.
+    if not isinstance(receipt["outcome"], str):
+        return VerifyResult(False, "outcome must be a string")
     if receipt["outcome"] not in ALLOWED_OUTCOMES:
         return VerifyResult(False, f"invalid outcome: {receipt['outcome']!r}")
     if not isinstance(receipt["policy_applied"], list):
@@ -571,13 +593,13 @@ def verify_receipt(
     if cost < 0:
         return VerifyResult(False, "cost_prevented_eur must be non-negative")
     ts = receipt["timestamp"]
-    if not isinstance(ts, str) or not _RFC3339_OFFSET.match(ts):
+    if not isinstance(ts, str) or not _RFC3339_OFFSET.fullmatch(ts):
         return VerifyResult(
             False,
             "timestamp must be an RFC 3339 datetime with an explicit offset",
         )
     rh = receipt["request_hash"]
-    if not isinstance(rh, str) or not _HEX64.match(rh):
+    if not isinstance(rh, str) or not _HEX64.fullmatch(rh):
         return VerifyResult(False, "request_hash must be 64 lowercase hex chars")
 
     if trusted_public_key is None and not allow_untrusted_embedded_key:

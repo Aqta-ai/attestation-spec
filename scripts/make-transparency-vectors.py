@@ -151,6 +151,36 @@ def main():
           {**cgood, "consistency_path": cgood["consistency_path"][:-1]},
           "consistency path one node short")
 
+    # Signed tree heads holding a lone surrogate (29 Sep 2026). The signed bytes
+    # carry the org_id or timestamp as UTF-8 and a lone surrogate has none:
+    # JavaScript's TextEncoder writes U+FFFD in its place and Python's encoder
+    # raises. Each head is signed over EF BF BD, so until 1.2.7 the TypeScript
+    # verifier returned valid and the Python verifier crashed on the same bytes.
+    # Signed with the throwaway key the adversary bundles use (bytes 0 to 31).
+    import base64
+    from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+    key = Ed25519PrivateKey.from_private_bytes(bytes(range(32)))
+    pub = base64.urlsafe_b64encode(key.public_key().public_bytes_raw()).decode().rstrip("=")
+
+    def sign(message):
+        return base64.urlsafe_b64encode(key.sign(message)).decode().rstrip("=")
+
+    size = str(len(leaves)).encode()
+    write("invalid", "sth-org-id-lone-surrogate.json", {
+        "_trusted_public_key": pub, "org_id": "org-\ud800", "tree_size": len(leaves),
+        "root_hash": root.hex(),
+        "signature": sign(b"aqta-sth-v1|org-\xef\xbf\xbd|" + size + b"|" + root),
+    }, "a per-org head whose org_id holds a lone surrogate, signed over the U+FFFD bytes a "
+       "substituting encoder produces. The value has no UTF-8 form, so the head is refused")
+    stamp = "2026-09-12T18:11:00Z"
+    write("invalid", "sth-public-timestamp-lone-surrogate.json", {
+        "_trusted_public_key": pub, "log": "public", "tree_size": len(leaves),
+        "root_hash": root.hex(), "timestamp": stamp + "\udc00",
+        "signature": sign(b"aqta-sth-public-v1|" + size + b"|" + root + b"|"
+                          + stamp.encode() + b"\xef\xbf\xbd"),
+    }, "a public head whose timestamp ends in a lone low surrogate, signed over U+FFFD in its "
+       "place. Refused for the same reason")
+
     print(f"\nwrote vectors to {OUT}")
 
 

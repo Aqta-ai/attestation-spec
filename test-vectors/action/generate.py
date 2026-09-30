@@ -247,6 +247,38 @@ def generate_invalid() -> None:
         ISSUER.private_key.sign(canonical)).decode().rstrip("=")
     _write(INVALID, "016-policy-code-point-order.json", payload)
 
+    # 017 to 023, added 29 September 2026 after internal adversarial review:
+    # the classes behind ATTESTATION-v1 invalid 018 to 023, under this profile.
+    # Python's `$` also matches just before a final line feed and its `\d`
+    # matches any Unicode decimal digit; JavaScript's do neither, and until
+    # 1.2.7 the Python verifier accepted 017, 018, 019 and 021. Signed directly
+    # over the defect, as 016 is, because the reference issuer now refuses
+    # these hashes.
+    def _resigned(n, **fields):
+        p = {k: v for k, v in base(n).items() if k != "signature"}
+        p.update(fields)
+        c = json.dumps(p, sort_keys=True, separators=(",", ":"),
+                       ensure_ascii=False).encode("utf-8")
+        p["signature"] = _b64x.urlsafe_b64encode(
+            ISSUER.private_key.sign(c)).decode().rstrip("=")
+        return p
+
+    _write(INVALID, "017-args-hash-trailing-newline.json", _resigned(0x21, args_hash=ARGS + "\n"))
+    _write(INVALID, "018-intent-hash-trailing-newline.json", _resigned(0x22, intent_hash=INTENT + "\n"))
+    _write(INVALID, "019-timestamp-trailing-newline.json", _resigned(0x23, timestamp=TS + "\n"))
+    r = base(0x24)
+    r["signature"] = r["signature"] + "\n"  # outside what is signed: anyone can append it
+    _write(INVALID, "020-signature-trailing-newline.json", r)
+    _write(INVALID, "021-timestamp-non-ascii-digits.json", _resigned(
+        0x25, timestamp="2026-08-22T14:03:11.\u0664\u0661\u0662\u0669\u0660\u0663+00:00"))
+    _write(INVALID, "022-outcome-not-a-string.json", _resigned(0x26, outcome=["BLOCKED"]))
+    # No canonical bytes exist for a lone surrogate, so the genuine signature
+    # stays and the ordering rule refuses the record first. The 1.2.6 Python
+    # verifier raised UnicodeEncodeError building that order.
+    r = base(0x27)
+    r["policy_applied"] = ["\ud800", "require_intent"]
+    _write(INVALID, "023-policy-lone-surrogate.json", r)
+
 if __name__ == "__main__":
     print(f"ACTION-v1 vector key: {ISSUER.public_key_b64}")
     generate_valid()

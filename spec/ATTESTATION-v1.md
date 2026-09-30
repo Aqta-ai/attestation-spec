@@ -211,6 +211,15 @@ outside the cryptographic verification contract:
 - `timestamp` is a well-formed ISO 8601 datetime within a reasonable clock
   skew of the current time if the receipt is being verified live.
 
+Each format rule above matches the whole value, and its digits are the ASCII
+digits `0` to `9`. A value with anything before or after the pattern, a
+trailing line feed included, or with a decimal digit from another script, such
+as fullwidth `２` or Arabic-Indic `٢`, does not conform. Regular expression
+engines differ on both points by default: in Python `$` also matches just
+before a final line feed and `\d` matches any Unicode decimal digit, while in
+JavaScript neither does, so an implementation that relies on its engine's
+defaults can accept a value that another implementation rejects.
+
 ## 8. Example
 
 Canonical payload (pretty-printed for documentation; actual signing uses the
@@ -401,6 +410,10 @@ For any deployment using ATTESTATION-v1, the residual risk is:
 
 ## 13. Change Log
 
+- **Clarification (2026-09-29).** §7 states that the format checks match the
+  whole value with ASCII digits. The Python reference verifier accepted a
+  trailing line feed and non-ASCII digits until `aqta-verify-receipt` 1.2.7.
+  No wire-format change.
 - **Errata (2026-08-24).** Three corrections, none of which change the wire
   format or invalidate any issued receipt:
   - §6 now states the **non-integer number rule normatively** (ECMA-262

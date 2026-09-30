@@ -40,12 +40,13 @@ def ts(minute: int) -> str:
     return f"2026-09-12T18:{minute:02d}:00Z"
 
 
-def head(leaves, minute):
+def head(leaves, minute, stamp=None):
+    stamp = ts(minute) if stamp is None else stamp
     root = merkle_root(leaves)
-    signed = b"aqta-sth-public-v1|" + str(len(leaves)).encode() + b"|" + root + b"|" + ts(minute).encode()
+    signed = b"aqta-sth-public-v1|" + str(len(leaves)).encode() + b"|" + root + b"|" + stamp.encode()
     return {
         "v": 1, "log": "public", "tree_size": len(leaves), "root_hash": root.hex(),
-        "timestamp": ts(minute),
+        "timestamp": stamp,
         "signature": base64.urlsafe_b64encode(KEY.sign(signed)).decode().rstrip("="),
     }
 
@@ -189,6 +190,44 @@ def main():
           "unsigned_root",
           heads=[head(honest, 11)],
           inclusions=[unsigned])
+
+    # ---- the timestamp grammar against regex engine defaults (29 Sep 2026) --
+    # Python's `$` also matches just before a final line feed and its `\d`
+    # matches any Unicode decimal digit; JavaScript's do neither. Until 1.2.7
+    # the Python verifier returned `consistent` for all four of these and the
+    # TypeScript verifier refused them. record_timestamp is signed by nothing in
+    # a bundle, so whoever assembles the bundle controls it.
+    lf = inclusion(honest, 4)
+    lf["record_timestamp"] = ts(4) + "\n"
+    write("a3-record-timestamp-trailing-newline.json", "A3",
+          "a record_timestamp ending in a line feed. The grammar matches the whole string; a pattern "
+          "whose $ also matches before a final line feed accepts it",
+          "invalid_proof",
+          heads=[head(honest, 11)],
+          inclusions=[lf])
+
+    digits = inclusion(honest, 4)
+    digits["record_timestamp"] = "2026-09-12T18:0\u0664:00Z"
+    write("a3-record-timestamp-non-ascii-digits.json", "A3",
+          "a record_timestamp whose minute holds an Arabic-Indic digit. The grammar's digits are ASCII "
+          "0 to 9; a Unicode-aware digit class accepts it and then compares it as a string",
+          "invalid_proof",
+          heads=[head(honest, 11)],
+          inclusions=[digits])
+
+    write("a3-head-timestamp-trailing-newline.json", "A3",
+          "a correctly signed head whose timestamp ends in a line feed: the signature verifies and "
+          "the timestamp grammar refuses it",
+          "invalid_head",
+          heads=[head(honest, 11, ts(11) + "\n")],
+          inclusions=[inclusion(honest, 4, record_minute=4)])
+
+    write("a3-head-timestamp-non-ascii-digits.json", "A3",
+          "a correctly signed head whose timestamp year is in fullwidth digits: the signature "
+          "verifies and the timestamp grammar refuses it",
+          "invalid_head",
+          heads=[head(honest, 11, "\uff12\uff10\uff12\uff16-09-12T18:11:00Z")],
+          inclusions=[inclusion(honest, 4, record_minute=4)])
 
     print(f"\nwrote {len(list(OUT.glob('*.json')))} bundles to {OUT}")
 

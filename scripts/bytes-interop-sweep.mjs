@@ -12,6 +12,7 @@ import { fileURLToPath } from 'node:url';
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const DIR = join(ROOT, 'test-vectors/bytes');
 const TS_CLI = join(ROOT, 'packages/verify-receipt/dist/cli.js');
+const TS_PROOF = join(ROOT, 'packages/verify-receipt/dist/verify-proof.js');
 const PY_ENV = { ...process.env, PYTHONPATH: join(ROOT, 'packages/verify-receipt-py/src') };
 const manifest = JSON.parse(readFileSync(join(DIR, 'expected.json'), 'utf8'));
 const PIN = manifest.trusted_public_key;
@@ -22,9 +23,14 @@ for (const f of readdirSync(DIR).filter((n) => n.endsWith('.bin')).sort()) {
   const want = manifest.vectors[f]?.expected_exit;
   const ts = code(spawnSync('node', [TS_CLI, path, '--key', PIN]));
   const py = code(spawnSync('python3', ['-m', 'aqta_verify_receipt', path, '--key', PIN], { env: PY_ENV }));
-  const ok = ts === py && ts === want;
+  // The proof commands read bytes too (29 Sep 2026: the Python one raised on
+  // invalid UTF-8 and exited 1 where TypeScript exits 2). No file here is a
+  // proof document, so both must refuse every one as malformed input.
+  const tsProof = code(spawnSync('node', [TS_PROOF, path]));
+  const pyProof = code(spawnSync('python3', ['-m', 'aqta_verify_receipt.verify_proof', path], { env: PY_ENV }));
+  const ok = ts === py && ts === want && tsProof === 2 && pyProof === 2;
   if (!ok) failures++;
-  console.log(`${ok ? 'ok  ' : 'FAIL'} ${f.padEnd(36)} ts=${ts} py=${py} expected=${want}`);
+  console.log(`${ok ? 'ok  ' : 'FAIL'} ${f.padEnd(36)} ts=${ts} py=${py} expected=${want} proof ts=${tsProof} py=${pyProof}`);
 }
 console.log(failures === 0 ? 'BYTES SWEEP CLEAN' : `${failures} BYTE-LEVEL DIVERGENCES`);
 process.exit(failures === 0 ? 0 : 1);

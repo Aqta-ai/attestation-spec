@@ -26,8 +26,13 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 
 _LEAF_PREFIX = b"\x00"
 _NODE_PREFIX = b"\x01"
-_HEX = re.compile(r"^[0-9a-f]*$")
-_B64URL = re.compile(r"^[A-Za-z0-9_-]+$")
+# Compiled with re.ASCII and applied with fullmatch(), for the reason given in
+# verifier.py: Python's `$` also matches just before a final line feed and its
+# `\d` matches any Unicode decimal digit, where JavaScript's do neither.
+_HEX = re.compile(r"^[0-9a-f]*$", re.ASCII)
+_B64URL = re.compile(r"^[A-Za-z0-9_-]+$", re.ASCII)
+# A surrogate code point in a Python str has no UTF-8 encoding.
+_SURROGATE = re.compile(r"[\ud800-\udfff]")
 
 
 @dataclass
@@ -49,7 +54,7 @@ def _node(left: bytes, right: bytes) -> bytes:
 
 
 def _unhex(value: Any) -> bytes:
-    if not isinstance(value, str) or len(value) % 2 or not _HEX.match(value):
+    if not isinstance(value, str) or len(value) % 2 or not _HEX.fullmatch(value):
         raise ValueError("not lowercase hex")
     return bytes.fromhex(value)
 
@@ -233,7 +238,7 @@ def verify_signed_tree_head(head: Mapping[str, Any], trusted_public_key: str) ->
         return ProofResult(False, "head must carry org_id and an integer tree_size")
     if not isinstance(head.get("root_hash"), str) or not isinstance(head.get("signature"), str):
         return ProofResult(False, "head must carry root_hash and signature")
-    if not _B64URL.match(head["signature"]) or not _B64URL.match(trusted_public_key or ""):
+    if not _B64URL.fullmatch(head["signature"]) or not _B64URL.fullmatch(trusted_public_key or ""):
         return ProofResult(False, "signature and key must be base64url without padding")
 
     try:
@@ -242,6 +247,14 @@ def verify_signed_tree_head(head: Mapping[str, Any], trusted_public_key: str) ->
         return ProofResult(False, "root_hash must be lowercase hex")
     if len(root) != 32:
         return ProofResult(False, "root_hash must be 32 bytes")
+
+    # The signed bytes carry the timestamp (public head) or org_id (per-org
+    # head) as UTF-8, and a lone surrogate has none. Python's encoder raised here
+    # while JavaScript's TextEncoder writes U+FFFD, so a head signed over EF BF BD
+    # verified in TypeScript under any lone-surrogate spelling and crashed this
+    # verifier. Both refuse it, with the same reason.
+    if _SURROGATE.search(head["timestamp"] if is_public else head["org_id"]):
+        return ProofResult(False, "head contains an unpaired surrogate")
 
     if is_public:
         # PUBLIC_STH_PREFIX || ascii(tree_size) || "|" || root || "|" || ts
@@ -297,7 +310,7 @@ def verify_signed_tree_head(head: Mapping[str, Any], trusted_public_key: str) ->
 # submission order; a record can be created before a head and submitted after
 # it. The vector a3-lag-is-not-backdating pins that this returns consistent.
 
-_TIMESTAMP = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$")
+_TIMESTAMP = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$", re.ASCII)
 
 
 @dataclass
@@ -328,7 +341,7 @@ def assess_history(bundle: Mapping[str, Any], trusted_public_key: str) -> Histor
         r = verify_signed_tree_head(h, trusted_public_key)
         if not r.valid:
             return fail("invalid_head", f"head {i}: {r.reason or 'verification failed'}")
-        if not _TIMESTAMP.match(h["timestamp"]):
+        if not _TIMESTAMP.fullmatch(h["timestamp"]):
             return fail("invalid_head", f"head {i}: timestamp must be YYYY-MM-DDTHH:MM:SSZ")
         heads.append((h["tree_size"], h["root_hash"].lower(), h["timestamp"]))
 
@@ -371,7 +384,7 @@ def assess_history(bundle: Mapping[str, Any], trusted_public_key: str) -> Histor
             return fail("invalid_proof", f"inclusion {i}: {r.reason or 'verification failed'}")
         ts = entry.get("record_timestamp")
         if ts is not None:
-            if not isinstance(ts, str) or not _TIMESTAMP.match(ts):
+            if not isinstance(ts, str) or not _TIMESTAMP.fullmatch(ts):
                 return fail("invalid_proof", f"inclusion {i}: record_timestamp must be YYYY-MM-DDTHH:MM:SSZ")
             # Fixed-width UTC strings compare correctly as strings.
             if ts > head[2] and contradiction is None:

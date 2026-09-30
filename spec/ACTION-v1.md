@@ -181,6 +181,15 @@ Verifiers SHOULD also perform these semantic checks:
 - `timestamp` is a well-formed ISO 8601 datetime with explicit offset.
 - `intent_hash` is `""` whenever `session_id` is `""`.
 
+Each format rule above matches the whole value, and its digits are the ASCII
+digits `0` to `9`. A value with anything before or after the pattern, a
+trailing line feed included, or with a decimal digit from another script, such
+as fullwidth `２` or Arabic-Indic `٢`, does not conform. Regular expression
+engines differ on both points by default: in Python `$` also matches just
+before a final line feed and `\d` matches any Unicode decimal digit, while in
+JavaScript neither does, so an implementation that relies on its engine's
+defaults can accept a value that another implementation rejects.
+
 ## 8. Assertion Provenance (normative)
 
 Not every field in a signed record is evidence of the same kind. The signature
@@ -277,6 +286,10 @@ replay and `action_id` deduplication) apply unchanged. Additionally:
 
 ## 13. Change Log
 
+- **Clarification (2026-09-29).** §7 states that the format checks match the
+  whole value with ASCII digits. The Python reference verifier accepted a
+  trailing line feed and non-ASCII digits until `aqta-verify-receipt` 1.2.7.
+  No wire-format change.
 - **1.0 (2026-08-22).** Format frozen with the publication of
   `aqta-verify-receipt` 1.1.0 on npm and PyPI: both reference verifiers
   agree on all 25 conformance vectors and the cross-implementation interop

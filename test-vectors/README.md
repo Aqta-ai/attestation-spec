@@ -64,6 +64,12 @@ Each file encodes exactly one failure mode. A verifier MUST reject.
 | [`invalid/015-uncoerced-integer-float.json`](./invalid/015-uncoerced-integer-float.json) | `cost_prevented_eur` signed as `1.0`, uncoerced by the issuer | Canonical bytes mismatch: §6(3) puts integer coercion on the issuer, so the signature check fails |
 | [`invalid/016-signature-padded.json`](./invalid/016-signature-padded.json) | Genuine signature with base64 padding appended | Not base64url per spec 4; the signature field is not covered by the signature, so lenient decoding makes one receipt several byte strings |
 | [`invalid/017-signature-standard-base64-alphabet.json`](./invalid/017-signature-standard-base64-alphabet.json) | Genuine signature respelled in the standard base64 alphabet | Same class: spec 4 fixes the alphabet, and accepting both spellings diverged from the Python verifier |
+| [`invalid/018-request-hash-trailing-newline.json`](./invalid/018-request-hash-trailing-newline.json) | `request_hash` is 64 hex characters and a line feed, signed | `request_hash must be 64 lowercase hex chars`. The format matches the whole string; Python's `$` also matches before a final line feed, and until 1.2.7 the Python verifier accepted this |
+| [`invalid/019-timestamp-trailing-newline.json`](./invalid/019-timestamp-trailing-newline.json) | `timestamp` ends in a line feed, signed | `timestamp must be an RFC 3339 datetime with an explicit offset`. Same class |
+| [`invalid/020-signature-trailing-newline.json`](./invalid/020-signature-trailing-newline.json) | Genuine signature with a line feed appended | `signature decode error: not base64url`. The field is outside what is signed, so anyone can append one |
+| [`invalid/021-timestamp-non-ascii-digits.json`](./invalid/021-timestamp-non-ascii-digits.json) | `timestamp` year in fullwidth digits (`２０２６`), signed | `timestamp must be an RFC 3339 datetime with an explicit offset`. Digits are ASCII `0` to `9`; Python's `\d` matches any Unicode decimal digit unless `re.ASCII` is set |
+| [`invalid/022-outcome-not-a-string.json`](./invalid/022-outcome-not-a-string.json) | `outcome` is `["ALLOWED"]`, signed | `outcome must be a string`. The 1.2.6 Python verifier raised instead of returning a verdict |
+| [`invalid/023-policy-lone-surrogate.json`](./invalid/023-policy-lone-surrogate.json) | `policy_applied` holds a lone surrogate, out of order | `policy_applied must be in lexicographic order`. By UTF-16 code unit U+D800 sorts after ASCII; the 1.2.6 Python verifier raised building that order |
 
 ## Cases that cannot be shipped as vectors
 
@@ -113,8 +119,12 @@ implementation must name the same one: `invalid_head`, `equivocation`, `unsigned
 | `invalid-head-signature` | A5 | `invalid_head` | One head fails under the trusted key; nothing below it counts |
 | `unsigned-root-target` | A6 | `unsigned_root` | A proof that verifies, against a root no head signed: a tree not in evidence |
 | `a3-timestamp-grammar-is-strict` | A3 | `invalid_proof` | A `record_timestamp` with fractional seconds and an offset is refused, not parsed |
+| `a3-record-timestamp-trailing-newline` | A3 | `invalid_proof` | A `record_timestamp` ending in a line feed. The grammar matches the whole string |
+| `a3-record-timestamp-non-ascii-digits` | A3 | `invalid_proof` | A `record_timestamp` with an Arabic-Indic digit. Digits are ASCII `0` to `9` |
+| `a3-head-timestamp-trailing-newline` | A3 | `invalid_head` | A correctly signed head whose timestamp ends in a line feed |
+| `a3-head-timestamp-non-ascii-digits` | A3 | `invalid_head` | A correctly signed head whose timestamp is in fullwidth digits |
 
-**Timestamps in a bundle.** `record_timestamp` and a head's `timestamp` are `YYYY-MM-DDTHH:MM:SSZ`,
+**Timestamps in a bundle.** `record_timestamp` and a head's `timestamp` are exactly `YYYY-MM-DDTHH:MM:SSZ` in ASCII digits,
 deliberately narrower than the RFC 3339 a receipt carries, so the two implementations compare
 fixed-width strings and never depend on a date parser agreeing. Whoever builds a bundle converts
 the receipt's signed timestamp to UTC and floors it to the second. Flooring can only make a record

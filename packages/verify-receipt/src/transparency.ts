@@ -31,6 +31,9 @@ function sha256(data: Uint8Array): Uint8Array {
 const LEAF_PREFIX = 0x00;
 const NODE_PREFIX = 0x01;
 
+/** An unpaired surrogate, which has no UTF-8 encoding (the pattern in index.ts). */
+const LONE_SURROGATE = /[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/;
+
 function hexToBytes(hex: string): Uint8Array {
   if (typeof hex !== 'string' || hex.length % 2 !== 0 || !/^[0-9a-f]*$/.test(hex)) {
     throw new Error('not lowercase hex');
@@ -303,6 +306,14 @@ export function verifySignedTreeHead(head: unknown, trustedPublicKey: string): P
     return { valid: false, reason: 'root_hash must be lowercase hex' };
   }
   if (root.length !== 32) return { valid: false, reason: 'root_hash must be 32 bytes' };
+
+  // The signed bytes carry the timestamp (public head) or org_id (per-org head)
+  // as UTF-8. TextEncoder writes U+FFFD for a lone surrogate, so a head signed
+  // over EF BF BD verified here under any lone-surrogate spelling while the
+  // Python verifier's encoder raised on the same bytes. Both refuse it.
+  if (LONE_SURROGATE.test((isPublic ? h.timestamp : h.org_id) as string)) {
+    return { valid: false, reason: 'head contains an unpaired surrogate' };
+  }
 
   let signed: Uint8Array;
   if (isPublic) {

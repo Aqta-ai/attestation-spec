@@ -75,15 +75,26 @@ def main(argv: Optional[list] = None) -> None:
         sys.stderr.write(USAGE)
         raise SystemExit(2)
 
+    where = "stdin" if file == "-" else file
     try:
         raw = sys.stdin.read() if file == "-" else open(file, "r", encoding="utf-8").read()
+    except UnicodeDecodeError:
+        # A ValueError, not an OSError, so it escaped as a traceback and exit 1
+        # where the TypeScript command exits 2. Same answer as aqta-verify-receipt.
+        sys.stderr.write(f"aqta-verify-proof: cannot read {where}: not valid UTF-8\n")
+        raise SystemExit(2)
     except OSError:
-        where = "stdin" if file == "-" else file
         sys.stderr.write(f"aqta-verify-proof: cannot read {where}\n")
         raise SystemExit(2)
 
+    def _no_json5_constants(token):
+        # RFC 8259 has no NaN or Infinity. Python's json accepts them as an
+        # extension, so a proof carrying one verified here while the TypeScript
+        # command refused the same bytes as not JSON.
+        raise ValueError(f"not valid JSON: {token}")
+
     try:
-        doc: Any = json.loads(raw)
+        doc: Any = json.loads(raw, parse_constant=_no_json5_constants)
     except ValueError:
         sys.stderr.write("aqta-verify-proof: input is not valid JSON\n")
         raise SystemExit(2)

@@ -150,7 +150,8 @@ verdict a verifier must reach; both reference implementations and both command-l
 held to the same verdict by the interop sweep. Three of those bundles exist to pin limits rather
 than detections: `a3-lag-is-not-backdating` (absence from an earlier head is not evidence, because
 log order is submission order), `a3-timestamp-grammar-is-strict` (verifiers compare fixed-width UTC
-strings and never parse dates), and the absence of any A2 bundle at all. A5 is exercised by the
+strings and never parse dates), and the absence of any A2 bundle at all. Four more, added 29 September 2026, hold that grammar
+to the whole string in ASCII digits, for a head's timestamp and for a record's claimed time. A5 is exercised by the
 key-pinning cases in the receipt suite rather than here.
 
 The gap is not the cryptography, and until 12 September 2026 it was that these

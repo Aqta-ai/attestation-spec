@@ -37,7 +37,7 @@ canonical_payload = _ref.canonical_payload
 SPEC_VERSION = "accept-1"
 DECISIONS = {"ACCEPTED", "OVERRIDDEN", "ESCALATED"}
 SUBJECT_VERSIONS = {"1", "action-1"}
-_HEX64 = re.compile(r"^[0-9a-f]{64}$")
+_HEX64 = re.compile(r"^[0-9a-f]{64}$", re.ASCII)
 
 
 def _b64url_encode(data: bytes) -> str:
@@ -109,9 +109,9 @@ class ReferenceAcceptanceIssuer:
             raise ValueError(f"subject_v must be one of {sorted(SUBJECT_VERSIONS)}")
         if not subject_id:
             raise ValueError("subject_id must be non-empty")
-        if not _HEX64.match(subject_hash):
+        if not _HEX64.fullmatch(subject_hash):
             raise ValueError("subject_hash must be 64 lowercase hex characters")
-        if reason_hash and not _HEX64.match(reason_hash):
+        if reason_hash and not _HEX64.fullmatch(reason_hash):
             raise ValueError("reason_hash must be '' or 64 lowercase hex characters")
         if not reviewer_ref:
             raise ValueError("reviewer_ref must be non-empty")

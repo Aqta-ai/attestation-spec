@@ -40,7 +40,7 @@ canonical_payload = _ref.canonical_payload  # re-exported utility
 
 SPEC_VERSION = "action-1"
 ALLOWED_OUTCOMES = {"ALLOWED", "BLOCKED"}
-_HEX64 = re.compile(r"^[0-9a-f]{64}$")
+_HEX64 = re.compile(r"^[0-9a-f]{64}$", re.ASCII)
 
 
 def _b64url_encode(data: bytes) -> str:
@@ -102,9 +102,9 @@ class ReferenceActionIssuer:
             raise ValueError(f"outcome must be one of {ALLOWED_OUTCOMES}")
         if not tool:
             raise ValueError("tool must be non-empty")
-        if not _HEX64.match(args_hash):
+        if not _HEX64.fullmatch(args_hash):
             raise ValueError("args_hash must be 64 lowercase hex chars")
-        if intent_hash and not _HEX64.match(intent_hash):
+        if intent_hash and not _HEX64.fullmatch(intent_hash):
             raise ValueError("intent_hash must be '' or 64 lowercase hex chars")
         if intent_hash and not session_id:
             raise ValueError("intent_hash requires a session_id (spec §7)")

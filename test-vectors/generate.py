@@ -305,6 +305,45 @@ def main() -> None:
         _sign_raw(_base_payload(cost_prevented_eur=1.0)),
     )
 
+    # 018 to 023, added 29 September 2026 after internal adversarial review.
+    # (016 and 017 were written separately in August 2026; this script leaves
+    # them alone.) Python's `$` also matches just before a final line feed and
+    # its `\d` matches any Unicode decimal digit; JavaScript's do neither. Until
+    # 1.2.7 the Python verifier accepted 018, 019 and 021 and the TypeScript
+    # verifier rejected them. Each carries a valid signature over its defect
+    # where the defect is in a signed field, so only the named rule refuses it.
+    _write(
+        "invalid/018-request-hash-trailing-newline.json",
+        _sign_raw(_base_payload(request_hash=_base_payload()["request_hash"] + "\n")),
+    )
+    _write(
+        "invalid/019-timestamp-trailing-newline.json",
+        _sign_raw(_base_payload(timestamp="2026-04-23T10:15:30.000000+00:00\n")),
+    )
+    # The signature field is outside what is signed, so anyone can append a
+    # line feed to a genuine one. The strict base64url rule refuses it.
+    _write(
+        "invalid/020-signature-trailing-newline.json",
+        {**base, "signature": base["signature"] + "\n"},
+    )
+    _write(
+        "invalid/021-timestamp-non-ascii-digits.json",
+        _sign_raw(_base_payload(timestamp="\uff12\uff10\uff12\uff16-04-23T10:15:30.000000+00:00")),
+    )
+    # The 1.2.6 Python verifier raised TypeError on a list or object here.
+    _write(
+        "invalid/022-outcome-not-a-string.json",
+        _sign_raw(_base_payload(outcome=["ALLOWED"])),
+    )
+    # A lone surrogate has no UTF-8 encoding, so there are no canonical bytes to
+    # sign: the genuine signature stays and the ordering rule refuses the record
+    # first. By UTF-16 code unit U+D800 sorts after "budget_guard". The 1.2.6
+    # Python verifier raised UnicodeEncodeError building that order.
+    _write(
+        "invalid/023-policy-lone-surrogate.json",
+        {**base, "policy_applied": ["\ud800", "budget_guard"]},
+    )
+
     print()
     print("All vectors written to test-vectors/.")
     print("Run your verifier against valid/*.json (MUST return valid)")

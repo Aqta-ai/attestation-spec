@@ -198,7 +198,9 @@ function canonicalise(payload: Record<string, unknown>): Uint8Array {
  *
  * Must stay character-for-character identical to _RFC3339_OFFSET in the Python
  * verifier; the two implementations agreeing on what a timestamp is is the
- * whole point of having two.
+ * whole point of having two. Identical text is not identical behaviour: here
+ * `\d` is ASCII only and `$` matches only at the end of the input, so the
+ * Python side compiles with re.ASCII and matches with fullmatch().
  */
 const RFC3339_OFFSET =
   /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])[Tt ]([01]\d|2[0-3]):[0-5]\d:([0-5]\d|60)(\.\d+)?([Zz]|[+-]([01]\d|2[0-3]):[0-5]\d)$/;
@@ -469,8 +471,14 @@ export function verifyReceipt(
   if (r.v !== 1) {
     return { valid: false, reason: `unsupported version: ${r.v}` };
   }
-  if (typeof r.outcome !== 'string' || !ALLOWED_OUTCOMES.has(r.outcome)) {
-    return { valid: false, reason: `invalid outcome: ${String(r.outcome)}` };
+  // The type is its own check, worded as ACTION-v1 words it: the Python
+  // verifier raised on a list or object here (an unhashable set lookup), and
+  // both now return the same reason for any non-string outcome.
+  if (typeof r.outcome !== 'string') {
+    return { valid: false, reason: 'outcome must be a string' };
+  }
+  if (!ALLOWED_OUTCOMES.has(r.outcome)) {
+    return { valid: false, reason: `invalid outcome: ${r.outcome}` };
   }
   if (!Array.isArray(r.policy_applied)) {
     return { valid: false, reason: 'policy_applied must be an array' };

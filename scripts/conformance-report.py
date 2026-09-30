@@ -26,6 +26,12 @@ CATEGORY = {
     "signature-padded": "Encoding violation",
     "signature-standard-base64-alphabet": "Encoding violation",
     "uncoerced-integer-float": "Number canonicalisation",
+    "request-hash-trailing-newline": "Digest violation",
+    "timestamp-trailing-newline": "Timestamp violation",
+    "signature-trailing-newline": "Encoding violation",
+    "timestamp-non-ascii-digits": "Timestamp violation",
+    "outcome-not-a-string": "Type violation",
+    "policy-lone-surrogate": "Unicode handling",
 }
 
 def run(cmd, f):
@@ -57,7 +63,7 @@ lines = [
  f"| Vectors | {len(rows)} ({len(valid)} valid, {len(inval)} adversarial) |",
  f"| Implementations agree | **{agree}/{len(rows)}** |",
  f"| Verdicts match specification | **{ok}/{len(rows)}** |", "",
- "Two independently written verifiers, TypeScript (npm) and Python (PyPI), run",
+ "Two separately written verifiers, TypeScript (npm) and Python (PyPI), run",
  "against the same published vectors with the same pinned key.", "",
  "> Both implementations produced identical verdicts for every published vector.", "",
  "## What the adversarial vectors cover", "",

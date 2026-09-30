@@ -52,6 +52,13 @@ reference verifiers before release.
 | 014-intent-without-session | `intent_hash` set while `session_id` is `""` (§7 semantic rule). |
 | 015-escaped-unicode-signing | Signed over `\uXXXX`-escaped bytes; a §6-conformant verifier reconstructs literal UTF-8 and the signature fails. The cross-language escaping trap, pinned as a vector. |
 | 016-policy-code-point-order | `policy_applied` sorted by Unicode code point instead of UTF-16 code unit. The signature is valid; only the ordering check may reject it. Signed directly rather than through the reference issuer, which now corrects the order. |
+| 017-args-hash-trailing-newline | `args_hash` is 64 hex characters and a line feed, signed. `args_hash must be 64 lowercase hex characters`: the format matches the whole string, and until 1.2.7 the Python verifier accepted it because Python's `$` also matches before a final line feed. |
+| 018-intent-hash-trailing-newline | `intent_hash` ends in a line feed, signed. `intent_hash must be '' or 64 lowercase hex characters`. Same class. |
+| 019-timestamp-trailing-newline | `timestamp` ends in a line feed, signed. `timestamp must be an RFC 3339 datetime with an explicit offset`. Same class. |
+| 020-signature-trailing-newline | Genuine signature with a line feed appended. `signature decode error: not base64url`; the field is outside what is signed. |
+| 021-timestamp-non-ascii-digits | Fractional seconds in Arabic-Indic digits, signed. Same timestamp reason: digits are ASCII `0` to `9`, and Python's `\d` matches any Unicode decimal digit unless `re.ASCII` is set. |
+| 022-outcome-not-a-string | `outcome` is `["BLOCKED"]`, signed. `outcome must be a string`, the reason ATTESTATION-v1 invalid 022 also gives. |
+| 023-policy-lone-surrogate | `policy_applied` holds a lone surrogate, out of UTF-16 code-unit order. `policy_applied must be in lexicographic order`; the 1.2.6 Python verifier raised building that order. |
 
 ## Regenerating
 
