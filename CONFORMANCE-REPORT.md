@@ -4,11 +4,11 @@
 
 | | |
 |---|---|
-| Release | 1.2.6 |
-| Generated | 2026-09-12 |
-| Vectors | 27 (10 valid, 17 adversarial) |
-| Implementations agree | **27/27** |
-| Verdicts match specification | **27/27** |
+| Release | 1.2.7 |
+| Generated | 2026-09-30 |
+| Vectors | 33 (10 valid, 23 adversarial) |
+| Implementations agree | **33/33** |
+| Verdicts match specification | **33/33** |
 
 Two separately written verifiers, TypeScript (npm) and Python (PyPI), run
 against the same published vectors with the same pinned key.
@@ -19,18 +19,19 @@ against the same published vectors with the same pinned key.
 
 | Failure class | Vectors |
 |---|---:|
-| Encoding violation | 2 |
+| Timestamp violation | 4 |
+| Encoding violation | 3 |
+| Type violation | 3 |
+| Digest violation | 2 |
 | Schema violation | 2 |
-| Timestamp violation | 2 |
-| Type violation | 2 |
 | Canonical ordering | 1 |
-| Digest violation | 1 |
 | Enum violation | 1 |
 | Field tampering | 1 |
 | Key substitution | 1 |
 | Number canonicalisation | 1 |
 | Range violation | 1 |
 | Signature tampering | 1 |
+| Unicode handling | 1 |
 | Version violation | 1 |
 
 ## Every vector
@@ -64,6 +65,12 @@ against the same published vectors with the same pinned key.
 | `015-uncoerced-integer-float.json` | invalid | reject | reject | yes |
 | `016-signature-padded.json` | invalid | reject | reject | yes |
 | `017-signature-standard-base64-alphabet.json` | invalid | reject | reject | yes |
+| `018-request-hash-trailing-newline.json` | invalid | reject | reject | yes |
+| `019-timestamp-trailing-newline.json` | invalid | reject | reject | yes |
+| `020-signature-trailing-newline.json` | invalid | reject | reject | yes |
+| `021-timestamp-non-ascii-digits.json` | invalid | reject | reject | yes |
+| `022-outcome-not-a-string.json` | invalid | reject | reject | yes |
+| `023-policy-lone-surrogate.json` | invalid | reject | reject | yes |
 
 ## Reproducing this
 

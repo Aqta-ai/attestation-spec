@@ -9,17 +9,91 @@ own versioning contract described in [CONFORMANCE.md](./CONFORMANCE.md).
 
 ## [Unreleased]
 
+## [1.2.7] - 2026-09-29
+
+### Fixed
+
+- **The Python verifier accepted a trailing line feed that the TypeScript verifier rejected.**
+  Found in internal adversarial review on 29 September 2026. The Python verifier applied its
+  format patterns with `re.match` and a `$` anchor, and Python's `$` matches at the end of the
+  string and also just before a final line feed. A record whose `request_hash`, `args_hash`,
+  `intent_hash` or `timestamp` ended in `\n`, signed that way by the issuer, therefore verified
+  in Python and failed in TypeScript, where `$` matches only at the end of the input. It is not
+  a forgery path, because the line feed has to be inside what the issuer signed, but it broke
+  the rule that both reference verifiers return the same verdict on the same bytes. Every
+  pattern in the Python package is now applied with `fullmatch()`.
+- **The Python verifier accepted non-ASCII digits in a timestamp.** Found in the same review by
+  sweeping every pattern and string check in both packages for the class. Python's `\d` matches
+  any Unicode decimal digit unless `re.ASCII` is set, and JavaScript's matches only `0` to `9`,
+  so a signed timestamp written in fullwidth (`２０２６`), Arabic-Indic or Devanagari digits
+  verified in Python and failed in TypeScript. Every pattern in the Python package is now
+  compiled with `re.ASCII`, so the pattern text the two verifiers share also means the same
+  thing in both.
+- The same two defaults reached beyond those four fields. An `anchor-v1` envelope whose
+  `signature_b64` was padded and ended in a line feed verified in Python and failed in
+  TypeScript; that field is outside what is signed, so anyone holding a genuine envelope could
+  produce the split, though only under the explicit `--envelope anchor-v1` opt-in. In history
+  bundles, a head's timestamp or a `record_timestamp` ending in a line feed or written in
+  non-ASCII digits returned `consistent` or `timestamp_contradiction` in Python where
+  TypeScript returned `invalid_head` or `invalid_proof`; `record_timestamp` is signed by
+  nothing in a bundle, so whoever assembles one controls it. A receipt signature or public key,
+  or a tree head signature or key, ending in a line feed was already refused by both, for
+  different reasons; both now give the TypeScript reason.
+- **The Python verifier raised instead of returning a verdict on two inputs.** An ATTESTATION-v1
+  `outcome` that was a list or an object raised `TypeError` from a set lookup, and a lone
+  surrogate in `policy_applied`, under either profile, raised `UnicodeEncodeError` while
+  building the UTF-16 sort key. TypeScript returned invalid for both. Python now checks the
+  outcome's type first and builds the sort key with `surrogatepass`, which orders a lone
+  surrogate by code unit exactly as JavaScript does.
+- **A signed tree head holding a lone surrogate verified in TypeScript and crashed Python.** A
+  head's signed bytes carry its `org_id` or `timestamp` as UTF-8, and a lone surrogate has no
+  UTF-8 form: `TextEncoder` writes U+FFFD in its place and Python's encoder raises. A head
+  signed over U+FFFD therefore verified in TypeScript under any lone-surrogate spelling of that
+  character. Both verifiers now refuse it with `head contains an unpaired surrogate`.
+- **The Python `aqta-verify-proof` did not read input as `aqta-verify-receipt` does.** Invalid
+  UTF-8 escaped as a traceback with exit 1 where the TypeScript command exits 2, and `NaN` or
+  `Infinity` was accepted, so a genuine proof with `"x": NaN` added verified in Python and was
+  refused as not JSON by TypeScript. Both now exit 2, with the receipt command's messages.
+- `examples/reference-action-issuer.py` and `examples/reference-acceptance-issuer.py` checked
+  hashes with the same `match()` and could sign a hash ending in a line feed. They now use
+  `fullmatch()` with `re.ASCII`.
+
 ### Added
 
-- History bundles: `assessHistory` (TypeScript) and `assess_history` (Python) assess several
-  signed heads, consistency proofs and inclusion proofs together and return a named verdict
-  (`invalid_head`, `equivocation`, `unsigned_root`, `fork`, `invalid_proof`,
-  `timestamp_contradiction`, `consistent`), in a fixed precedence both implementations share.
-  `aqta-verify-proof` recognises a document carrying `heads` as a bundle and needs `--key`;
-  its `--json` output gains `verdict`. Twelve bundles in `test-vectors/transparency/adversary/`
-  pin the adversary classes A1, A3, A4 and A6 from ISSUER-ADVERSARY.md, including three that pin
-  limits rather than detections: lag is not backdating, no A2 bundle exists, and the timestamp
-  grammar is strict (`YYYY-MM-DDTHH:MM:SSZ`; builders normalise, verifiers never parse dates). The interop sweep covers the new bucket.
+- Conformance vectors for each class above, refused by both verifiers with the same reason:
+  ATTESTATION-v1 `invalid/018` to `invalid/023` and ACTION-v1 `invalid/017` to `invalid/023`
+  (a line feed after each hash, the timestamp and the signature; non-ASCII timestamp digits; a
+  non-string outcome; a lone surrogate in `policy_applied`). Where the defect is in a signed
+  field the vector carries a valid signature over it, so only the named rule can refuse it.
+  The receipt suite is now 67 vectors: 33 ATTESTATION-v1 and 34 ACTION-v1.
+- Four history bundles hold the bundle timestamp grammar to the whole string in ASCII digits,
+  for a head's timestamp and for a record's claimed time, and two signed tree head vectors pin
+  the lone surrogate case.
+- History bundles, committed after 1.2.6 and first published in this release: `assessHistory`
+  (TypeScript) and `assess_history` (Python) assess several signed heads, consistency proofs
+  and inclusion proofs together and return a named verdict (`invalid_head`, `equivocation`,
+  `unsigned_root`, `fork`, `invalid_proof`, `timestamp_contradiction`, `consistent`), in a
+  fixed precedence both implementations share. `aqta-verify-proof` recognises a document
+  carrying `heads` as a bundle and needs `--key`; its `--json` output gains `verdict`. Sixteen
+  bundles in `test-vectors/transparency/adversary/` pin the adversary classes A1, A3, A4 and A6
+  from ISSUER-ADVERSARY.md, including bundles that pin limits rather than detections: lag is
+  not backdating, no A2 bundle exists, and the timestamp grammar is strict
+  (`YYYY-MM-DDTHH:MM:SSZ`; builders normalise, verifiers never parse dates). The interop sweep
+  covers the bucket.
+- `scripts/differential-fuzz.mjs` re-signs a set of grammar mutants with the vector key, so a
+  lenient grammar check shows as a divergence instead of hiding behind a failed signature:
+  every timestamp digit rewritten in fullwidth and in Arabic-Indic, and five trailing
+  characters on each hash and on the timestamp. Its `sig+nl` probe appended a backslash and the
+  letter n rather than a line feed; it now appends a line feed. `scripts/bytes-interop-sweep.mjs`
+  also runs both `aqta-verify-proof` commands over the byte vectors.
+
+### Changed
+
+- The TypeScript verifier's reason for a non-string ATTESTATION-v1 `outcome` is now `outcome
+  must be a string`, the reason ACTION-v1 already gave and the Python verifier now gives. A
+  string outside the enumeration still reads `invalid outcome: ...`.
+- `spec/ATTESTATION-v1.md` and `spec/ACTION-v1.md` state in section 7 that the format checks
+  match the whole value with ASCII digits. No wire-format change.
 
 ## [1.2.6] - 2026-09-12
 
@@ -51,8 +125,6 @@ own versioning contract described in [CONFORMANCE.md](./CONFORMANCE.md).
   each file and fails on any disagreement. `scripts/differential-fuzz.mjs` claimed byte-level
   coverage but wrote JavaScript strings, which cannot contain an invalid byte; the new sweep is
   where that class now lives.
-
-## [Unreleased]
 
 ## [1.2.5] - 2026-09-10 (verifier divergence on `policy_applied` ordering)
 
