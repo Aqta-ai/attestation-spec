@@ -5,7 +5,7 @@
 **Last updated:** 2026-08-23
 **Sibling specifications:** [ATTESTATION-v1](./ATTESTATION-v1.md) (model-call decisions) and [ACTION-v1](./ACTION-v1.md) (agent tool actions). This document defines a third record type in the same family: same key, same canonicalisation, same verification model, different subject.
 **Reference issuer:** [examples/reference-acceptance-issuer.py](../examples/reference-acceptance-issuer.py)
-**Reference verifiers:** `aqta-verify-receipt` (planned v1.2.0; explicit profile opt-in required).
+**Reference verifiers:** not yet supported by a published `aqta-verify-receipt` release; support will require explicit profile opt-in.
 
 ---
 

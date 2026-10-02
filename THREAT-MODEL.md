@@ -4,9 +4,9 @@ A self-authored adversarial analysis of our own system. We wrote this because a 
 format that does not state its own trust assumptions is asking to be trusted, which is the
 failure mode this project exists to remove. Reporting a flaw: see [SECURITY.md](./SECURITY.md).
 
-Scope: the ATTESTATION-v1 envelope, the published reference verifiers (v1.0.7 on
-npm and PyPI; pinning required by default), and the production Seal issuer
-(signing in production).
+Scope: the ATTESTATION-v1 envelope, the published reference verifiers (current
+release on npm and PyPI; pinning required by default), and the production Seal
+issuer (signing in production).
 
 ## What a receipt actually proves
 
@@ -37,7 +37,7 @@ would help is called out honestly under each gap.
 **Signature forgery (outsider).** Breaking Ed25519 or the canonicalisation. Mitigated by
 standard cryptography (RFC 8032 over canonical JSON) and by verifier strictness: the
 published verifier rejects unknown top-level fields and malformed values, and the repository
-ships conformance vectors (10 valid, 15 adversarial) an independent implementation must agree on.
+ships conformance vectors, valid and adversarial, that an independent implementation must agree on.
 Residual risk: implementation bugs; both verifiers are open source and deliberately small.
 
 **Key substitution (the important subtlety).** A receipt is self-verifying against its own
@@ -82,9 +82,11 @@ business events should key on `attestation_id`.
 
 **Omission (A5).** Because v1 receipts are not chained, a verifier holding some receipts
 cannot tell whether others were withheld: per-receipt verification sees presence, never
-absence. Denied requests are audit-logged rather than receipt-signed, so the receipt stream
-alone is deliberately not a complete account of traffic and is not presented as one.
-Completeness needs an anchored, publicly auditable log; that is roadmap, not shipped.
+absence. Refusals have been receipt-signed alongside allowed calls since 16 July 2026, and
+since 27 August 2026 receipts are entered in a public append-only log (RFC 6962) that serves
+inclusion and consistency proofs. A reviewer can therefore check that a receipt they hold was
+logged and that the log only grew. That still does not show that every request produced a
+receipt: omission stays open, as [ISSUER-ADVERSARY.md](./ISSUER-ADVERSARY.md) states.
 
 **Quantum adversary.** Ed25519 is not post-quantum secure; a cryptographically relevant
 quantum computer forges against any captured public key. Crypto-agility in v1 comes from the

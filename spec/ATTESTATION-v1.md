@@ -19,9 +19,10 @@ third party holding the public key can verify a receipt **without trusting the
 issuing gateway's servers**.
 
 The format is intended as a lowest-common-denominator interchange format for
-audit-evidence pipelines under the EU AI Act, DORA, SR 11-7, and equivalent
-frameworks where a post-hoc log is not sufficient and cryptographic proof of
-the enforcement decision is required.
+audit-evidence pipelines, for example under DORA, bank model-risk guidance such
+as SR 11-7, or the EU AI Act, where the enforcement decision has to be checkable
+by a third party rather than taken on trust from a post-hoc log. None of those
+frameworks prescribes this format.
 
 ## 2. Scope
 
@@ -171,7 +172,7 @@ bump the receipt `v` version.
 
 ## 7. Verification
 
-Counsel-grade verification answers "did this issuer sign this receipt?", not
+Pinned verification answers "did this issuer sign this receipt?", not
 merely "is this receipt internally consistent?". A receipt embeds its own
 `public_key`; verifying against that embedded key alone only proves someone
 who held some key signed it. Anyone can self-sign a forged receipt.
@@ -275,9 +276,10 @@ Signed receipt (same payload with signature appended):
 ## 10. Security Considerations
 
 - **Private-key storage.** The issuer's private key MUST be held in a secure
-  environment. The reference implementation loads it from an environment
-  variable sourced from AWS Secrets Manager or equivalent. Compromise of the
-  private key invalidates every subsequent receipt.
+  environment, such as a managed secret store, an HSM or an enclave. The
+  reference issuer in this repository is for vectors and interop only and holds
+  no production key. Compromise of the private key invalidates every
+  subsequent receipt.
 - **Clock skew.** `timestamp` is self-attested by the issuer. Verifiers
   concerned with freshness MUST cross-reference against a trusted time
   source.
@@ -296,9 +298,9 @@ Signed receipt (same payload with signature appended):
 | TypeScript / Node (verify) | `aqta-verify-receipt` (npm; see registry for latest) | [packages/verify-receipt](../packages/verify-receipt) |
 | Python (minimal reference issuer) | stand-alone example | [examples/reference-issuer.py](../examples/reference-issuer.py) |
 
-A conformant production issuer additionally manages the private signing key
-in a secure enclave, enforces policy before signing, and persists receipts
-to a tamper-evident log. The [Seal](https://app.aqta.ai) managed service
+A production issuer additionally protects the private signing key (see §10),
+enforces policy before signing, and persists receipts to a tamper-evident
+log. The [Seal](https://app.aqta.ai) managed service
 is the canonical production issuer; the stand-alone reference issuer in
 this repository covers only the format requirements of §4 to §6.
 
@@ -410,6 +412,10 @@ For any deployment using ATTESTATION-v1, the residual risk is:
 
 ## 13. Change Log
 
+- **Editorial (2026-10-02).** §1 no longer reads as though the frameworks it
+  names require cryptographic proof. §7 says "pinned verification". §10 and
+  §11 describe key storage without naming a specific cloud service or
+  implying that every production issuer uses an enclave. No wire-format change.
 - **Clarification (2026-09-29).** §7 states that the format checks match the
   whole value with ASCII digits. The Python reference verifier accepted a
   trailing line feed and non-ASCII digits until `aqta-verify-receipt` 1.2.7.

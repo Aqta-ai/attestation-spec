@@ -277,15 +277,16 @@ replay and `action_id` deduplication) apply unchanged. Additionally:
 
 ## 12. Reference Implementations
 
-- Reference issuer: `examples/reference-action-issuer.py` (planned with the
-  first vector generation; shares canonicalisation code with
-  `reference-issuer.py`).
+- Reference issuer: `examples/reference-action-issuer.py` (shares
+  canonicalisation code with `reference-issuer.py`).
 - Reference verifiers: `packages/verify-receipt` (TypeScript) and
-  `packages/verify-receipt-py` (Python), both gaining an explicit ACTION-v1
-  profile in v1.1.0. Conformance vectors live in `test-vectors/action/`.
+  `packages/verify-receipt-py` (Python), both with an explicit ACTION-v1
+  profile since v1.1.0. Conformance vectors live in `test-vectors/action/`.
 
 ## 13. Change Log
 
+- **Editorial (2026-10-02).** §12 no longer describes the reference issuer and
+  verifiers as planned; both have shipped since 1.1.0. No wire-format change.
 - **Clarification (2026-09-29).** §7 states that the format checks match the
   whole value with ASCII digits. The Python reference verifier accepted a
   trailing line feed and non-ASCII digits until `aqta-verify-receipt` 1.2.7.

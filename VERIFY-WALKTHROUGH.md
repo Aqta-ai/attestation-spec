@@ -13,13 +13,13 @@ out honestly in [THREAT-MODEL.md](./THREAT-MODEL.md).
 
 ## 1. Install the published verifier (about 10 seconds)
 
-TypeScript/Node (current counsel-grade release; pinning required by default):
+TypeScript/Node (current release; pinning required by default):
 
 ```bash
 npm install aqta-verify-receipt
 ```
 
-Python (registry catch-up may lag npm; always pass `trusted_public_key`):
+Python (always pass `trusted_public_key`):
 
 ```bash
 pip install aqta-verify-receipt

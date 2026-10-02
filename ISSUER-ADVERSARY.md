@@ -1,6 +1,6 @@
 # The issuer as adversary
 
-Every one of the fifteen adversarial vectors in [`test-vectors/invalid/`](./test-vectors/invalid)
+Every adversarial vector in [`test-vectors/invalid/`](./test-vectors/invalid)
 attacks a receipt **after it was signed**: a flipped field, a swapped key, a
 malformed timestamp, an extra property. They model a third party interfering
 with evidence in transit or at rest.
