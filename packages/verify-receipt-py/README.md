@@ -33,7 +33,7 @@ Invalid:
 ✕ invalid  signature mismatch  2d41…871e94c
 ```
 
-Optional flourish (never the proof):
+Optional human-readable summary (the compact line and exit code are the result):
 
 ```bash
 aqta-verify-receipt receipt.json --key <pinned> --pretty
@@ -44,7 +44,7 @@ aqta-verify-receipt receipt.json --key <pinned> --pretty
 Or pipe:
 
 ```bash
-curl -sS https://api.aqta.ai/r/YOUR_RECEIPT_ID | aqta-verify-receipt - \
+curl -sS https://api.aqta.ai/v1/receipts/YOUR_RECEIPT_ID/public | aqta-verify-receipt - \
   --key 9Y3Eiq6V8QjRDUM5nPqSwKIOPQaoEU4SbagfYFdvWa4
 ```
 
@@ -89,7 +89,7 @@ aqta-verify-receipt <file|-> --integrity-only [--no-strict] [--json] [--pretty] 
 | `--integrity-only` | Signature vs embedded key only; returns untrusted. Anyone can self-sign. |
 | `--no-strict` | Allow unknown top-level fields |
 | `--json` | One JSON object on stdout |
-| `--pretty` | Optional human flourish after the compact line (not the proof) |
+| `--pretty` | Optional human-readable summary after the compact line |
 | `-q` | Silent; exit code only |
 
 `NO_COLOR=1` disables colour. Meaning never depends on colour alone.
@@ -122,11 +122,11 @@ An inclusion proof establishes that what you were shown is genuinely in the
 log. It does not establish that what you were **not** shown is irrelevant.
 That is omission, and it is open.
 
-## What this is not
+## Scope
 
-Not a governance dashboard. Not a cost router. A small verifier for one
-signed model-call receipt. The novel part is the receipt format and offline
-verification model, not ASCII theatre.
+A small offline verifier for signed Seal records and their log proofs. It
+reads a record and a key, and reports a verdict. It does not store, send or
+host records, and it never contacts Aqta.
 
 ## Licence
 

@@ -5,10 +5,10 @@ default. Exit 0 if valid, 1 if not, 2 on usage or IO errors.
 
 Default output is one compact, scriptable line on stdout. Colour is
 presentation only (NO_COLOR / non-TTY disables it). --pretty adds a short
-human flourish; it is never the verification contract.
+human-readable summary; it is never the verification contract.
 
     aqta-verify-receipt receipt.json --key <base64url>
-    curl -sS https://api.aqta.ai/r/ID | aqta-verify-receipt - --key <base64url>
+    curl -sS https://api.aqta.ai/v1/receipts/ID/public | aqta-verify-receipt - --key <base64url>
     aqta-verify-receipt receipt.json --key <base64url> --json
     aqta-verify-receipt receipt.json --key <base64url> --pretty
 """
@@ -139,7 +139,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--pretty",
         action="store_true",
-        help="optional human flourish after the compact line",
+        help="optional human-readable summary after the compact line",
     )
     parser.add_argument(
         "-q",

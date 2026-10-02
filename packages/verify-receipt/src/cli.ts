@@ -7,10 +7,10 @@
  *
  * Default output is one compact, scriptable line on stdout. Colour is
  * presentation only (NO_COLOR / non-TTY disables it). --pretty adds a short
- * human flourish; it is never the verification contract.
+ * human-readable summary; it is never the verification contract.
  *
  *   npx aqta-verify-receipt receipt.json --key <base64url-ed25519-key>
- *   curl -sS https://api.aqta.ai/r/REC_ID | npx aqta-verify-receipt - --key <key>
+ *   curl -sS https://api.aqta.ai/v1/receipts/REC_ID/public | npx aqta-verify-receipt - --key <key>
  *   npx aqta-verify-receipt receipt.json --key <key> --json
  *   npx aqta-verify-receipt receipt.json --key <key> --pretty
  */
@@ -57,7 +57,7 @@ Options:
   --profile <name>   verify under a named profile (action-1 for ACTION-v1 records)
   --no-strict        allow unknown top-level fields
   --json             machine JSON on stdout (one object)
-  --pretty           optional human flourish after the compact line
+  --pretty           optional human-readable summary after the compact line
   -q, --quiet        exit code only
 
 Contract:
