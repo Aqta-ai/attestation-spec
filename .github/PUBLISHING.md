@@ -10,10 +10,6 @@ Canonical workflows:
 - PyPI: [`.github/workflows/release-pypi.yml`](./workflows/release-pypi.yml) on tags `pyverify-v*`
 - npm: [`.github/workflows/release-npm.yml`](./workflows/release-npm.yml) on tags `tsverify-v*`
 
-[`publish.yml`](./workflows/publish.yml) is a secondary npm path that triggers
-on a GitHub Release publish. Prefer the tag workflows above unless you are
-backfilling a Release-driven publish.
-
 ---
 
 ## PyPI: trusted publishing (recommended)

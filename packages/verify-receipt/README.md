@@ -110,7 +110,7 @@ aqta-verify-receipt <file|-> --integrity-only [options]
 
 | Flag | Meaning |
 |------|---------|
-| `--key` | Pin issuer identity (required for counsel-grade). |
+| `--key` | Pin the issuer key. Required unless `--integrity-only`. |
 | `--integrity-only` | Signature vs embedded key only; returns untrusted. Anyone can self-sign. |
 | `--no-strict` | Allow unknown top-level fields |
 | `--json` | One JSON object on stdout |

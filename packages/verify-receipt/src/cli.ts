@@ -51,7 +51,7 @@ Usage:
   aqta-verify-receipt <receipt.json | -> --integrity-only [options]
 
 Options:
-  --key <key>        pin the issuer public key (required for counsel-grade)
+  --key <key>        pin the issuer public key (required unless --integrity-only)
   --integrity-only   check signature vs embedded key only (anyone can self-sign)
   --envelope <name>  opt in to a non-ATTESTATION-v1 envelope (e.g. anchor-v1)
   --profile <name>   verify under a named profile (action-1 for ACTION-v1 records)

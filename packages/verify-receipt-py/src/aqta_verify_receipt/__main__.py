@@ -104,7 +104,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--key",
         dest="key",
-        help="trusted Ed25519 public key (base64url); required for counsel-grade",
+        help="trusted Ed25519 public key (base64url); pins the issuer",
     )
     parser.add_argument(
         "--integrity-only",
