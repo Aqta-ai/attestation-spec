@@ -12,8 +12,8 @@ question. It does not.
     curl -s https://api.aqta.ai/v1/public/transparency/proof/<id> | aqta-verify-proof -
 
 Verdicts, exit codes and the document sniffing match the TypeScript command of
-the same name byte for byte, because a bounty class nobody outside can exercise
-in both languages is not a bounty class.
+the same name byte for byte, because a check that only one of the two
+implementations can run cannot be compared across them.
 
 Exit 0 valid, 1 invalid, 2 usage or IO.
 """

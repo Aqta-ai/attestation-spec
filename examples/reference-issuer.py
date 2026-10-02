@@ -11,7 +11,7 @@ Useful for:
 
 This code is *not* a production issuer. A real issuer (like the Seal
 managed service at https://aqta.ai) additionally:
-  - Manages the private signing key in a secure enclave or KMS;
+  - Keeps the private signing key in a secret manager, HSM or enclave;
   - Enforces policy, budget, and loop-detection before signing;
   - Persists signed receipts to a tamper-evident audit log;
   - Integrates with LLM providers and returns receipts inline with API

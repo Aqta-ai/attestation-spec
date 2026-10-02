@@ -459,8 +459,8 @@ def verify_receipt(
     receipt
         The full receipt dict including the ``signature`` field.
     trusted_public_key
-        Base64url public key (no padding). Required for a counsel-grade check:
-        the receipt must carry this key and verify under it.
+        Base64url public key (no padding). Required to check who issued the
+        receipt: the receipt must carry this key and verify under it.
     allow_untrusted_embedded_key
         If True, verify against the embedded ``public_key`` without pinning.
         Result includes ``key_source="untrusted"``. Default False.

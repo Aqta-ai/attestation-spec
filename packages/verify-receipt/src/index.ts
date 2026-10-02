@@ -52,8 +52,8 @@ export interface ActionRecord {
 
 export interface VerifyOptions {
   /**
-   * Trusted issuer public key (base64url, no padding). Required for a
-   * counsel-grade check: the receipt must carry this key and verify under it.
+   * Trusted issuer public key (base64url, no padding). Required to check who
+   * issued the receipt: the receipt must carry this key and verify under it.
    *
    * Omit only with `allowUntrustedEmbeddedKey: true` for integrity-only
    * checks against whatever key the receipt embeds (anyone can self-sign).

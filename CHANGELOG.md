@@ -405,7 +405,7 @@ command-line wrapper both packages ship.
 - Package pages (npm and PyPI READMEs) and the repository root now show the
   Seal mark as an image (`aqta.ai/brand/seal-mark-512.png`) in place of the
   block ASCII banner.
-- Two remaining internal product-name parentheticals removed from
+- Two remaining references to the previous product name removed from
   `CHANGELOG.md` and `spec/ATTESTATION-v1.md`, and the GitHub repository
   "About" field re-branded to Seal.
 
@@ -509,7 +509,8 @@ command-line wrapper both packages ship.
 - Spec wording: "enforcement gateway" instead of "governance gateway".
 - Dual-licence layout: Apache-2.0 root `LICENSE`; CC-BY-4.0 for `spec/` in
   `LICENSE-SPEC`.
-- Package READMEs aligned with enforcement wedge; both pubkey URLs documented.
+- Package READMEs lead with enforcement (allow or block before the model
+  runs); both pubkey URLs documented.
 - CI runs the 14 test vectors on Python and TypeScript.
 - Community health: `CODE_OF_CONDUCT.md`, issue/PR templates, examples README.
 - Wiki disabled; GitHub Release for tag `v1.0.0` (package Latest remains
@@ -519,8 +520,8 @@ command-line wrapper both packages ship.
 
 - Root README no longer claims TypeScript npm publication is pending.
   `aqta-verify-receipt` is published on both PyPI and npm.
-- README reframed around the enforcement wedge (gateway allow/block before
-  the model runs), with an ordinary-logs comparison, live browser verifier
+- README reframed around enforcement (gateway allow/block before the model
+  runs), with an ordinary-logs comparison, live browser verifier
   link, and an honest "relationship to open standards" section (SCITT /
   COSE / W3C VC / in-toto adjacent, not conforming).
 
@@ -568,13 +569,12 @@ were doc fixes only; no behaviour change in either verifier.
   find the known-good and known-bad receipts directly.
 - Badge row on the Python and TypeScript package READMEs (PyPI
   version, Python versions, CI status, licence; npm version, CI,
-  licence). First impression for visitors landing on the package
-  pages.
+  licence).
 
 ### `aqta-verify-receipt` 1.0.1 (PyPI and npm 2026-04-24)
 
-**Why:** Initial 1.0.0 release linked to a private internal
-repository (`aqta-app`) which returns 404 for external users.
+**Why:** Initial 1.0.0 release linked to a private repository, which
+returns 404 for external users.
 Republished with all package-metadata URLs pointing to the public
 [`Aqta-ai/attestation-spec`](https://github.com/Aqta-ai/attestation-spec)
 repository.

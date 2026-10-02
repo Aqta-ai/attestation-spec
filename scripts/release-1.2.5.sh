@@ -38,9 +38,9 @@ echo "== pypi"
 
 echo "== confirm both registries serve 1.2.5, then push"
 npm view aqta-verify-receipt version
-# curl, not urllib: this machine's python has no CA bundle for pypi.org, and on
-# 10 Sep 2026 that aborted the script AFTER both uploads had succeeded, leaving
-# the repo unpushed and the run looking like a failed release.
+# curl, not urllib: a Python build without a CA bundle for pypi.org fails this
+# check after both uploads have succeeded, which leaves the repo unpushed and
+# makes a good release look like a failed one.
 echo -n 'pypi: '; curl -sf https://pypi.org/pypi/aqta-verify-receipt/json | python3 -c "import sys,json;print(json.load(sys.stdin)['info']['version'])"
 git push origin main
 echo "done: packages published, repo pushed"

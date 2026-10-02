@@ -26,8 +26,8 @@ const FIXTURE_RECEIPT = {
   policy_applied: ['budget_guard', 'loop_guard'],
   cost_prevented_eur: 0.0,
   timestamp: '2026-04-23T10:15:30.123456+00:00',
-  public_key: '', // populated by make-test-fixture.py
-  signature: '',  // populated by make-test-fixture.py
+  public_key: '', // left empty: signed interop runs in scripts/make-interop-fixture.mjs
+  signature: '',  // left empty, see above
 };
 
 test('rejects empty object', () => {
@@ -58,7 +58,7 @@ test('rejects unsupported version', () => {
 });
 
 test('rejects invalid outcome', () => {
-  const bad = { ...FIXTURE_RECEIPT, outcome: 'YOLO' } as any;
+  const bad = { ...FIXTURE_RECEIPT, outcome: 'MAYBE' } as any;
   const res = verifyReceipt(bad, { allowUntrustedEmbeddedKey: true });
   assert.equal(res.valid, false);
   assert.match(res.reason ?? '', /invalid outcome/);
@@ -85,9 +85,9 @@ test('rejects pinned-key mismatch', () => {
   assert.match(res.reason ?? '', /does not match trusted key/);
 });
 
-// Note: full signature-verification interop test requires the fixture to be
-// populated by `scripts/make-test-fixture.py` before running this suite.
-// When FIXTURE_RECEIPT.signature is empty, the signature check is skipped.
+// Signature-level interop is covered by `scripts/make-interop-fixture.mjs`,
+// which signs a receipt with the reference issuer. The fixture here carries an
+// empty signature, so this test checks that it is refused.
 test('signature decoder rejects empty signature when integrity-only', () => {
   const res = verifyReceipt(FIXTURE_RECEIPT, {
     allowUntrustedEmbeddedKey: true,

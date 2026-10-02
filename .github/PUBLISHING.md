@@ -1,8 +1,9 @@
 # Publishing setup
 
 How to release verifier library versions from this repository
-using **trusted publishing via GitHub Actions OIDC** (Sigstore provenance,
-no long-lived registry tokens in GitHub secrets).
+using **trusted publishing via GitHub Actions OIDC** where the registry supports
+it (Sigstore provenance). The PyPI path uses no token. The npm tag workflow
+still reads a granular `NPM_TOKEN` repository secret, set up as described below.
 
 Canonical workflows:
 
@@ -53,7 +54,7 @@ git push origin pyverify-v1.0.3
 
 GitHub Actions builds, validates, and publishes. No tokens involved.
 
-### Migrating from the personal account (optional, recommended)
+### Moving ownership to an organisation account (optional)
 
 If `aqta-verify-receipt` is currently owned by a personal PyPI account,
 PyPI Organisations (in beta) lets you transfer ownership to an
@@ -67,9 +68,8 @@ organisation account:
 4. Remove the personal account once the organisation is verified to
    own the project.
 
-This step is optional but improves institutional trust; auditors who
-inspect the PyPI page see a corporate publisher rather than an
-individual.
+This step is optional. Publishing then does not depend on one person's
+account, and the PyPI page names the organisation as publisher.
 
 ---
 
@@ -121,9 +121,9 @@ under it:
 
 ## Security: rotate any tokens that have been pasted to a third party
 
-Tokens used during interactive setup (typed into chat windows, pasted
-into config files, shared with collaborators, etc.) should be revoked
-once trusted publishing is configured:
+Tokens used during interactive setup (pasted into config files or
+terminals, shared with collaborators, and so on) should be revoked once
+trusted publishing is configured:
 
 - **PyPI tokens**:
   <https://pypi.org/manage/account/token/> → delete each unused token.
