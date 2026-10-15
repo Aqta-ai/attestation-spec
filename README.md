@@ -133,6 +133,26 @@ node scripts/make-interop-fixture.mjs
 node scripts/transparency-interop-sweep.mjs
 ```
 
+## Cross-language pitfalls
+
+The two reference verifiers, TypeScript and Python, must return the same verdict on the same
+bytes. These defaults differ between the languages and each one caused a divergence that is now
+pinned by a vector:
+
+| Pitfall | What differs | Fixed in |
+|---|---|---|
+| String ordering | JavaScript sorts by UTF-16 code unit; Python's `sorted()` sorts by code point. They split once a character outside the BMP appears. Sort by `s.encode("utf-16-be", "surrogatepass")` in Python. | [1.2.5](./CHANGELOG.md) |
+| Number formatting | Canonical numbers follow ECMA-262 `Number::toString` (RFC 8785), not Python's `repr`. They disagree for `0 < abs(x) < 1e-4`. | [CHANGELOG](./CHANGELOG.md) |
+| Invalid UTF-8 | Node's `readFileSync(file, "utf8")` replaces bad bytes with U+FFFD. Decode with a fatal decoder in both. | [1.2.6](./CHANGELOG.md) |
+| End anchors | Python's `$` also matches before a final line feed. Use `fullmatch()`. | [1.2.7](./CHANGELOG.md) |
+| Digits | Python's `\d` matches any Unicode digit unless `re.ASCII` is set. | [1.2.7](./CHANGELOG.md) |
+| Lone surrogates | They have no UTF-8 form: `TextEncoder` writes U+FFFD and Python raises. Refuse them explicitly. | [1.2.7](./CHANGELOG.md) |
+
+Every class has vectors under [`test-vectors/`](./test-vectors/), and the sweeps in
+[`scripts/`](./scripts/) (`action-interop-sweep.mjs`, `bytes-interop-sweep.mjs`,
+`transparency-interop-sweep.mjs`, `differential-fuzz.mjs`) run both implementations over them in
+CI and fail on any disagreement. If you write a third verifier, run it against the same vectors.
+
 ## Attribution
 
 Please credit the authors when you implement, fork, cite, or redistribute.
