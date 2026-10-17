@@ -161,6 +161,17 @@ def generate_invalid() -> None:
     payload["signature"] = _b64.urlsafe_b64encode(sig).decode().rstrip("=")
     _write(INVALID, "015-escaped-unicode-signing.json", payload)
 
+    # 016 and 017: ACCEPT-v1 records whose only change is the declared
+    # version tag, re-signed so only the version check can refuse them. 006
+    # changes the tag after signing and so also fails on the signature.
+    for n, name, tag in ((0x20, "016-action-version-tag.json", "action-1"),
+                         (0x21, "017-attestation-version-tag.json", 1)):
+        payload = {k: v for k, v in base(n).items() if k != "signature"}
+        payload["v"] = tag
+        sig = ISSUER.private_key.sign(_acc.canonical_payload(payload))
+        payload["signature"] = _b64.urlsafe_b64encode(sig).decode().rstrip("=")
+        _write(INVALID, name, payload)
+
 
 if __name__ == "__main__":
     print(f"ACCEPT-v1 vector key: {ISSUER.public_key_b64}")

@@ -1,0 +1,51 @@
+{
+  "args": {
+    "count": 2,
+    "items": [
+      {
+        "\uff21": 1,
+        "\ud800\udc00": 2
+      }
+    ],
+    "options": {
+      "\ue000": false,
+      "\ud83d\ude00": true
+    }
+  },
+  "args_hash": "a151cbb2cfe81a1fa468d4ffaf6df714701eba623703afc9e7571e13b87e9a0d",
+  "canonical_hex": "7b22636f756e74223a322c226974656d73223a5b7b22f0908080223a322c22efbca1223a317d5d2c226f7074696f6e73223a7b22f09f9880223a747275652c22ee8080223a66616c73657d7d",
+  "code_point_order_args_hash": "3030216dde6cabc5e36e8089a9beeacd5e7321cd62ff753e750d81d9aa2da89b",
+  "code_point_order_hex": "7b22636f756e74223a322c226974656d73223a5b7b22efbca1223a312c22f0908080223a327d5d2c226f7074696f6e73223a7b22ee8080223a66616c73652c22f09f9880223a747275657d7d",
+  "description": "Non-BMP and U+E000 to U+FFFF names inside a nested object and inside an object within an array. Ordering applies at every depth.",
+  "envelope": {
+    "count": 2,
+    "items": [
+      {
+        "\uff21": 1,
+        "\ud800\udc00": 2
+      }
+    ],
+    "options": {
+      "\ue000": false,
+      "\ud83d\ude00": true
+    },
+    "public_key_b64": "pOaccW6Csyo1POtxjixPH80oux9--YC1tzzaENT4vQ0",
+    "signature_b64": "zguvq2IA2slBMzkBxfcmkM4NJz8TMB9Gc2fLJg-COgOTJoPyTm_gXjvgMpqhgsGsMS-3k6pAQL_fcl7C85JPCg"
+  },
+  "envelope_code_point_order": {
+    "count": 2,
+    "items": [
+      {
+        "\uff21": 1,
+        "\ud800\udc00": 2
+      }
+    ],
+    "options": {
+      "\ue000": false,
+      "\ud83d\ude00": true
+    },
+    "public_key_b64": "pOaccW6Csyo1POtxjixPH80oux9--YC1tzzaENT4vQ0",
+    "signature_b64": "_PT5Wp9pbpefBUDMQS2NG1vDr-dG9-fDH6isf72xQPkbV3DLeSR7hUwQMXbI5KhL1i-krop5HXA5E565gJmJAw"
+  },
+  "orders_differ": true
+}

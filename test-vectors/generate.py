@@ -35,8 +35,23 @@ _ref = importlib.util.module_from_spec(_spec)  # type: ignore[arg-type]
 _spec.loader.exec_module(_ref)  # type: ignore[union-attr]
 
 
+
+def _load(name: str, filename: str):
+    spec = importlib.util.spec_from_file_location(name, _REPO_ROOT / "examples" / filename)
+    mod = importlib.util.module_from_spec(spec)  # type: ignore[arg-type]
+    spec.loader.exec_module(mod)  # type: ignore[union-attr]
+    return mod
+
+
+_act = _load("act_ref", "reference-action-issuer.py")
+_acc = _load("acc_ref", "reference-acceptance-issuer.py")
+
 SEED = hashlib.sha256(b"attestation-spec/test-vectors/v1").digest()
 ISSUER = _ref.ReferenceIssuer.from_seed(SEED)
+# Same key, sibling profiles: the type-confusion vectors (024 to 027) must
+# pass the pin so only the version and structure rules can refuse them.
+ACT_ISSUER = _act.ReferenceActionIssuer.from_seed(SEED)
+ACC_ISSUER = _acc.ReferenceAcceptanceIssuer.from_seed(SEED)
 
 OUTPUT = Path(__file__).parent
 
@@ -343,6 +358,33 @@ def main() -> None:
         "invalid/023-policy-lone-surrogate.json",
         {**base, "policy_applied": ["\ud800", "budget_guard"]},
     )
+
+    # 024 to 027: record-type confusion, each correctly signed under this
+    # suite's key. 024 and 026 are complete records of the sibling profiles;
+    # 025 and 027 are ATTESTATION-v1 receipts whose only change is the
+    # declared version tag, re-signed so only the version check can refuse
+    # them.
+    _write("invalid/024-action-v1-record.json", dict(ACT_ISSUER.sign(
+        org_id="org-test-vectors", agent="claude-code/2.1",
+        tool="github.merge_pull_request",
+        args_hash=_act.args_hash_of({"repo": "example/api", "pr": 41}),
+        outcome="ALLOWED", policy_applied=["budget_guard"],
+        action_id="00000000-0000-0000-0000-000000000024",
+        timestamp="2026-04-23T10:15:30.000000+00:00",
+    )))
+    _write("invalid/025-action-version-tag.json", _sign_raw(_base_payload(v="action-1")))
+    _write("invalid/026-accept-v1-record.json", dict(ACC_ISSUER.sign(
+        org_id="org-test-vectors", subject_v="1",
+        subject_id="00000000-0000-0000-0000-000000000001",
+        subject_hash=_acc.subject_hash_of(_make(
+            "001", outcome="ALLOWED",
+            attestation_id="00000000-0000-0000-0000-000000000001")),
+        decision="ACCEPTED", reviewer_ref="reviewer r-0001",
+        policy_applied=["budget_guard"],
+        acceptance_id="00000000-0000-0000-0000-000000000026",
+        timestamp="2026-04-23T10:15:30.000000+00:00",
+    )))
+    _write("invalid/027-accept-version-tag.json", _sign_raw(_base_payload(v="accept-1")))
 
     print()
     print("All vectors written to test-vectors/.")

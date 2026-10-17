@@ -44,6 +44,8 @@ explicitly for the ACCEPT-v1 profile with the key above pinned.
 | 013-policy-not-sorted | `policy_applied` reordered after signing. |
 | 014-timestamp-no-offset | Timestamp lacks an explicit timezone offset. |
 | 015-escaped-unicode-signing | Signed over `\uXXXX`-escaped bytes; a conformant verifier reconstructs literal UTF-8 and the signature fails. |
+| 016-action-version-tag | An ACCEPT-v1 record whose only change is `v: "action-1"`, re-signed. The signature is valid, so only the version check can refuse it. |
+| 017-attestation-version-tag | The same with `v: 1`, re-signed. Unlike 006 the signature is valid. |
 
 ## What these vectors do not test
 

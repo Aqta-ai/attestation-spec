@@ -122,7 +122,7 @@ class ReferenceIssuer:
             "request_hash": request_hash,
             "model": model,
             "outcome": outcome,
-            "policy_applied": sorted(policy_applied),
+            "policy_applied": sorted(policy_applied, key=utf16_sort_key),
             "cost_prevented_eur": cost,
             "timestamp": timestamp
             or datetime.now(timezone.utc).isoformat(),
@@ -133,6 +133,20 @@ class ReferenceIssuer:
         signature = self.private_key.sign(canonical)
 
         return {**payload, "signature": _b64url_encode(signature)}
+
+
+def utf16_sort_key(s: str) -> bytes:
+    """Sort key for UTF-16 code unit order (spec 6, RFC 8785 section 3.2.3).
+
+    Comparing the UTF-16BE encodings bytewise is code unit order. Python's
+    default str comparison is code point order, which differs whenever a
+    character above U+FFFF (encoded as a surrogate pair starting 0xD800 to
+    0xDBFF) is compared with one in U+E000 to U+FFFF: by code point U+E000
+    comes first, by code unit the supplementary character does.
+    surrogatepass keeps the key total for a lone surrogate, which
+    _canonical then rejects.
+    """
+    return s.encode("utf-16-be", "surrogatepass")
 
 
 def _js_number(x: float) -> str:
@@ -189,7 +203,7 @@ def _canonical(value) -> str:
             "{"
             + ",".join(
                 f"{_canonical(str(k))}:{_canonical(value[k])}"
-                for k in sorted(value.keys())
+                for k in sorted(value.keys(), key=lambda k: utf16_sort_key(str(k)))
             )
             + "}"
         )

@@ -1,0 +1,30 @@
+{
+  "args": {
+    "path": "/tmp/x",
+    "\u4e00": "one",
+    "\uf900": "compat",
+    "\ud840\udc00": "ext-b"
+  },
+  "args_hash": "2cd4c9dc15ddf23bfee1769c4a0b15c4dcf413a943ec22e0ce24a63c1f174f37",
+  "canonical_hex": "7b2270617468223a222f746d702f78222c22e4b880223a226f6e65222c22f0a08080223a226578742d62222c22efa480223a22636f6d706174227d",
+  "code_point_order_args_hash": "27440df40bf70c4b55987f46f03d6db2ab176ecfd69ad95a87a734e770b0b1bd",
+  "code_point_order_hex": "7b2270617468223a222f746d702f78222c22e4b880223a226f6e65222c22efa480223a22636f6d706174222c22f0a08080223a226578742d62227d",
+  "description": "CJK: U+4E00, U+F900 (compatibility ideograph) and U+20000 (Extension B). By code unit U+20000 (0xD840 0xDC00) sorts between U+4E00 and U+F900; by code point it sorts last.",
+  "envelope": {
+    "path": "/tmp/x",
+    "public_key_b64": "pOaccW6Csyo1POtxjixPH80oux9--YC1tzzaENT4vQ0",
+    "signature_b64": "fabt1BUxT0g1lhmVbBH88FtOo4QZETLNCycbQuQMBgbbByykXcHA6QwMCH97LwryLQqBb3E05RhKxwFyMt2CAg",
+    "\u4e00": "one",
+    "\uf900": "compat",
+    "\ud840\udc00": "ext-b"
+  },
+  "envelope_code_point_order": {
+    "path": "/tmp/x",
+    "public_key_b64": "pOaccW6Csyo1POtxjixPH80oux9--YC1tzzaENT4vQ0",
+    "signature_b64": "RmasBUGtVCEuAuld9gOqAkKvlICV0-ssRHKOy03RA4krHqHj9aL0CU0bYiZxbsRFljg37dcAUEL8bFOCV5i5Dw",
+    "\u4e00": "one",
+    "\uf900": "compat",
+    "\ud840\udc00": "ext-b"
+  },
+  "orders_differ": true
+}

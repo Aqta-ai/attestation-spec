@@ -1,0 +1,24 @@
+{
+  "args": {
+    "pr": 41,
+    "repo": "example/api"
+  },
+  "args_hash": "8195fd1a5f2881870e56f68dac8279d80d5bec6a022bd97755409f31fd2740f9",
+  "canonical_hex": "7b227072223a34312c227265706f223a226578616d706c652f617069227d",
+  "code_point_order_args_hash": "8195fd1a5f2881870e56f68dac8279d80d5bec6a022bd97755409f31fd2740f9",
+  "code_point_order_hex": "7b227072223a34312c227265706f223a226578616d706c652f617069227d",
+  "description": "ASCII names only, the argument object used by the other vectors. Both orders agree: the fix changes no hash for ASCII names.",
+  "envelope": {
+    "pr": 41,
+    "public_key_b64": "pOaccW6Csyo1POtxjixPH80oux9--YC1tzzaENT4vQ0",
+    "repo": "example/api",
+    "signature_b64": "7iN8uU9CUxfnJyNrYxdve1AFG6i_l3HnXn6GDTDxbl3UO6qJBPEgH1GJeBvvq2t6rKkzxPyq03-ZIY5HGHYLCg"
+  },
+  "envelope_code_point_order": {
+    "pr": 41,
+    "public_key_b64": "pOaccW6Csyo1POtxjixPH80oux9--YC1tzzaENT4vQ0",
+    "repo": "example/api",
+    "signature_b64": "7iN8uU9CUxfnJyNrYxdve1AFG6i_l3HnXn6GDTDxbl3UO6qJBPEgH1GJeBvvq2t6rKkzxPyq03-ZIY5HGHYLCg"
+  },
+  "orders_differ": false
+}

@@ -46,6 +46,15 @@ const KNOWN_WORDING_DIVERGENCES = new Set([
   'non-object:null',               // "not an object" vs "not a mapping"
   'att/invalid/008-invalid-outcome.json',   // MAYBE vs 'MAYBE'
   'att/invalid/014-boolean-version.json',   // true vs True
+  // Record-type confusion under the ATTESTATION-v1 path. Both verifiers reject.
+  // 025 and 027 differ only in quoting the string tag (action-1 vs 'action-1').
+  // 024 and 026 lack several ATTESTATION-v1 fields: TypeScript names the first
+  // in field order, Python iterates a frozenset and names whichever field its
+  // hash order reaches first, which varies between processes.
+  'att/invalid/024-action-v1-record.json',
+  'att/invalid/025-action-version-tag.json',
+  'att/invalid/026-accept-v1-record.json',
+  'att/invalid/027-accept-version-tag.json',
 ]);
 
 let failures = 0;
@@ -118,6 +127,45 @@ compare('integrity-only', base,
   { profile: 'ACTION-v1', allowUntrustedEmbeddedKey: true },
   { profile: 'ACTION-v1', allow_untrusted_embedded_key: true });
 compare('non-object:null', null, tsOptsPinned, pyOptsPinned);
+
+// Argument-object canonicalisation (test-vectors/action/args). Each file
+// carries the canonical bytes for an argument object whose member names order
+// differently by UTF-16 code unit and by code point. The anchor-v1 envelope is
+// the public entry point that canonicalises arbitrary member names, so a
+// verifier's key order is checked through it: the envelope signed over the
+// code-unit bytes MUST verify, and the one signed over the code-point bytes
+// MUST NOT wherever the two orders differ. The reference issuer's args_hash is
+// checked against the same files.
+console.log('argument canonicalisation vectors:');
+const ARGS_DIR = join(ROOT, 'test-vectors/action/args');
+const argFiles = readdirSync(ARGS_DIR).filter((f) => f.endsWith('.json')).sort();
+const issuerHashes = JSON.parse(execFileSync('python3', ['-c', `
+import hashlib, importlib.util, json, sys
+spec = importlib.util.spec_from_file_location("a", ${JSON.stringify(join(ROOT, 'examples/reference-action-issuer.py'))})
+m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
+vs = json.load(sys.stdin)
+print(json.dumps({k: [m.args_hash_of(v["args"]), m.canonical_payload(v["args"]).hex()] for k, v in vs.items()}))
+`], { input: JSON.stringify(Object.fromEntries(argFiles.map((f) =>
+  [f, JSON.parse(readFileSync(join(ARGS_DIR, f)))]))) }).toString());
+for (const f of argFiles) {
+  const v = JSON.parse(readFileSync(join(ARGS_DIR, f)));
+  const [hash, hex] = issuerHashes[f];
+  if (hash !== v.args_hash || hex !== v.canonical_hex) {
+    failures++;
+    console.log(`  ISSUER MISMATCH args/${f}: ${hash}`);
+  } else {
+    console.log(`  ok   issuer args/${f}: args_hash=${hash.slice(0, 16)}...`);
+  }
+  const envTs = { envelope: 'anchor-v1', trustedPublicKey: PIN };
+  const envPy = { envelope: 'anchor-v1', trusted_public_key: PIN };
+  const good = compare(`args/${f}:code-unit`, v.envelope, envTs, envPy);
+  if (!good.valid) { failures++; console.log('    EXPECTED valid, got invalid'); }
+  const cp = compare(`args/${f}:code-point`, v.envelope_code_point_order, envTs, envPy);
+  if (cp.valid !== !v.orders_differ) {
+    failures++;
+    console.log(`    EXPECTED valid=${!v.orders_differ}, got valid=${cp.valid}`);
+  }
+}
 
 // The ATTESTATION suite must be unaffected: sweep it too.
 console.log('ATTESTATION-v1 regression sweep:');

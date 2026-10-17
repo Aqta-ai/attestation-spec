@@ -118,8 +118,9 @@ Everything above applies, with these differences taken from
    presents `agent` as verified identity, or presents an `ALLOWED` record as
    proof that the action was subsequently executed, does not conform.
 6. **Vectors:** `test-vectors/action/valid` (11) MUST all verify and
-   `test-vectors/action/invalid` (23) MUST all fail, under the vector issuer
-   key named in that directory's README.
+   `test-vectors/action/invalid` (26) MUST all fail, under the vector issuer
+   key named in that directory's README. An issuer MUST produce the `args_hash`
+   in each file under `test-vectors/action/args` from its `args` object.
 7. **Interop:** the sweep in
    [`scripts/action-interop-sweep.mjs`](./scripts/action-interop-sweep.mjs)
    MUST pass across every vector, not a single fixture. One hardcoded

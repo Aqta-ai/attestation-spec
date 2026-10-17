@@ -1,0 +1,27 @@
+{
+  "args": {
+    "repo": "example/api",
+    "\uff21": "fullwidth A",
+    "\ud83d\udcc1": "folder"
+  },
+  "args_hash": "351307a0c729a81d4e2dde9b8609162adf6e3e5bc3a083a00724192807fa1bd9",
+  "canonical_hex": "7b227265706f223a226578616d706c652f617069222c22f09f9381223a22666f6c646572222c22efbca1223a2266756c6c77696474682041227d",
+  "code_point_order_args_hash": "7755fba35e9ec676d589b6db68a86c256e09feac74cd18d21f3dcc9886f76738",
+  "code_point_order_hex": "7b227265706f223a226578616d706c652f617069222c22efbca1223a2266756c6c77696474682041222c22f09f9381223a22666f6c646572227d",
+  "description": "ASCII, a supplementary-plane name (U+1F4C1) and a name in U+E000 to U+FFFF (U+FF21). By code unit U+1F4C1 (0xD83D 0xDCC1) sorts before U+FF21; by code point it sorts after.",
+  "envelope": {
+    "public_key_b64": "pOaccW6Csyo1POtxjixPH80oux9--YC1tzzaENT4vQ0",
+    "repo": "example/api",
+    "signature_b64": "JN9AEZZk-eZpsPU6sFGpAOWa2zK6IKZBfZrMQsLYr1mDys6hI0v5DzPjFW_TFoc49L2wfQtIsE3RXFbf-MbmBw",
+    "\uff21": "fullwidth A",
+    "\ud83d\udcc1": "folder"
+  },
+  "envelope_code_point_order": {
+    "public_key_b64": "pOaccW6Csyo1POtxjixPH80oux9--YC1tzzaENT4vQ0",
+    "repo": "example/api",
+    "signature_b64": "QMHjTq1nrcpan3jpedRihIIuGiddXhW_dTnihvZs9ZJz1l6vBCpofJP8nzPtxmecWvuUbe2U6ceTQrnoK_cPAQ",
+    "\uff21": "fullwidth A",
+    "\ud83d\udcc1": "folder"
+  },
+  "orders_differ": true
+}

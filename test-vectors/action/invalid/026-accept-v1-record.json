@@ -1,0 +1,18 @@
+{
+  "acceptance_id": "00000000-0000-0000-0000-0000000000ca",
+  "decision": "ACCEPTED",
+  "org_id": "org-vector",
+  "policy_applied": [
+    "require_intent"
+  ],
+  "public_key": "pOaccW6Csyo1POtxjixPH80oux9--YC1tzzaENT4vQ0",
+  "reason_hash": "",
+  "reviewer_authority": "",
+  "reviewer_ref": "reviewer r-0001",
+  "signature": "SjSM6gxlSgRrAnGf4rHbQIADQ02_Q7Q0FgjKSEaQKUiT1t8oKGU75KL4j681P57bFbcvA93eEWrqvIdpDy5kDw",
+  "subject_hash": "659c2b3047542a752cea9cad6a7c5def5281b7e015d03e9c1381e33e71ae4669",
+  "subject_id": "00000000-0000-0000-0000-000000000001",
+  "subject_v": "action-1",
+  "timestamp": "2026-08-22T14:03:11.412903+00:00",
+  "v": "accept-1"
+}

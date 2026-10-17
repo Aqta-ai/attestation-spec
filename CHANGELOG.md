@@ -9,6 +9,30 @@ own versioning contract described in [CONFORMANCE.md](./CONFORMANCE.md).
 
 ## [Unreleased]
 
+### Fixed
+
+- **The reference issuer sorted object member names by Unicode code point.** The spec (§6 of
+  ATTESTATION-v1 and ACTION-v1, RFC 8785 section 3.2.3) requires UTF-16 code unit order, and
+  both reference verifiers already used it. The two orders differ when a name holding a
+  character above U+FFFF is compared with one holding a character in U+E000 to U+FFFF, so for
+  such argument objects `examples/reference-issuer.py` produced canonical bytes, and an
+  `args_hash` from `reference-action-issuer.py`, that no conformant implementation reproduces.
+  Record top-level names are ASCII, so no signed record changes and every existing vector
+  regenerates byte for byte. The ATTESTATION-v1 and ACCEPT-v1 issuers now order
+  `policy_applied` by code unit as well, as the ACTION-v1 issuer already did.
+
+### Added
+
+- `test-vectors/action/args/`: six argument objects with their canonical bytes, `args_hash`,
+  the code-point bytes for contrast, and an `anchor-v1` envelope pair that checks a verifier's
+  member-name order through its public interface. Includes CJK Extension B, a nested object,
+  and an NFC and an NFD spelling as two distinct names.
+- Record-type confusion vectors, each correctly signed under its suite's key: ATTESTATION-v1
+  invalid 024 to 027, ACTION-v1 invalid 024 to 026, ACCEPT-v1 invalid 016 and 017.
+- `scripts/action-interop-sweep.mjs` checks the argument vectors through both verifiers and
+  the reference issuer. `scripts/conformance-report.py` covers the ACTION-v1 and argument
+  vectors.
+
 ## [1.2.7] - 2026-09-29
 
 ### Fixed

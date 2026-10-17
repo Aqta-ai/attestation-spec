@@ -59,6 +59,44 @@ reference verifiers before release.
 | 021-timestamp-non-ascii-digits | Fractional seconds in Arabic-Indic digits, signed. Same timestamp reason: digits are ASCII `0` to `9`, and Python's `\d` matches any Unicode decimal digit unless `re.ASCII` is set. |
 | 022-outcome-not-a-string | `outcome` is `["BLOCKED"]`, signed. `outcome must be a string`, the reason ATTESTATION-v1 invalid 022 also gives. |
 | 023-policy-lone-surrogate | `policy_applied` holds a lone surrogate, out of UTF-16 code-unit order. `policy_applied must be in lexicographic order`; the 1.2.6 Python verifier raised building that order. |
+| 024-attestation-version-tag | An ACTION-v1 record whose only change is `v: 1`, ATTESTATION-v1's tag, re-signed. `v must be the string 'action-1'`. Unlike 006 the signature is valid, so only the version check can refuse it. |
+| 025-accept-version-tag | The same with `v: "accept-1"`, ACCEPT-v1's tag, re-signed. `v must be the string 'action-1'`. |
+| 026-accept-v1-record | A complete, correctly signed ACCEPT-v1 record under this suite's key. The sibling of 007 for the third profile. |
+
+## args/
+
+Argument objects for `args_hash` (§6). Member names are sorted by UTF-16
+code unit (RFC 8785 section 3.2.3), which differs from Unicode code point
+order when a name holding a character above U+FFFF is compared with one
+holding a character in U+E000 to U+FFFF: the supplementary character is
+encoded as a surrogate pair starting 0xD800 to 0xDBFF, so it sorts first by
+code unit and last by code point. Member names are not normalised: §6
+defines the bytes, and an NFC and an NFD spelling are different names.
+
+Each file carries:
+
+| Field | Meaning |
+|---|---|
+| `args` | The argument object. The file escapes non-ASCII as `\uXXXX`; that is the file format, not the canonical form. |
+| `canonical_hex` | The canonical bytes a conformant issuer hashes. |
+| `args_hash` | SHA-256 of `canonical_hex`, the value a conformant issuer puts in the record. |
+| `orders_differ` | Whether code point order gives different bytes. |
+| `code_point_order_hex`, `code_point_order_args_hash` | The bytes and hash a code-point sort produces, for contrast. |
+| `envelope` | An `anchor-v1` envelope over the same object plus `public_key_b64`, signed over the code-unit bytes with this suite's key. MUST verify with `envelope: anchor-v1` and the key pinned. |
+| `envelope_code_point_order` | The same envelope signed over the code-point bytes. MUST NOT verify where `orders_differ` is true. |
+
+The envelope pair is how a verifier's member-name order is checked through
+its public interface: ACTION-v1 and ATTESTATION-v1 records have ASCII
+top-level names only, so their signatures never exercise it.
+
+| Vector | Exercises |
+|---|---|
+| 001-non-bmp-vs-fullwidth | ASCII, U+1F4C1 and U+FF21. Orders differ. |
+| 002-cjk-extension-b | U+4E00, U+F900 and U+20000. Orders differ. |
+| 003-common-prefix | Names sharing a prefix, differing in U+E000 against U+1F600. Orders differ. |
+| 004-nfc-nfd-distinct-names | U+00E9 and U+0065 U+0301 as two distinct names, with a combining mark. Orders agree; pins that no normalisation is applied. |
+| 005-nested | Non-BMP and U+E000 to U+FFFF names in a nested object and in an object inside an array. Orders differ. |
+| 006-ascii-only | `{"repo": "example/api", "pr": 41}`, the object behind every other vector's `args_hash`. Orders agree. |
 
 ## Regenerating
 

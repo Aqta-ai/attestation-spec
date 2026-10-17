@@ -1,0 +1,18 @@
+{
+  "acceptance_id": "00000000-0000-0000-0000-000000000026",
+  "decision": "ACCEPTED",
+  "org_id": "org-test-vectors",
+  "policy_applied": [
+    "budget_guard"
+  ],
+  "public_key": "alWzEnrA_z9McN9z_MFfQCnH9mVgOwRZ26wrI7oix4E",
+  "reason_hash": "",
+  "reviewer_authority": "",
+  "reviewer_ref": "reviewer r-0001",
+  "signature": "nQFpfNWmfwIJVbBY81ZwmBW24gVGLDKAmt7Bui8VVkBc1FjCxR2a3sS-TDkDryrXCq3mMOpOS-ajeZaho3YpDA",
+  "subject_hash": "a92dc56766a393ee90f814f9fa70a4ddce6631b2dc8a88287db5fb9853ecc9d1",
+  "subject_id": "00000000-0000-0000-0000-000000000001",
+  "subject_v": "1",
+  "timestamp": "2026-04-23T10:15:30.000000+00:00",
+  "v": "accept-1"
+}

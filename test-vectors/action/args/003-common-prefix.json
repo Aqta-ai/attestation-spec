@@ -1,0 +1,27 @@
+{
+  "args": {
+    "name": "plain",
+    "name\ue000": "private use",
+    "name\ud83d\ude00": "emoji"
+  },
+  "args_hash": "f69f92a6ead232ae3f5fd49d20867a27c16d20f86651734599e6ab73bc484a83",
+  "canonical_hex": "7b226e616d65223a22706c61696e222c226e616d65f09f9880223a22656d6f6a69222c226e616d65ee8080223a227072697661746520757365227d",
+  "code_point_order_args_hash": "60373741732a37f0cf778028828d3a1dd790a68ba4a18b559e207ef9ab6e22bf",
+  "code_point_order_hex": "7b226e616d65223a22706c61696e222c226e616d65ee8080223a227072697661746520757365222c226e616d65f09f9880223a22656d6f6a69227d",
+  "description": "Names sharing a prefix and differing in one character: U+E000 against U+1F600.",
+  "envelope": {
+    "name": "plain",
+    "name\ue000": "private use",
+    "name\ud83d\ude00": "emoji",
+    "public_key_b64": "pOaccW6Csyo1POtxjixPH80oux9--YC1tzzaENT4vQ0",
+    "signature_b64": "WC8JBNT7pCSavgOjlJX9wLNSlzcK0bWFKQH1CY2PvX033_uhs0RRQhRcDk9SmGrHrN3PjQBUEDYZFlgBWSurBw"
+  },
+  "envelope_code_point_order": {
+    "name": "plain",
+    "name\ue000": "private use",
+    "name\ud83d\ude00": "emoji",
+    "public_key_b64": "pOaccW6Csyo1POtxjixPH80oux9--YC1tzzaENT4vQ0",
+    "signature_b64": "JUnViujysBrzojWM9Y4DoIj0_eTAqR2hsePlzgbPnGSRhx-2y8VU8r-mUX3u2ydwgfxQlaUGc4IYtRSKAaOfDg"
+  },
+  "orders_differ": true
+}

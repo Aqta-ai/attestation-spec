@@ -127,7 +127,7 @@ class ReferenceAcceptanceIssuer:
             "reason_hash": reason_hash or "",
             "reviewer_ref": reviewer_ref,
             "reviewer_authority": reviewer_authority or "",
-            "policy_applied": sorted(policy_applied),
+            "policy_applied": sorted(policy_applied, key=_ref.utf16_sort_key),
             "timestamp": timestamp or datetime.now(timezone.utc).isoformat(),
             "public_key": self.public_key_b64,
         }

@@ -70,6 +70,10 @@ Each file encodes exactly one failure mode. A verifier MUST reject.
 | [`invalid/021-timestamp-non-ascii-digits.json`](./invalid/021-timestamp-non-ascii-digits.json) | `timestamp` year in fullwidth digits (`２０２６`), signed | `timestamp must be an RFC 3339 datetime with an explicit offset`. Digits are ASCII `0` to `9`; Python's `\d` matches any Unicode decimal digit unless `re.ASCII` is set |
 | [`invalid/022-outcome-not-a-string.json`](./invalid/022-outcome-not-a-string.json) | `outcome` is `["ALLOWED"]`, signed | `outcome must be a string`. The 1.2.6 Python verifier raised instead of returning a verdict |
 | [`invalid/023-policy-lone-surrogate.json`](./invalid/023-policy-lone-surrogate.json) | `policy_applied` holds a lone surrogate, out of order | `policy_applied must be in lexicographic order`. By UTF-16 code unit U+D800 sorts after ASCII; the 1.2.6 Python verifier raised building that order |
+| [`invalid/024-action-v1-record.json`](./invalid/024-action-v1-record.json) | A complete ACTION-v1 record, correctly signed under this suite's key | Structural check fails: ATTESTATION-v1 fields are missing. Accepting it means the verifier inferred the record type from field shape |
+| [`invalid/025-action-version-tag.json`](./invalid/025-action-version-tag.json) | ATTESTATION-v1 receipt with `v: "action-1"`, re-signed | Unsupported version. The signature is valid, so only the version check can refuse it |
+| [`invalid/026-accept-v1-record.json`](./invalid/026-accept-v1-record.json) | A complete ACCEPT-v1 record, correctly signed under this suite's key | Structural check fails, as for 024 |
+| [`invalid/027-accept-version-tag.json`](./invalid/027-accept-version-tag.json) | ATTESTATION-v1 receipt with `v: "accept-1"`, re-signed | Unsupported version, as for 025 |
 
 ## Cases that cannot be shipped as vectors
 

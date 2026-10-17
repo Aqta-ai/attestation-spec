@@ -43,13 +43,22 @@ _att_ref = importlib.util.module_from_spec(_att_spec)  # type: ignore[arg-type]
 _att_spec.loader.exec_module(_att_ref)  # type: ignore[union-attr]
 
 
+_acc_spec = importlib.util.spec_from_file_location(
+    "acc_ref", _REPO_ROOT / "examples" / "reference-acceptance-issuer.py"
+)
+_acc_ref = importlib.util.module_from_spec(_acc_spec)  # type: ignore[arg-type]
+_acc_spec.loader.exec_module(_acc_ref)  # type: ignore[union-attr]
+
+
 SEED = hashlib.sha256(b"attestation-spec/test-vectors/action-1").digest()
 ISSUER = _action_ref.ReferenceActionIssuer.from_seed(SEED)
 ATT_ISSUER = _att_ref.ReferenceIssuer.from_seed(SEED)
+ACC_ISSUER = _acc_ref.ReferenceAcceptanceIssuer.from_seed(SEED)
 
 HERE = Path(__file__).resolve().parent
 VALID = HERE / "valid"
 INVALID = HERE / "invalid"
+ARGS_DIR = HERE / "args"
 
 TS = "2026-08-22T14:03:11.412903+00:00"
 INTENT = hashlib.sha256(b"fix the failing auth test in repo example/api").hexdigest()
@@ -279,8 +288,111 @@ def generate_invalid() -> None:
     r["policy_applied"] = ["\ud800", "require_intent"]
     _write(INVALID, "023-policy-lone-surrogate.json", r)
 
+    # 024 to 026: record-type confusion. 024 and 025 are ACTION-v1 records whose
+    # only change is the declared version tag, re-signed so the signature is
+    # valid and only the version check can refuse them. 026 is a complete,
+    # correctly signed ACCEPT-v1 record under this suite's key, the sibling of
+    # 007 for the third profile.
+    _write(INVALID, "024-attestation-version-tag.json", _resigned(0x28, v=1))
+    _write(INVALID, "025-accept-version-tag.json", _resigned(0x29, v="accept-1"))
+    _write(INVALID, "026-accept-v1-record.json", dict(ACC_ISSUER.sign(
+        org_id="org-vector", subject_v="action-1",
+        subject_id="00000000-0000-0000-0000-000000000001",
+        subject_hash=_acc_ref.subject_hash_of(_sign(
+            1, outcome="ALLOWED",
+            policy_applied=["production_change_review", "require_intent"],
+            session_id="sess-vector-0001", intent_hash=INTENT,
+        )),
+        decision="ACCEPTED", reviewer_ref="reviewer r-0001",
+        policy_applied=["require_intent"],
+        acceptance_id="00000000-0000-0000-0000-0000000000ca", timestamp=TS,
+    )))
+
+
+# Argument objects whose member names order differently by UTF-16 code unit
+# (spec section 6, RFC 8785 section 3.2.3) and by Unicode code point. Each file
+# carries the canonical bytes and args_hash a conformant issuer produces, the
+# code-point-order bytes for contrast, and two anchor-v1 envelopes over the same
+# object: one signed over the code-unit bytes (verifies) and one signed over
+# the code-point bytes (does not). The envelope path is the one public verifier
+# entry point that canonicalises arbitrary member names, so it is how a
+# verifier's key ordering is checked end to end. Member names are not
+# normalised: section 6 defines the bytes, and NFC and NFD spellings are
+# different names with different bytes.
+ARGS_CASES = [
+    ("001-non-bmp-vs-fullwidth",
+     "ASCII, a supplementary-plane name (U+1F4C1) and a name in U+E000 to "
+     "U+FFFF (U+FF21). By code unit U+1F4C1 (0xD83D 0xDCC1) sorts before "
+     "U+FF21; by code point it sorts after.",
+     {"repo": "example/api", "\uff21": "fullwidth A", "\U0001F4C1": "folder"}),
+    ("002-cjk-extension-b",
+     "CJK: U+4E00, U+F900 (compatibility ideograph) and U+20000 (Extension B). "
+     "By code unit U+20000 (0xD840 0xDC00) sorts between U+4E00 and U+F900; by "
+     "code point it sorts last.",
+     {"path": "/tmp/x", "\u4e00": "one", "\uf900": "compat", "\U00020000": "ext-b"}),
+    ("003-common-prefix",
+     "Names sharing a prefix and differing in one character: U+E000 against "
+     "U+1F600.",
+     {"name": "plain", "name\ue000": "private use", "name\U0001F600": "emoji"}),
+    ("004-nfc-nfd-distinct-names",
+     "U+00E9 (NFC) and U+0065 U+0301 (NFD) are distinct member names with "
+     "distinct bytes; neither is normalised. Combining U+0301 sorts by its own "
+     "code unit. Both orders agree here; the vector pins that no normalisation "
+     "is applied.",
+     {"e": "base", "\u00e9": "nfc", "e\u0301": "nfd", "f": "next"}),
+    ("005-nested",
+     "Non-BMP and U+E000 to U+FFFF names inside a nested object and inside an "
+     "object within an array. Ordering applies at every depth.",
+     {"options": {"\U0001F600": True, "\ue000": False},
+      "items": [{"\uff21": 1, "\U00010000": 2}], "count": 2}),
+    ("006-ascii-only",
+     "ASCII names only, the argument object used by the other vectors. Both "
+     "orders agree: the fix changes no hash for ASCII names.",
+     {"repo": "example/api", "pr": 41}),
+]
+
+
+def _code_point_canonical(value) -> bytes:
+    # The bytes an issuer sorting by code point produces. Valid for these
+    # cases only: they carry no floats.
+    return json.dumps(value, sort_keys=True, separators=(",", ":"),
+                      ensure_ascii=False).encode("utf-8")
+
+
+def _anchor_envelope(args, canonical_of) -> dict:
+    p = {**args, "public_key_b64": ISSUER.public_key_b64}
+    sig = ISSUER.private_key.sign(canonical_of(p))
+    return {**p, "signature_b64": _b64url(sig)}
+
+
+def _b64url(b: bytes) -> str:
+    import base64
+    return base64.urlsafe_b64encode(b).decode("ascii").rstrip("=")
+
+
+def generate_args() -> None:
+    print("args/")
+    ARGS_DIR.mkdir(parents=True, exist_ok=True)
+    for name, description, args in ARGS_CASES:
+        unit = _action_ref.canonical_payload(args)
+        point = _code_point_canonical(args)
+        assert _action_ref.args_hash_of(args) == hashlib.sha256(unit).hexdigest()
+        vector = {
+            "description": description,
+            "args": args,
+            "canonical_hex": unit.hex(),
+            "args_hash": hashlib.sha256(unit).hexdigest(),
+            "orders_differ": unit != point,
+            "code_point_order_hex": point.hex(),
+            "code_point_order_args_hash": hashlib.sha256(point).hexdigest(),
+            "envelope": _anchor_envelope(args, _action_ref.canonical_payload),
+            "envelope_code_point_order": _anchor_envelope(args, _code_point_canonical),
+        }
+        _write(ARGS_DIR, f"{name}.json", vector)
+
 if __name__ == "__main__":
     print(f"ACTION-v1 vector key: {ISSUER.public_key_b64}")
     generate_valid()
     generate_invalid()
+    generate_args()
     print("done", file=sys.stderr)

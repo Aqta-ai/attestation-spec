@@ -1,0 +1,30 @@
+{
+  "args": {
+    "e": "base",
+    "e\u0301": "nfd",
+    "f": "next",
+    "\u00e9": "nfc"
+  },
+  "args_hash": "be8d85c8d61fa8620037d50e2871de1a57f8b2b78fe7b3f0bd7825258fcd6b9f",
+  "canonical_hex": "7b2265223a2262617365222c2265cc81223a226e6664222c2266223a226e657874222c22c3a9223a226e6663227d",
+  "code_point_order_args_hash": "be8d85c8d61fa8620037d50e2871de1a57f8b2b78fe7b3f0bd7825258fcd6b9f",
+  "code_point_order_hex": "7b2265223a2262617365222c2265cc81223a226e6664222c2266223a226e657874222c22c3a9223a226e6663227d",
+  "description": "U+00E9 (NFC) and U+0065 U+0301 (NFD) are distinct member names with distinct bytes; neither is normalised. Combining U+0301 sorts by its own code unit. Both orders agree here; the vector pins that no normalisation is applied.",
+  "envelope": {
+    "e": "base",
+    "e\u0301": "nfd",
+    "f": "next",
+    "public_key_b64": "pOaccW6Csyo1POtxjixPH80oux9--YC1tzzaENT4vQ0",
+    "signature_b64": "DUpnbkyslpuFxv46R_-r73AJ2cJKovRdWLsOprX7Y5G-xVpV2xXMIW67SWRpPIFBvxb5KcC_Bg2Rdx1QC9dnBg",
+    "\u00e9": "nfc"
+  },
+  "envelope_code_point_order": {
+    "e": "base",
+    "e\u0301": "nfd",
+    "f": "next",
+    "public_key_b64": "pOaccW6Csyo1POtxjixPH80oux9--YC1tzzaENT4vQ0",
+    "signature_b64": "DUpnbkyslpuFxv46R_-r73AJ2cJKovRdWLsOprX7Y5G-xVpV2xXMIW67SWRpPIFBvxb5KcC_Bg2Rdx1QC9dnBg",
+    "\u00e9": "nfc"
+  },
+  "orders_differ": false
+}
