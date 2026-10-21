@@ -1,0 +1,82 @@
+{
+  "approver_keys": [
+    "e0ULYEtW1O_YoBjZmw06NJZ0J4rHevjpHlkISHXyjZ4",
+    "LMd_9TWEG2BaIkOkQnnzR3LABqEnR28-I0lHDRbdfco"
+  ],
+  "bundle": {
+    "actions": [
+      {
+        "args": {
+          "amount_minor": "480000",
+          "aqta_grant_hash": "cc5fcb4a73bf29900e60b1a62ed2c354dd54524a5a2fdb9377bb0ce559be20ea",
+          "aqta_grant_id": "g-pay-nb",
+          "currency": "EUR",
+          "invoice_id": "INV-2291",
+          "payee": "Harbour Print Ltd",
+          "payee_iban": "IE29AIBK93115212345678",
+          "resource": "INV-2291"
+        },
+        "record": {
+          "action_id": "00000000-0000-4000-8000-00000000002d",
+          "agent": "agent",
+          "args_hash": "b758608d65feffdf64bbe7f1067fe73ff00df7e621094cb64b67345a822954f1",
+          "intent_hash": "",
+          "org_id": "org-vector",
+          "outcome": "ALLOWED",
+          "policy_applied": [
+            "require_grant"
+          ],
+          "public_key": "VZh1DjZPXa6voCmlv7MU7APjSr-HFxrG2WSqDm-eBGE",
+          "session_id": "",
+          "signature": "k-ZMwWhCa6v-gL10Q937_rYNrSyO9AGQRwHrQcWT16KuKdRcE6zWM_ZFC_6f21ude5qhloicD2LkZXtnV6sDDA",
+          "timestamp": "2026-10-20T12:05:09.999999999+02:00",
+          "tool": "payments.transfer",
+          "v": "action-1"
+        }
+      }
+    ],
+    "grants": [
+      {
+        "approver": "finance-controller",
+        "grant_id": "g-pay-nb",
+        "intent_ref": "",
+        "max_uses": "1",
+        "not_after": "2026-10-20T10:17:00+00:00",
+        "not_before": "2026-10-20T10:05:10+00:00",
+        "org_id": "org-vector",
+        "public_key": "e0ULYEtW1O_YoBjZmw06NJZ0J4rHevjpHlkISHXyjZ4",
+        "require_args": [],
+        "scope_args": [
+          "amount_minor=480000",
+          "currency=EUR",
+          "payee_iban=IE29AIBK93115212345678"
+        ],
+        "scope_environment": "",
+        "scope_resource": "INV-2291",
+        "scope_tool": "payments.transfer",
+        "signature": "J06sEtJkkppyqojXMgUzrbUE_yVpLh_At7SsFgQtw-x7waksIeXMPnHePUYqKEAmrfb3u1MOV8Swpqmyln5LCA",
+        "signing_mode": "approver-signed",
+        "v": "grant-1"
+      }
+    ],
+    "uses": [
+      {
+        "action_id": "00000000-0000-4000-8000-00000000002d",
+        "approver_public_key": "e0ULYEtW1O_YoBjZmw06NJZ0J4rHevjpHlkISHXyjZ4",
+        "args_hash": "b758608d65feffdf64bbe7f1067fe73ff00df7e621094cb64b67345a822954f1",
+        "consumption_key": "org:org-vector|grant:g-pay-nb",
+        "grant_hash": "cc5fcb4a73bf29900e60b1a62ed2c354dd54524a5a2fdb9377bb0ce559be20ea",
+        "grant_id": "g-pay-nb",
+        "max_uses": "1",
+        "org_id": "org-vector",
+        "public_key": "VZh1DjZPXa6voCmlv7MU7APjSr-HFxrG2WSqDm-eBGE",
+        "signature": "FRH35gf7ymPlPb9poyHbZG2C6Qz-oo8rtAtzVEMaoSP4OC7HNL9O2ucoHoSgr82WylM95tVBI5hWiTqtix80CQ",
+        "timestamp": "2026-10-20T12:05:09.999999999+02:00",
+        "use_id": "00000000-0000-4000-9000-00000000002d",
+        "use_index": "1",
+        "v": "use-1"
+      }
+    ],
+    "v": "chain-1"
+  }
+}

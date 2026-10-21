@@ -210,6 +210,11 @@ def build() -> None:
     add("pass", "009-blocked-only-no-approver-set", "Only refusals: nothing was authorised, so no approver set is "
         "needed.", bundle([], [], [A_none]), approver_keys=None)
 
+    A_edge = action(44, INVOICE, G1, ts="2026-10-20T11:17:00.000000000+01:00")
+    add("pass", "010-use-at-not-after-other-offset", "The use is recorded at exactly not_after, written in another "
+        "offset with nine fractional zeros: the same instant, so inside the window.",
+        bundle([G1], [use(44, G1, A_edge, ts="2026-10-20T11:17:00.000000000+01:00")], [A_edge]))
+
     # ---- FAIL ---------------------------------------------------------------------------------------------------
     def changed_args(**kv):
         a = copy.deepcopy(A1)
@@ -342,6 +347,11 @@ def build() -> None:
     A_noref = action(43, INVOICE, None)
     add("fail", "046-use-for-action-without-grant-reference", "A USE names an action whose arguments do not "
         "reference the grant.", bundle([G1], [U_noref], [A_noref]))
+
+    Gnb = grant(grant_id="g-pay-nb", scope_args=FIXED, not_before="2026-10-20T10:05:10+00:00")
+    A_early = action(45, INVOICE, Gnb, ts="2026-10-20T12:05:09.999999999+02:00")
+    add("fail", "047-use-before-not-before", "The use is recorded one nanosecond before not_before, written in "
+        "another offset.", bundle([Gnb], [use(45, Gnb, A_early, ts="2026-10-20T12:05:09.999999999+02:00")], [A_early]))
 
     # ---- INCOMPLETE ---------------------------------------------------------------------------------------------
     add("incomplete", "001-no-approver-set", "A4: the honest bundle, with no approver set supplied by the relying "

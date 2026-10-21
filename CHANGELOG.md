@@ -9,6 +9,25 @@ own versioning contract described in [CONFORMANCE.md](./CONFORMANCE.md).
 
 ## [Unreleased]
 
+Not released, not published. GRANT-v1 and USE-v1 are drafts.
+
+### Added
+
+- **`--profile chain` in both reference verifiers (draft).** Checks a bundle of GRANT-v1 approvals,
+  USE-v1 records and the ACTION-v1 records they authorised, and returns PASS, FAIL or INCOMPLETE.
+  Missing evidence is INCOMPLETE, never PASS; without a relying-party approver set an authorised
+  action is INCOMPLETE. Explicit opt-in only. CLI exit codes for this profile: 0 PASS, 1 FAIL,
+  3 INCOMPLETE. Specs `spec/GRANT-v1.md` and `spec/USE-v1.md`; 63 vectors in `test-vectors/chain/`;
+  `scripts/chain-interop-sweep.mjs` requires the two verifiers to agree on verdict and reason on
+  every vector and on about 23,000 mutations of them.
+
+### Fixed
+
+- **The reference issuer sorted object member names by code point.** `examples/reference-issuer.py`
+  used `sorted()`, which reverses a non-BMP name against U+E000 to U+FFFF; both verifiers sort by
+  UTF-16 code unit (RFC 8785). An argument object with such a key hashed to bytes neither verifier
+  computes. Found by chain vector `pass/008`. No existing vector changed.
+
 ## [1.2.7] - 2026-09-29
 
 ### Fixed

@@ -19,6 +19,7 @@ import json
 import os
 import sys
 
+from .chain import verify_chain
 from .verifier import verify_receipt
 
 PUB_KEY_HINT = "https://api.aqta.ai/v1/attestation/public-key"
@@ -127,9 +128,18 @@ def main(argv: list[str] | None = None) -> int:
         "--profile",
         metavar="NAME",
         default=None,
-        help="verify under an explicit profile; the only accepted value is "
-        "action-1 (ACTION-v1 action records). Cannot be combined with "
+        help="verify under an explicit profile: action-1 (ACTION-v1 action "
+        "records) or chain (a GRANT-v1, USE-v1 and ACTION-v1 bundle, draft; "
+        "exit 0 PASS, 1 FAIL, 3 INCOMPLETE). Cannot be combined with "
         "--envelope",
+    )
+    parser.add_argument(
+        "--approver-keys",
+        metavar="KEYS",
+        default=None,
+        help="chain profile only: comma-separated base64url approver keys the "
+        "relying party designates. Without it an authorised action is "
+        "INCOMPLETE, never PASS",
     )
     parser.add_argument(
         "--json",
@@ -174,10 +184,24 @@ def main(argv: list[str] | None = None) -> int:
             file=sys.stderr,
         )
         return 2
-    if args.profile is not None and args.profile != "action-1":
+    if args.profile is not None and args.profile not in ("action-1", "chain"):
         print(
             f"aqta-verify-receipt: unknown profile: {args.profile} "
-            "(the only accepted value is action-1)",
+            "(accepted values: action-1, chain)",
+            file=sys.stderr,
+        )
+        return 2
+    chain_profile = args.profile == "chain"
+    if args.approver_keys is not None and not chain_profile:
+        print(
+            "aqta-verify-receipt: --approver-keys applies only to --profile chain",
+            file=sys.stderr,
+        )
+        return 2
+    if chain_profile and (args.integrity_only or args.no_strict):
+        print(
+            "aqta-verify-receipt: --profile chain needs --key and takes no "
+            "--integrity-only or --no-strict",
             file=sys.stderr,
         )
         return 2
@@ -240,6 +264,18 @@ def main(argv: list[str] | None = None) -> int:
     if not isinstance(receipt, dict):
         print("aqta-verify-receipt: receipt must be a JSON object", file=sys.stderr)
         return 2
+
+    if chain_profile:
+        approvers = None
+        if args.approver_keys is not None:
+            approvers = [k.strip() for k in args.approver_keys.split(",") if k.strip()]
+        res = verify_chain(receipt, trusted_public_key=args.key, approver_keys=approvers)
+        if not args.quiet:
+            if args.json:
+                print(json.dumps({"verdict": res.verdict, "profile": "chain", "reason": res.reason}))
+            else:
+                print(f"{res.verdict} chain" + (f" ({res.reason})" if res.reason else ", pinned issuer key"))
+        return {"PASS": 0, "FAIL": 1, "INCOMPLETE": 3}[res.verdict]
 
     action_profile = args.profile == "action-1"
     result = verify_receipt(

@@ -16,6 +16,7 @@
  */
 import { readFileSync } from 'fs';
 import { verifyReceipt, AttestationReceipt, EnvelopeFormat } from './index';
+import { verifyChain } from './chain';
 
 const PUB_KEY_HINT = 'https://api.aqta.ai/v1/attestation/public-key';
 
@@ -54,7 +55,9 @@ Options:
   --key <key>        pin the issuer public key (required unless --integrity-only)
   --integrity-only   check signature vs embedded key only (anyone can self-sign)
   --envelope <name>  opt in to a non-ATTESTATION-v1 envelope (e.g. anchor-v1)
-  --profile <name>   verify under a named profile (action-1 for ACTION-v1 records)
+  --profile <name>   verify under a named profile: action-1 (ACTION-v1 records) or
+                     chain (GRANT-v1 + USE-v1 + ACTION-v1 bundle, draft)
+  --approver-keys <k,k>  chain only: approver keys the relying party designates
   --no-strict        allow unknown top-level fields
   --json             machine JSON on stdout (one object)
   --pretty           optional human-readable summary after the compact line
@@ -62,6 +65,7 @@ Options:
 
 Contract:
   exit 0 valid · exit 1 invalid · exit 2 usage/IO
+  --profile chain: exit 0 PASS · 1 FAIL · 3 INCOMPLETE · 2 usage/IO
   default stdout is one compact line (words carry meaning; colour is optional)
   --pretty never changes the exit code or the verify result
 
@@ -132,6 +136,7 @@ function main(): void {
   let quiet = false;
   let asJson = false;
   let pretty = false;
+  let approverKeys: string | undefined;
   for (let i = 0; i < args.length; i++) {
     const a = args[i];
     if (a === '--key') {
@@ -145,6 +150,9 @@ function main(): void {
     } else if (a === '--profile') {
       profile = args[++i];
       if (!profile) usage();
+    } else if (a === '--approver-keys') {
+      approverKeys = args[++i];
+      if (approverKeys === undefined) usage();
     } else if (a === '--no-strict') {
       strict = false;
     } else if (a === '--quiet' || a === '-q') {
@@ -172,8 +180,17 @@ function main(): void {
   }
   // The flag takes the wire tag ("action-1"), the library takes the profile
   // name ("ACTION-v1"); the mapping is fixed here and nowhere else.
-  if (profile !== undefined && profile !== 'action-1') {
-    process.stderr.write(`aqta-verify-receipt: unknown profile ${profile} (only: action-1)\n`);
+  if (profile !== undefined && profile !== 'action-1' && profile !== 'chain') {
+    process.stderr.write(`aqta-verify-receipt: unknown profile ${profile} (only: action-1, chain)\n`);
+    process.exit(2);
+  }
+  const chainProfile = profile === 'chain';
+  if (approverKeys !== undefined && !chainProfile) {
+    process.stderr.write('aqta-verify-receipt: --approver-keys applies only to --profile chain\n');
+    process.exit(2);
+  }
+  if (chainProfile && (integrityOnly || !strict)) {
+    process.stderr.write('aqta-verify-receipt: --profile chain needs --key and takes no --integrity-only or --no-strict\n');
     process.exit(2);
   }
   if (profile !== undefined && envelope !== undefined) {
@@ -233,6 +250,21 @@ function main(): void {
       `aqta-verify-receipt: duplicate member name: ${duplicate}\n`
     );
     process.exit(2);
+  }
+
+  if (chainProfile) {
+    const approvers = approverKeys === undefined
+      ? null
+      : approverKeys.split(',').map((k) => k.trim()).filter((k) => k !== '');
+    const res = verifyChain(receipt, { trustedPublicKey: trustedKey, approverKeys: approvers });
+    if (!quiet) {
+      if (asJson) {
+        process.stdout.write(JSON.stringify({ verdict: res.verdict, profile: 'chain', reason: res.reason }) + '\n');
+      } else {
+        process.stdout.write(`${res.verdict} chain` + (res.reason ? ` (${res.reason})` : ', pinned issuer key') + '\n');
+      }
+    }
+    process.exit(res.verdict === 'PASS' ? 0 : res.verdict === 'FAIL' ? 1 : 3);
   }
 
   const actionProfile = profile === 'action-1';

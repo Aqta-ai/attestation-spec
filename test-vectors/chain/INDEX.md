@@ -17,6 +17,7 @@ Designated approver keys (the default `approver_keys`): `e0ULYEtW1O_YoBjZmw06NJZ
 | pass/007-non-bmp-consumption-key | intent_ref, and so consumption_key, carries a non-BMP character, signed as literal UTF-8. |
 | pass/008-require-args-utf16-order | require_args holds a non-BMP and a private-use name in UTF-16 code-unit order, the order a code-point sort reverses. |
 | pass/009-blocked-only-no-approver-set | Only refusals: nothing was authorised, so no approver set is needed. |
+| pass/010-use-at-not-after-other-offset | The use is recorded at exactly not_after, written in another offset with nine fractional zeros: the same instant, so inside the window. |
 | fail/001-action-amount-changed | A1: the disclosed amount differs from what the action record's args_hash commits to. |
 | fail/002-action-payee-changed | A1: the disclosed payee IBAN differs. |
 | fail/003-grant-key-swapped | A2: the grant's public_key is swapped for another designated approver's key; the signature no longer verifies. |
@@ -63,6 +64,7 @@ Designated approver keys (the default `approver_keys`): `e0ULYEtW1O_YoBjZmw06NJZ
 | fail/044-bundle-unknown-member | The bundle carries an unrecognised member. |
 | fail/045-fail-outranks-incomplete | No approver set is supplied (INCOMPLETE on its own) and a USE conflicts (FAIL): FAIL wins. |
 | fail/046-use-for-action-without-grant-reference | A USE names an action whose arguments do not reference the grant. |
+| fail/047-use-before-not-before | The use is recorded one nanosecond before not_before, written in another offset. |
 | incomplete/001-no-approver-set | A4: the honest bundle, with no approver set supplied by the relying party. |
 | incomplete/002-grant-missing | A9: the grant is not in the bundle. |
 | incomplete/003-use-missing | A10: an ALLOWED action consumed a counted grant and its USE is not in the bundle. |

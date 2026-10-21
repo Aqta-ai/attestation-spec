@@ -49,3 +49,13 @@ from .transparency import (  # noqa: E402,F401
 )
 
 from .transparency import HistoryResult, assess_history  # noqa: E402,F401
+
+# The chain profile (spec/USE-v1.md section 9; GRANT-v1 and USE-v1 are drafts).
+# Explicit opt-in: call verify_chain, never inferred from a record's shape.
+from .chain import (  # noqa: E402,F401
+    ChainResult,
+    check_grant_record,
+    check_use_record,
+    grant_hash,
+    verify_chain,
+)

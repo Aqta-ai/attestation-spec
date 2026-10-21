@@ -189,7 +189,15 @@ def _canonical(value) -> str:
             "{"
             + ",".join(
                 f"{_canonical(str(k))}:{_canonical(value[k])}"
-                for k in sorted(value.keys())
+                # RFC 8785 member order is UTF-16 code unit, as in both
+                # verifiers. Plain sorted() is code-point order and reverses
+                # non-BMP names against U+E000..U+FFFF, so an argument object
+                # with such a key hashed to bytes neither verifier computes.
+                # Found by chain vector pass/008, 21 October 2026.
+                for k in sorted(
+                    value.keys(),
+                    key=lambda k: str(k).encode("utf-16-be", "surrogatepass"),
+                )
             )
             + "}"
         )

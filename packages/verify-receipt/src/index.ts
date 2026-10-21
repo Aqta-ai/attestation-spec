@@ -788,3 +788,16 @@ export type {
   SignedTreeHead,
   ProofResult,
 } from './transparency.js';
+
+/**
+ * Shared internals for the chain profile (src/chain.ts). Not part of the
+ * public API: exported so GRANT-v1 and USE-v1 use the same canonicalisation,
+ * timestamp grammar and strict base64url as ACTION-v1, never a second copy.
+ */
+export const _internal = {
+  canonicalValue,
+  RFC3339_OFFSET,
+  B64URL_STRICT,
+  base64urlDecode,
+  canonicalScalar,
+};
