@@ -1,0 +1,88 @@
+{
+  "approver_keys": [
+    "e0ULYEtW1O_YoBjZmw06NJZ0J4rHevjpHlkISHXyjZ4",
+    "LMd_9TWEG2BaIkOkQnnzR3LABqEnR28-I0lHDRbdfco"
+  ],
+  "bundle": {
+    "actions": [
+      {
+        "args": {
+          "aqta_grant_hash": "b7171d5119eae2a0f380fd982174f9a57ea9aee2977a041c6fd8f08c38e0d921",
+          "aqta_grant_id": "g-batch-3",
+          "report": "R-1"
+        },
+        "record": {
+          "action_id": "00000000-0000-4000-8000-00000000000b",
+          "agent": "agent",
+          "args_hash": "a07ead8fb439448d5e03deaadd8f9778998c3645bc02cf8a11dc7543289be7bc",
+          "intent_hash": "",
+          "org_id": "org-vector",
+          "outcome": "ALLOWED",
+          "policy_applied": [
+            "require_grant"
+          ],
+          "public_key": "VZh1DjZPXa6voCmlv7MU7APjSr-HFxrG2WSqDm-eBGE",
+          "session_id": "",
+          "signature": "f6Jw4-2-HyM0Ubhs2j7aMY13cwSS9wHT7xNdAP0vZk0ka07AvzCfMNyOhhb-yUrdLNNa--3dJG-3ezYCsyvsAA",
+          "timestamp": "2026-10-20T11:01:00+00:00",
+          "tool": "reports.send",
+          "v": "action-1"
+        }
+      }
+    ],
+    "grants": [
+      {
+        "approver": "finance-controller",
+        "grant_id": "g-batch-3",
+        "intent_ref": "",
+        "max_uses": "3",
+        "not_after": "2026-10-20T18:00:00+00:00",
+        "not_before": "",
+        "org_id": "org-vector",
+        "public_key": "e0ULYEtW1O_YoBjZmw06NJZ0J4rHevjpHlkISHXyjZ4",
+        "require_args": [],
+        "scope_environment": "",
+        "scope_resource": "",
+        "scope_tool": "reports.send",
+        "signature": "_y_osQ4efWR-kfxxF8ePmBgCDsc6WO0Lb5amUxuO0aRaF8z08EtTNsC-rl72w2GfwAoDWrPVpjGQ9sJRNtj4Dw",
+        "signing_mode": "approver-signed",
+        "v": "grant-1"
+      }
+    ],
+    "uses": [
+      {
+        "action_id": "00000000-0000-4000-8000-00000000000b",
+        "approver_public_key": "e0ULYEtW1O_YoBjZmw06NJZ0J4rHevjpHlkISHXyjZ4",
+        "args_hash": "a07ead8fb439448d5e03deaadd8f9778998c3645bc02cf8a11dc7543289be7bc",
+        "consumption_key": "org:org-vector|grant:g-batch-3",
+        "grant_hash": "b7171d5119eae2a0f380fd982174f9a57ea9aee2977a041c6fd8f08c38e0d921",
+        "grant_id": "g-batch-3",
+        "max_uses": "3",
+        "org_id": "org-vector",
+        "public_key": "VZh1DjZPXa6voCmlv7MU7APjSr-HFxrG2WSqDm-eBGE",
+        "signature": "4CsyCGKBLoCzN_KZNBj9HyYZXM19q1X4DUqYDgXpMacV9xHzKyBbLTNBChVcGJg5Xj5PHtC0l9qaGoYlfrwYAQ",
+        "timestamp": "2026-10-20T11:00:59+00:00",
+        "use_id": "00000000-0000-4000-9000-000000000028",
+        "use_index": "1",
+        "v": "use-1"
+      },
+      {
+        "action_id": "00000000-0000-4000-8000-00000000000b",
+        "approver_public_key": "e0ULYEtW1O_YoBjZmw06NJZ0J4rHevjpHlkISHXyjZ4",
+        "args_hash": "a07ead8fb439448d5e03deaadd8f9778998c3645bc02cf8a11dc7543289be7bc",
+        "consumption_key": "org:org-vector|grant:g-batch-3",
+        "grant_hash": "b7171d5119eae2a0f380fd982174f9a57ea9aee2977a041c6fd8f08c38e0d921",
+        "grant_id": "g-batch-3",
+        "max_uses": "3",
+        "org_id": "org-vector",
+        "public_key": "VZh1DjZPXa6voCmlv7MU7APjSr-HFxrG2WSqDm-eBGE",
+        "signature": "POG-KUPrAZwzJ9MxuHfuVBW_AS_DEGcbdtIJc6LJb8DQoqqbn06y7na5vVNYK0mNWcJG1d3a7748rm6Q79_1DA",
+        "timestamp": "2026-10-20T11:00:59+00:00",
+        "use_id": "00000000-0000-4000-9000-000000000029",
+        "use_index": "2",
+        "v": "use-1"
+      }
+    ],
+    "v": "chain-1"
+  }
+}

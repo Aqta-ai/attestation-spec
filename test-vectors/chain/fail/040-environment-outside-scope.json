@@ -1,0 +1,74 @@
+{
+  "approver_keys": [
+    "e0ULYEtW1O_YoBjZmw06NJZ0J4rHevjpHlkISHXyjZ4",
+    "LMd_9TWEG2BaIkOkQnnzR3LABqEnR28-I0lHDRbdfco"
+  ],
+  "bundle": {
+    "actions": [
+      {
+        "args": {
+          "aqta_grant_hash": "1d1729b4dfd21dbc79b88f3e5881f3b7535f06467dd52123a0b8e01e9a45440b",
+          "aqta_grant_id": "g-dep",
+          "environment": "staging",
+          "resource": "2026.09.27-rc1",
+          "version": "2026.09.27-rc1"
+        },
+        "record": {
+          "action_id": "00000000-0000-4000-8000-000000000027",
+          "agent": "agent",
+          "args_hash": "4ecc686a24051479872a868fe2862b8be16f1873d62955ec77b889818f69d02e",
+          "intent_hash": "",
+          "org_id": "org-vector",
+          "outcome": "ALLOWED",
+          "policy_applied": [
+            "require_grant"
+          ],
+          "public_key": "VZh1DjZPXa6voCmlv7MU7APjSr-HFxrG2WSqDm-eBGE",
+          "session_id": "",
+          "signature": "kqBu_wqRKdhN-qHbVcK_ih3TUN2KGqD3lGKH0cBJIf_Dc_gX0443UOVU5H9GrCQ23hnnrdfL0O5-xJb43x4RBg",
+          "timestamp": "2026-10-20T12:24:15+00:00",
+          "tool": "deploy.production",
+          "v": "action-1"
+        }
+      }
+    ],
+    "grants": [
+      {
+        "approver": "release-manager",
+        "grant_id": "g-dep",
+        "intent_ref": "",
+        "max_uses": "1",
+        "not_after": "2026-10-20T12:35:00+00:00",
+        "not_before": "",
+        "org_id": "org-vector",
+        "public_key": "LMd_9TWEG2BaIkOkQnnzR3LABqEnR28-I0lHDRbdfco",
+        "require_args": [],
+        "scope_environment": "production",
+        "scope_resource": "2026.09.27-rc1",
+        "scope_tool": "deploy.production",
+        "signature": "8-zl5Rp2cuE-r67KA9dp19YE5P_ol8DVERHpY-hUrzCoYOo9V6VNVscPj4zluxNJFNBzxwxdESbOdkGimpQABQ",
+        "signing_mode": "approver-signed",
+        "v": "grant-1"
+      }
+    ],
+    "uses": [
+      {
+        "action_id": "00000000-0000-4000-8000-000000000027",
+        "approver_public_key": "LMd_9TWEG2BaIkOkQnnzR3LABqEnR28-I0lHDRbdfco",
+        "args_hash": "4ecc686a24051479872a868fe2862b8be16f1873d62955ec77b889818f69d02e",
+        "consumption_key": "org:org-vector|grant:g-dep",
+        "grant_hash": "1d1729b4dfd21dbc79b88f3e5881f3b7535f06467dd52123a0b8e01e9a45440b",
+        "grant_id": "g-dep",
+        "max_uses": "1",
+        "org_id": "org-vector",
+        "public_key": "VZh1DjZPXa6voCmlv7MU7APjSr-HFxrG2WSqDm-eBGE",
+        "signature": "Kkjed1No2eTVHCGIEOHzkHwjVpwB2XqCU92iOjyJEZhbrZ7OHVdnDr8lz600si3Dsi7ZNmwRDLF8Wazxu8LmDw",
+        "timestamp": "2026-10-20T12:24:14+00:00",
+        "use_id": "00000000-0000-4000-9000-000000000027",
+        "use_index": "1",
+        "v": "use-1"
+      }
+    ],
+    "v": "chain-1"
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "approver_keys": null,
+  "bundle": {
+    "actions": [
+      {
+        "args": {
+          "version": "2026.09.27-rc1"
+        },
+        "record": {
+          "action_id": "00000000-0000-4000-8000-000000000004",
+          "agent": "agent",
+          "args_hash": "bb5f66b6c126553b186508a43f8b96dce6320da656d9ff3a76cf5674f84c726c",
+          "intent_hash": "",
+          "org_id": "org-vector",
+          "outcome": "BLOCKED",
+          "policy_applied": [
+            "require_grant"
+          ],
+          "public_key": "VZh1DjZPXa6voCmlv7MU7APjSr-HFxrG2WSqDm-eBGE",
+          "session_id": "",
+          "signature": "vQzrg7q-tBrtci8vN2xwWe6J3if3KFP0bys7frFg-f1GLAOOasuJINNlbsK-bkG0CMRp3R4jekHJMSUdjGgrBg",
+          "timestamp": "2026-10-20T10:41:30+00:00",
+          "tool": "deploy.production",
+          "v": "action-1"
+        }
+      }
+    ],
+    "grants": [],
+    "uses": [],
+    "v": "chain-1"
+  }
+}

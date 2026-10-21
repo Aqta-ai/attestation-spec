@@ -1,0 +1,152 @@
+{
+  "approver_keys": [
+    "e0ULYEtW1O_YoBjZmw06NJZ0J4rHevjpHlkISHXyjZ4",
+    "LMd_9TWEG2BaIkOkQnnzR3LABqEnR28-I0lHDRbdfco"
+  ],
+  "bundle": {
+    "actions": [
+      {
+        "args": {
+          "aqta_grant_hash": "b7171d5119eae2a0f380fd982174f9a57ea9aee2977a041c6fd8f08c38e0d921",
+          "aqta_grant_id": "g-batch-3",
+          "report": "R-1"
+        },
+        "record": {
+          "action_id": "00000000-0000-4000-8000-00000000000b",
+          "agent": "agent",
+          "args_hash": "a07ead8fb439448d5e03deaadd8f9778998c3645bc02cf8a11dc7543289be7bc",
+          "intent_hash": "",
+          "org_id": "org-vector",
+          "outcome": "ALLOWED",
+          "policy_applied": [
+            "require_grant"
+          ],
+          "public_key": "VZh1DjZPXa6voCmlv7MU7APjSr-HFxrG2WSqDm-eBGE",
+          "session_id": "",
+          "signature": "f6Jw4-2-HyM0Ubhs2j7aMY13cwSS9wHT7xNdAP0vZk0ka07AvzCfMNyOhhb-yUrdLNNa--3dJG-3ezYCsyvsAA",
+          "timestamp": "2026-10-20T11:01:00+00:00",
+          "tool": "reports.send",
+          "v": "action-1"
+        }
+      },
+      {
+        "args": {
+          "aqta_grant_hash": "b7171d5119eae2a0f380fd982174f9a57ea9aee2977a041c6fd8f08c38e0d921",
+          "aqta_grant_id": "g-batch-3",
+          "report": "R-2"
+        },
+        "record": {
+          "action_id": "00000000-0000-4000-8000-00000000000c",
+          "agent": "agent",
+          "args_hash": "9c6fec57e19f79789539a670db00c7d6f0d6160b72d08ab6aad21d56a79237f3",
+          "intent_hash": "",
+          "org_id": "org-vector",
+          "outcome": "ALLOWED",
+          "policy_applied": [
+            "require_grant"
+          ],
+          "public_key": "VZh1DjZPXa6voCmlv7MU7APjSr-HFxrG2WSqDm-eBGE",
+          "session_id": "",
+          "signature": "4occF58onNRpmHCiDxQgfFHoV7MTPDBXpaw6fuBz14jltWPPiCMjFpZzUBVQnCVxxIcN-_h4EyAKsLlo6IKkCg",
+          "timestamp": "2026-10-20T11:02:00+00:00",
+          "tool": "reports.send",
+          "v": "action-1"
+        }
+      },
+      {
+        "args": {
+          "aqta_grant_hash": "b7171d5119eae2a0f380fd982174f9a57ea9aee2977a041c6fd8f08c38e0d921",
+          "aqta_grant_id": "g-batch-3",
+          "report": "R-3"
+        },
+        "record": {
+          "action_id": "00000000-0000-4000-8000-00000000000d",
+          "agent": "agent",
+          "args_hash": "a92932fd6e245a75d5005145e0b3c988542daba6d8058427d5db62cb08e8f63c",
+          "intent_hash": "",
+          "org_id": "org-vector",
+          "outcome": "ALLOWED",
+          "policy_applied": [
+            "require_grant"
+          ],
+          "public_key": "VZh1DjZPXa6voCmlv7MU7APjSr-HFxrG2WSqDm-eBGE",
+          "session_id": "",
+          "signature": "cXt_X5mh85txdgBizz_v3qh3KpOEBTH6DmbZEqLVbI5A6nxfNlv7P4E0uxwTf9l2ANZmapDpTZnnDSKX56oqAQ",
+          "timestamp": "2026-10-20T11:03:00+00:00",
+          "tool": "reports.send",
+          "v": "action-1"
+        }
+      }
+    ],
+    "grants": [
+      {
+        "approver": "finance-controller",
+        "grant_id": "g-batch-3",
+        "intent_ref": "",
+        "max_uses": "3",
+        "not_after": "2026-10-20T18:00:00+00:00",
+        "not_before": "",
+        "org_id": "org-vector",
+        "public_key": "e0ULYEtW1O_YoBjZmw06NJZ0J4rHevjpHlkISHXyjZ4",
+        "require_args": [],
+        "scope_environment": "",
+        "scope_resource": "",
+        "scope_tool": "reports.send",
+        "signature": "_y_osQ4efWR-kfxxF8ePmBgCDsc6WO0Lb5amUxuO0aRaF8z08EtTNsC-rl72w2GfwAoDWrPVpjGQ9sJRNtj4Dw",
+        "signing_mode": "approver-signed",
+        "v": "grant-1"
+      }
+    ],
+    "uses": [
+      {
+        "action_id": "00000000-0000-4000-8000-00000000000b",
+        "approver_public_key": "e0ULYEtW1O_YoBjZmw06NJZ0J4rHevjpHlkISHXyjZ4",
+        "args_hash": "a07ead8fb439448d5e03deaadd8f9778998c3645bc02cf8a11dc7543289be7bc",
+        "consumption_key": "org:org-vector|grant:g-batch-3",
+        "grant_hash": "b7171d5119eae2a0f380fd982174f9a57ea9aee2977a041c6fd8f08c38e0d921",
+        "grant_id": "g-batch-3",
+        "max_uses": "3",
+        "org_id": "org-vector",
+        "public_key": "VZh1DjZPXa6voCmlv7MU7APjSr-HFxrG2WSqDm-eBGE",
+        "signature": "d6T8YPqAv3viEU4JvfWCPNJQCVXUuFD3GZsU3LxvJfT7QrFMtCZ3cmLqWO0_lwSqr2cDltQ3dnQaBfYKYkdFCw",
+        "timestamp": "2026-10-20T11:00:59+00:00",
+        "use_id": "00000000-0000-4000-9000-00000000000b",
+        "use_index": "1",
+        "v": "use-1"
+      },
+      {
+        "action_id": "00000000-0000-4000-8000-00000000000c",
+        "approver_public_key": "e0ULYEtW1O_YoBjZmw06NJZ0J4rHevjpHlkISHXyjZ4",
+        "args_hash": "9c6fec57e19f79789539a670db00c7d6f0d6160b72d08ab6aad21d56a79237f3",
+        "consumption_key": "org:org-vector|grant:g-batch-3",
+        "grant_hash": "b7171d5119eae2a0f380fd982174f9a57ea9aee2977a041c6fd8f08c38e0d921",
+        "grant_id": "g-batch-3",
+        "max_uses": "3",
+        "org_id": "org-vector",
+        "public_key": "VZh1DjZPXa6voCmlv7MU7APjSr-HFxrG2WSqDm-eBGE",
+        "signature": "Q9PRUmyaFIuvzu-lZBeEreNGT6MoZiPmoujQd5YnCK1IBiL3A-1oa3_sETM6nXtbkVRjpDj8XBmu_zx16M6TAw",
+        "timestamp": "2026-10-20T11:01:59+00:00",
+        "use_id": "00000000-0000-4000-9000-00000000000c",
+        "use_index": "2",
+        "v": "use-1"
+      },
+      {
+        "action_id": "00000000-0000-4000-8000-00000000000d",
+        "approver_public_key": "e0ULYEtW1O_YoBjZmw06NJZ0J4rHevjpHlkISHXyjZ4",
+        "args_hash": "a92932fd6e245a75d5005145e0b3c988542daba6d8058427d5db62cb08e8f63c",
+        "consumption_key": "org:org-vector|grant:g-batch-3",
+        "grant_hash": "b7171d5119eae2a0f380fd982174f9a57ea9aee2977a041c6fd8f08c38e0d921",
+        "grant_id": "g-batch-3",
+        "max_uses": "3",
+        "org_id": "org-vector",
+        "public_key": "VZh1DjZPXa6voCmlv7MU7APjSr-HFxrG2WSqDm-eBGE",
+        "signature": "RTCxbj0mXXMsmz4LuX3mOztqUaLs-hZjuK-Vn1vhTHeoKj9r_mLe98HEsj2OLqYWxqbXGmJsGlSvm3M1EYkjDg",
+        "timestamp": "2026-10-20T11:02:59+00:00",
+        "use_id": "00000000-0000-4000-9000-00000000000d",
+        "use_index": "3",
+        "v": "use-1"
+      }
+    ],
+    "v": "chain-1"
+  }
+}

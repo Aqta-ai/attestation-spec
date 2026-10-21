@@ -1,0 +1,30 @@
+{
+  "approver_keys": [
+    "e0ULYEtW1O_YoBjZmw06NJZ0J4rHevjpHlkISHXyjZ4",
+    "LMd_9TWEG2BaIkOkQnnzR3LABqEnR28-I0lHDRbdfco"
+  ],
+  "bundle": {
+    "actions": [],
+    "grants": [
+      {
+        "approver": "finance-controller",
+        "grant_id": "g-pay-1",
+        "intent_ref": "",
+        "max_uses": "1",
+        "not_after": "2026-10-20T10:17:00",
+        "not_before": "",
+        "org_id": "org-vector",
+        "public_key": "e0ULYEtW1O_YoBjZmw06NJZ0J4rHevjpHlkISHXyjZ4",
+        "require_args": [],
+        "scope_environment": "",
+        "scope_resource": "INV-2291",
+        "scope_tool": "payments.transfer",
+        "signature": "DBu6MR-Hx_0bB_a6AXmYCNNab-o2J2MzkcHzVXJpFN-mbfl7ovzT6nJUUPUC9RMVXy0jgRoZSigO0AVQ2zimDw",
+        "signing_mode": "approver-signed",
+        "v": "grant-1"
+      }
+    ],
+    "uses": [],
+    "v": "chain-1"
+  }
+}
