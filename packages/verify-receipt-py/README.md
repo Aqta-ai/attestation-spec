@@ -8,10 +8,30 @@
 [![npm](https://img.shields.io/npm/v/aqta-verify-receipt.svg)](https://www.npmjs.com/package/aqta-verify-receipt)
 [![Licence](https://img.shields.io/badge/licence-Apache--2.0-blue.svg)](LICENSE)
 
-Offline verifier for **Seal** receipts ([ATTESTATION-v1](https://github.com/Aqta-ai/attestation-spec/blob/main/spec/ATTESTATION-v1.md)).
+**Check what an AI was allowed to do, without trusting the company that ran it.**
 
-Seal signs the model call at runtime. This package checks that signature
-without contacting Aqta. No account. Same algorithm as the npm package.
+Seal signs every AI decision at the moment it happens: model calls and agent actions, refusals included. This package checks those signed records on your own machine. No account, no call to Aqta. Change one field and the check fails.
+
+## Try it in 10 seconds
+
+```bash
+curl -sO https://app.aqta.ai/samples/sample-receipt.json
+pip install aqta-verify-receipt
+aqta-verify-receipt sample-receipt.json --key 9Y3Eiq6V8QjRDUM5nPqSwKIOPQaoEU4SbagfYFdvWa4
+# ✓ valid  ALLOWED  520a…853a94  pinned issuer key
+```
+
+Now change `"outcome"` in the file and run it again:
+
+```text
+✕ invalid  signature check failed  520a…853a94
+```
+
+## Why it exists
+
+- A log is kept by whoever runs the system. A signed record can be checked by anyone else, offline, against a published key.
+- Two verifiers, written separately: this one and the TypeScript (npm) one. They must return the same verdict on every published test vector.
+- In use: [Authority Arena](https://arena.aqta.ai), an open evaluation of 21 AI models, checks all 1,529 of its signed records with this package.
 
 ## 30-second check
 

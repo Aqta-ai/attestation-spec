@@ -1,7 +1,7 @@
 /**
  * aqta-verify-receipt
  *
- * Independent verifier for Seal attestation receipts (ATTESTATION-v1).
+ * Offline verifier for Seal attestation receipts (ATTESTATION-v1).
  * Verifies the Ed25519 signature on a receipt using only the published
  * public key: no dependency on any third-party server.
  *

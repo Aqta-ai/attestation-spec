@@ -2,7 +2,7 @@
 aqta-verify-receipt
 ===================
 
-Independent verifier for Seal attestation receipts (ATTESTATION-v1) and
+Offline verifier for Seal attestation receipts (ATTESTATION-v1) and
 action authorisation records (ACTION-v1, via :func:`verify_action_record` or
 the explicit ``profile`` option).
 
