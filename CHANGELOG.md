@@ -9,6 +9,13 @@ own versioning contract described in [CONFORMANCE.md](./CONFORMANCE.md).
 
 ## [Unreleased]
 
+## [1.3.1] - 2026-10-22
+
+Documentation only. No change to any verdict, reason string or API.
+
+- READMEs (npm and PyPI) open with what the package checks and a 10-second demo against a published sample receipt.
+- Module docstrings describe the package as an offline verifier.
+
 ## [1.3.0] - 2026-10-22
 
 Purely additive: one new opt-in profile. GRANT-v1 and USE-v1 ship as **DRAFT specifications**.
