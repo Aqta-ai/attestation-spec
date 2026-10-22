@@ -10,7 +10,7 @@
 
 **Check what an AI was allowed to do, without trusting the company that ran it.**
 
-Seal signs every AI decision at the moment it happens: model calls and agent actions, refusals included. This package checks those signed records on your own machine. No account, no call to Aqta. Change one field and the check fails.
+Seal signs each AI decision that passes through it, at the moment it happens: model calls and agent actions, refusals included. This package checks those signed records on your own machine. No account, no call to Aqta. Change one field and the check fails.
 
 ## Try it in 10 seconds
 
