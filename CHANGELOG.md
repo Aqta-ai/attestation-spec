@@ -9,7 +9,14 @@ own versioning contract described in [CONFORMANCE.md](./CONFORMANCE.md).
 
 ## [Unreleased]
 
-Not released, not published. GRANT-v1 and USE-v1 are drafts.
+## [1.3.0] - 2026-10-22
+
+Purely additive: one new opt-in profile. GRANT-v1 and USE-v1 ship as **DRAFT specifications**.
+They are not frozen, and their wire formats may change before they are; a frozen version will say
+so in the specification. ATTESTATION-v1 and ACTION-v1 are unchanged. Without `--profile chain`
+the 1.3.0 command lines return byte-identical output and exit codes to 1.2.7 on every existing
+vector, in both languages (1,668 comparisons across six flag combinations, checked against the
+published 1.2.7 packages before release).
 
 ### Added
 

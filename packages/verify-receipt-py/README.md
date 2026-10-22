@@ -101,6 +101,27 @@ Pinning is required by default. Without `--key`, pass `--integrity-only`
 
 `cryptography` (>= 42) for constant-time Ed25519. Nothing else.
 
+## Chain profile (draft)
+
+GRANT-v1 and USE-v1 are **draft specifications, not frozen**; their wire
+formats may change. `--profile chain` checks a bundle of GRANT-v1 approvals,
+USE-v1 records and the ACTION-v1 records they authorised, and returns `PASS`,
+`FAIL` or `INCOMPLETE`. Missing evidence is `INCOMPLETE`, never `PASS`, and
+without `--approver-keys` an authorised action is `INCOMPLETE`.
+
+```bash
+aqta-verify-receipt bundle.json --profile chain --key <issuer key> --approver-keys <k1,k2>
+```
+
+Exit 0 `PASS`, 1 `FAIL`, 3 `INCOMPLETE`, 2 usage or IO. `--key` is required;
+`--integrity-only` and `--no-strict` are refused. Library:
+`from aqta_verify_receipt import verify_chain`, then
+`verify_chain(bundle, trusted_public_key=..., approver_keys=[...])`.
+Opt-in only: nothing selects this profile from a record's shape. The two
+separately written verifiers, this one and the TypeScript one, must return the
+same verdict and reason on every vector in
+[`test-vectors/chain/`](https://github.com/Aqta-ai/attestation-spec/tree/main/test-vectors/chain).
+
 ## Transparency proofs
 
 A receipt signature answers what the issuer asserted. It cannot answer whether

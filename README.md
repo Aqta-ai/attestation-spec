@@ -40,6 +40,24 @@ Profile selection is always explicit, never guessed from field shape:
 npx aqta-verify-receipt record.json --profile action-1 --key <key>
 ```
 
+**Draft: GRANT-v1, USE-v1 and the `chain` profile (1.3.0).** A GRANT-v1 record
+is a designated approver's signed approval for a bounded number of uses of an
+action; a USE-v1 record is the boundary's signed statement that one action
+consumed use *i* of *N*. The `chain` profile checks a bundle of grants, uses
+and the ACTION-v1 records they authorised together, and returns `PASS`,
+`FAIL` or `INCOMPLETE`. Missing evidence is `INCOMPLETE`, never `PASS`. Both
+specifications are **drafts and not frozen**: their wire formats may change.
+Opt in explicitly:
+
+```bash
+npx aqta-verify-receipt bundle.json --profile chain --key <issuer key> --approver-keys <k1,k2>
+# exit 0 PASS, 1 FAIL, 3 INCOMPLETE, 2 usage or IO
+```
+
+Specifications: [spec/GRANT-v1.md](./spec/GRANT-v1.md),
+[spec/USE-v1.md](./spec/USE-v1.md). Vectors:
+[test-vectors/chain/](./test-vectors/chain/).
+
 Anyone with the issuer's published public key can verify either offline.
 
 This repo is the **formats**, two **reference verifiers**, stand-alone
@@ -109,6 +127,8 @@ published key above to bind it to the issuer.
 | Path | What |
 |---|---|
 | [spec/ATTESTATION-v1.md](./spec/ATTESTATION-v1.md) | Wire format (CC-BY-4.0) |
+| [spec/ACTION-v1.md](./spec/ACTION-v1.md) | Agent action records (frozen) |
+| [spec/GRANT-v1.md](./spec/GRANT-v1.md), [spec/USE-v1.md](./spec/USE-v1.md) | Approvals, uses and the `chain` profile (DRAFT, not frozen) |
 | [packages/verify-receipt-py](./packages/verify-receipt-py) | Python verifier ([PyPI](https://pypi.org/project/aqta-verify-receipt/)) |
 | [packages/verify-receipt](./packages/verify-receipt) | TypeScript verifier ([npm](https://www.npmjs.com/package/aqta-verify-receipt)) |
 | [examples/](./examples) | Reference issuer and sample receipt |
@@ -131,6 +151,7 @@ pytest packages/verify-receipt-py/tests/ -q
 # Cross-implementation check: every test vector, both verifiers, same verdict.
 node scripts/make-interop-fixture.mjs
 node scripts/transparency-interop-sweep.mjs
+node scripts/chain-interop-sweep.mjs
 ```
 
 ## Cross-language pitfalls
@@ -150,7 +171,7 @@ pinned by a vector:
 
 Every class has vectors under [`test-vectors/`](./test-vectors/), and the sweeps in
 [`scripts/`](./scripts/) (`action-interop-sweep.mjs`, `bytes-interop-sweep.mjs`,
-`transparency-interop-sweep.mjs`, `differential-fuzz.mjs`) run both implementations over them in
+`transparency-interop-sweep.mjs`, `chain-interop-sweep.mjs`, `differential-fuzz.mjs`) run both implementations over them in
 CI and fail on any disagreement. If you write a third verifier, run it against the same vectors.
 
 ## Attribution
