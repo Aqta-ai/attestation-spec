@@ -59,3 +59,17 @@ from .chain import (  # noqa: E402,F401
     grant_hash,
     verify_chain,
 )
+
+# The complete and witnessed profiles (spec/CHECKPOINT-v1.md, spec/EXECUTION-v1.md,
+# spec/WITNESS-v1.md; all drafts). Explicit opt-in: call verify_complete or
+# verify_witnessed, never inferred from a bundle's shape.
+from .complete import (  # noqa: E402,F401
+    check_checkpoint_record,
+    check_execution_record,
+    checkpoint_hash,
+    execution_hash,
+    record_leaf,
+    records_hash,
+    verify_complete,
+)
+from .witnessed import check_witness_record, statement_hash, verify_witnessed  # noqa: E402,F401

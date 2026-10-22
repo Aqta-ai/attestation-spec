@@ -17,6 +17,8 @@
 import { readFileSync } from 'fs';
 import { verifyReceipt, AttestationReceipt, EnvelopeFormat } from './index';
 import { verifyChain } from './chain';
+import { verifyComplete } from './complete';
+import { verifyWitnessed } from './witnessed';
 
 const PUB_KEY_HINT = 'https://api.aqta.ai/v1/attestation/public-key';
 
@@ -58,6 +60,14 @@ Options:
   --profile <name>   verify under a named profile: action-1 (ACTION-v1 records) or
                      chain (GRANT-v1 + USE-v1 + ACTION-v1 bundle, draft)
   --approver-keys <k,k>  chain only: approver keys the relying party designates
+                     complete (records against CHECKPOINT-v1 checkpoints and an
+                     EXECUTION-v1 log, draft), witnessed (records against
+                     WITNESS-v1 statements, draft) are also accepted profiles
+  --review-from <t>  complete only: start of the review window (RFC 3339, offset)
+  --review-to <t>    complete only: end of the review window
+  --executor-keys <k,k>  complete only: executor keys the relying party designates
+  --witness-keys <k,k>   witnessed only: time-authority keys the relying party designates
+  --tolerance <s>    witnessed only: seconds an honest record may lag (default 3600)
   --no-strict        allow unknown top-level fields
   --json             machine JSON on stdout (one object)
   --pretty           optional human-readable summary after the compact line
@@ -65,7 +75,7 @@ Options:
 
 Contract:
   exit 0 valid · exit 1 invalid · exit 2 usage/IO
-  --profile chain: exit 0 PASS · 1 FAIL · 3 INCOMPLETE · 2 usage/IO
+  --profile chain|complete|witnessed: exit 0 PASS · 1 FAIL · 3 INCOMPLETE · 2 usage/IO
   default stdout is one compact line (words carry meaning; colour is optional)
   --pretty never changes the exit code or the verify result
 
@@ -137,6 +147,11 @@ function main(): void {
   let asJson = false;
   let pretty = false;
   let approverKeys: string | undefined;
+  const extra: Record<string, string | undefined> = {};
+  const EXTRA_FLAGS: Record<string, string> = {
+    '--review-from': 'complete', '--review-to': 'complete', '--executor-keys': 'complete',
+    '--witness-keys': 'witnessed', '--tolerance': 'witnessed',
+  };
   for (let i = 0; i < args.length; i++) {
     const a = args[i];
     if (a === '--key') {
@@ -150,6 +165,9 @@ function main(): void {
     } else if (a === '--profile') {
       profile = args[++i];
       if (!profile) usage();
+    } else if (a in EXTRA_FLAGS) {
+      extra[a] = args[++i];
+      if (extra[a] === undefined) usage();
     } else if (a === '--approver-keys') {
       approverKeys = args[++i];
       if (approverKeys === undefined) usage();
@@ -180,8 +198,19 @@ function main(): void {
   }
   // The flag takes the wire tag ("action-1"), the library takes the profile
   // name ("ACTION-v1"); the mapping is fixed here and nowhere else.
-  if (profile !== undefined && profile !== 'action-1' && profile !== 'chain') {
-    process.stderr.write(`aqta-verify-receipt: unknown profile ${profile} (only: action-1, chain)\n`);
+  if (profile !== undefined && !['action-1', 'chain', 'complete', 'witnessed'].includes(profile)) {
+    process.stderr.write(`aqta-verify-receipt: unknown profile ${profile} (only: action-1, chain, complete, witnessed)\n`);
+    process.exit(2);
+  }
+  for (const [flag, owner] of Object.entries(EXTRA_FLAGS)) {
+    if (extra[flag] !== undefined && profile !== owner) {
+      process.stderr.write(`aqta-verify-receipt: ${flag} applies only to --profile ${owner}\n`);
+      process.exit(2);
+    }
+  }
+  const draftProfile = profile === 'complete' || profile === 'witnessed';
+  if (draftProfile && (integrityOnly || !strict)) {
+    process.stderr.write(`aqta-verify-receipt: --profile ${profile} needs --key and takes no --integrity-only or --no-strict\n`);
     process.exit(2);
   }
   const chainProfile = profile === 'chain';
@@ -250,6 +279,31 @@ function main(): void {
       `aqta-verify-receipt: duplicate member name: ${duplicate}\n`
     );
     process.exit(2);
+  }
+
+  if (draftProfile) {
+    const keys = (v: string | undefined) => (v === undefined ? null : v.split(',').map((k) => k.trim()).filter((k) => k !== ''));
+    let res;
+    if (profile === 'complete') {
+      res = verifyComplete(receipt, { trustedPublicKey: trustedKey, reviewFrom: extra['--review-from'],
+        reviewTo: extra['--review-to'], executorKeys: keys(extra['--executor-keys']) });
+    } else {
+      const tol = extra['--tolerance'];
+      if (tol !== undefined && !/^[0-9]+$/.test(tol)) {
+        process.stderr.write('aqta-verify-receipt: --tolerance takes whole seconds\n');
+        process.exit(2);
+      }
+      res = verifyWitnessed(receipt, { trustedPublicKey: trustedKey, witnessKeys: keys(extra['--witness-keys']),
+        ...(tol === undefined ? {} : { toleranceSeconds: Number(tol) }) });
+    }
+    if (!quiet) {
+      if (asJson) {
+        process.stdout.write(JSON.stringify({ verdict: res.verdict, profile, reason: res.reason }) + '\n');
+      } else {
+        process.stdout.write(`${res.verdict} ${profile}` + (res.reason ? ` (${res.reason})` : ', pinned issuer key') + '\n');
+      }
+    }
+    process.exit(res.verdict === 'PASS' ? 0 : res.verdict === 'FAIL' ? 1 : 3);
   }
 
   if (chainProfile) {

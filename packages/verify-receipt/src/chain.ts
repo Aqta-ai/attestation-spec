@@ -462,5 +462,12 @@ function verifyChainInner(bundle: unknown, options: ChainOptions): ChainResult {
   return { verdict: 'PASS', reason: null };
 }
 
-/** Internal, for the interop sweep only: the exact-instant comparator. */
-export const _chainInternal = { cmpInstant };
+/**
+ * Internal: the exact-instant comparator (for the interop sweep), and the
+ * shared record helpers the complete and witnessed profiles (complete.ts,
+ * witnessed.ts) use, so every draft record is read one way.
+ */
+export const _chainInternal = {
+  cmpInstant, instant, isObject, has, firstUnknown, canonicalBytes, withoutSignature, signatureReason, isKey, Fail,
+  DECIMAL, DECIMAL_POSITIVE, HEX64,
+};

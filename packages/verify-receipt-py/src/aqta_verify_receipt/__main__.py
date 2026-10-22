@@ -20,6 +20,8 @@ import os
 import sys
 
 from .chain import verify_chain
+from .complete import verify_complete
+from .witnessed import verify_witnessed
 from .verifier import verify_receipt
 
 PUB_KEY_HINT = "https://api.aqta.ai/v1/attestation/public-key"
@@ -129,10 +131,22 @@ def main(argv: list[str] | None = None) -> int:
         metavar="NAME",
         default=None,
         help="verify under an explicit profile: action-1 (ACTION-v1 action "
-        "records) or chain (a GRANT-v1, USE-v1 and ACTION-v1 bundle, draft; "
-        "exit 0 PASS, 1 FAIL, 3 INCOMPLETE). Cannot be combined with "
+        "records), chain (a GRANT-v1, USE-v1 and ACTION-v1 bundle), complete "
+        "(records against CHECKPOINT-v1 checkpoints and an EXECUTION-v1 log) or "
+        "witnessed (records against WITNESS-v1 statements); the last three are "
+        "drafts, exit 0 PASS, 1 FAIL, 3 INCOMPLETE. Cannot be combined with "
         "--envelope",
     )
+    parser.add_argument("--review-from", metavar="TIME", default=None,
+                        help="complete profile only: start of the review window, RFC 3339 with an offset")
+    parser.add_argument("--review-to", metavar="TIME", default=None,
+                        help="complete profile only: end of the review window, RFC 3339 with an offset")
+    parser.add_argument("--executor-keys", metavar="KEYS", default=None,
+                        help="complete profile only: comma-separated executor keys the relying party designates")
+    parser.add_argument("--witness-keys", metavar="KEYS", default=None,
+                        help="witnessed profile only: comma-separated time-authority keys the relying party designates")
+    parser.add_argument("--tolerance", metavar="SECONDS", default=None,
+                        help="witnessed profile only: how late an honest record may enter the log (default 3600)")
     parser.add_argument(
         "--approver-keys",
         metavar="KEYS",
@@ -184,14 +198,24 @@ def main(argv: list[str] | None = None) -> int:
             file=sys.stderr,
         )
         return 2
-    if args.profile is not None and args.profile not in ("action-1", "chain"):
+    if args.profile is not None and args.profile not in ("action-1", "chain", "complete", "witnessed"):
         print(
             f"aqta-verify-receipt: unknown profile: {args.profile} "
-            "(accepted values: action-1, chain)",
+            "(accepted values: action-1, chain, complete, witnessed)",
             file=sys.stderr,
         )
         return 2
     chain_profile = args.profile == "chain"
+    for flag, value, owner in (("--review-from", args.review_from, "complete"), ("--review-to", args.review_to, "complete"),
+                               ("--executor-keys", args.executor_keys, "complete"),
+                               ("--witness-keys", args.witness_keys, "witnessed"), ("--tolerance", args.tolerance, "witnessed")):
+        if value is not None and args.profile != owner:
+            print(f"aqta-verify-receipt: {flag} applies only to --profile {owner}", file=sys.stderr)
+            return 2
+    if args.profile in ("complete", "witnessed") and (args.integrity_only or args.no_strict):
+        print(f"aqta-verify-receipt: --profile {args.profile} needs --key and takes no --integrity-only or --no-strict",
+              file=sys.stderr)
+        return 2
     if args.approver_keys is not None and not chain_profile:
         print(
             "aqta-verify-receipt: --approver-keys applies only to --profile chain",
@@ -264,6 +288,27 @@ def main(argv: list[str] | None = None) -> int:
     if not isinstance(receipt, dict):
         print("aqta-verify-receipt: receipt must be a JSON object", file=sys.stderr)
         return 2
+
+    if args.profile in ("complete", "witnessed"):
+        def keys(v):
+            return None if v is None else [k.strip() for k in v.split(",") if k.strip()]
+        if args.profile == "complete":
+            res = verify_complete(receipt, trusted_public_key=args.key, review_from=args.review_from,
+                                  review_to=args.review_to, executor_keys=keys(args.executor_keys))
+        else:
+            kw = {}
+            if args.tolerance is not None:
+                if not args.tolerance.isascii() or not args.tolerance.isdigit():
+                    print("aqta-verify-receipt: --tolerance takes whole seconds", file=sys.stderr)
+                    return 2
+                kw["tolerance_seconds"] = int(args.tolerance)
+            res = verify_witnessed(receipt, trusted_public_key=args.key, witness_keys=keys(args.witness_keys), **kw)
+        if not args.quiet:
+            if args.json:
+                print(json.dumps({"verdict": res.verdict, "profile": args.profile, "reason": res.reason}))
+            else:
+                print(f"{res.verdict} {args.profile}" + (f" ({res.reason})" if res.reason else ", pinned issuer key"))
+        return {"PASS": 0, "FAIL": 1, "INCOMPLETE": 3}[res.verdict]
 
     if chain_profile:
         approvers = None

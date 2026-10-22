@@ -9,6 +9,27 @@ own versioning contract described in [CONFORMANCE.md](./CONFORMANCE.md).
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-10-23
+
+Purely additive: two new opt-in profiles. CHECKPOINT-v1, EXECUTION-v1 and WITNESS-v1 ship as
+**DRAFT specifications**, not frozen. Without `--profile complete` or `--profile witnessed` the 1.4.0
+command lines answer exactly as 1.3.1 did.
+
+### Added
+
+- **`--profile complete` and `--profile witnessed` in both reference verifiers (drafts).** `complete`
+  checks ACTION-v1 and USE-v1 records against the CHECKPOINT-v1 checkpoints covering a review window
+  (a withheld record leaves a count that does not add up) and reconciles an executor's EXECUTION-v1
+  log against them (an action the executor carried out, which the issuer never recorded, is FAIL;
+  this needs the executor's cooperation and does not see refusals that never reached it). `witnessed`
+  checks records against a chain of WITNESS-v1 statements and fails a record logged more than a
+  stated tolerance (default 3600 seconds) after its claimed time; the Ed25519 statement stands in for
+  the Sigstore-anchored countersignature and does not verify real Sigstore bundles. Specs
+  `spec/CHECKPOINT-v1.md`, `spec/EXECUTION-v1.md`, `spec/WITNESS-v1.md`; vectors in
+  `test-vectors/complete/` and `test-vectors/witnessed/`; `scripts/e79-interop-sweep.mjs` holds both
+  implementations to one verdict and reason. Entry tag `0x04` for checkpoints in the public log.
+  `assess_history` and the vector `a3-lag-is-not-backdating` are unchanged.
+
 ## [1.3.1] - 2026-10-22
 
 Documentation only. No change to any verdict, reason string or API.
