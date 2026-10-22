@@ -1,0 +1,122 @@
+{
+  "bundle": {
+    "checkpoints": [
+      {
+        "checkpoint_seq": "1",
+        "org_id": "org-vector",
+        "period_end": "2026-10-20T11:00:00.000000+00:00",
+        "period_start": "2026-10-20T10:00:00.000000+00:00",
+        "prev_checkpoint_hash": "",
+        "public_key": "yV38x5N4n1PvEq7F8dcmoYtfhu4S_8qI9p8e2cRYJeA",
+        "record_count": "3",
+        "records_hash": "f6fc9f94e9b9474d7409dbc3a18c0bc95d80d23763c22df09bb5a1abf34aebd2",
+        "signature": "7BqGRSbNDbEvmqkF_F7Uuh5PwAeYMGucr6bVQQvyVoz35yBwDZnIBU6gK3F5Fs4UubSVWVoAWdUby6aEvh8gAg",
+        "timestamp": "2026-10-20T11:02:00.000000+00:00",
+        "total_count": "3",
+        "v": "checkpoint-1"
+      }
+    ],
+    "executions": [
+      {
+        "action_id": "00000000-0000-4000-8000-000000000001",
+        "action_leaf_hash": "4239739fcac57906d5a35a4f67f7689ee1003089b9fda20a6d2c413859031a4e",
+        "args_hash": "92ed19f9a12b624d40167ddf2e5f9fac3fff30924add5f244675ed8bf6d28d30",
+        "entry_seq": "1",
+        "executor_id": "payments-executor-1",
+        "org_id": "org-vector",
+        "prev_entry_hash": "",
+        "public_key": "audODzwnIAgfKxFhj2blR-sdyYQwwv_v8stRrGPc8RI",
+        "result": "EXECUTED",
+        "signature": "uUSCFNnWJwwhOkCXqzWmwz0FLcORuzXM6DlvTLv5vbXDlbLjLVIz8BDSk9t7XgmmkINmjpiXdfT2UK5U_7wFCQ",
+        "timestamp": "2026-10-20T10:05:12.000000+00:00",
+        "use_id": "00000000-0000-4000-9000-000000000001",
+        "use_leaf_hash": "e009e5dc7d98235bb0ae244751bc0fbcb11cf037b2cc92f7accd1ca508f66345",
+        "v": "execution-1"
+      },
+      {
+        "action_id": "00000000-0000-4000-8000-000000000002",
+        "action_leaf_hash": "34e144a9f006e1a04f6f7faa12081c0e1cf1103bdf6c290e6b75fb3a3b041323",
+        "args_hash": "d47f22aab2f2b7343b0c8d374ee4bbfd7fb3820bb1ad0f742dbec8cbbb65fb28",
+        "entry_seq": "2",
+        "executor_id": "payments-executor-1",
+        "org_id": "org-vector",
+        "prev_entry_hash": "cafdddaaaf14e9a98c7ed9f74dcbc711837fa531624b9c7aa285672ba385634c",
+        "public_key": "audODzwnIAgfKxFhj2blR-sdyYQwwv_v8stRrGPc8RI",
+        "result": "REFUSED",
+        "signature": "VyOv-ilF5eG3Zj5V8AkqE1YBrZboT9jpepDJpFl73eGrBCAD5q2QienXWIr08l2Jbv8xSTgPB5ZDTopxObHpDg",
+        "timestamp": "2026-10-20T10:08:00.000000+00:00",
+        "use_id": "",
+        "use_leaf_hash": "",
+        "v": "execution-1"
+      }
+    ],
+    "org_id": "org-vector",
+    "records": [
+      {
+        "kind": "use",
+        "record": {
+          "action_id": "00000000-0000-4000-8000-000000000001",
+          "approver_public_key": "nq5MOSpk51B1i-o_Z90Ux6sD-oU9pnAgbavUsqYfxjc",
+          "args_hash": "92ed19f9a12b624d40167ddf2e5f9fac3fff30924add5f244675ed8bf6d28d30",
+          "consumption_key": "org:org-vector|grant:g-1",
+          "grant_hash": "00d1c1c9f0bcc58c43e6d0b1c69ce3c8250dd42a15f9127dc42eb95303c4bec6",
+          "grant_id": "g-1",
+          "max_uses": "1",
+          "org_id": "org-vector",
+          "public_key": "yV38x5N4n1PvEq7F8dcmoYtfhu4S_8qI9p8e2cRYJeA",
+          "signature": "ck6JAccQOiOsm8c34hatiFCLnit2s1XpzJadzNn0vQOniaajkQML0p1bKQajy0hcj_ic5sRo1FItwHgA8BvyCw",
+          "timestamp": "2026-10-20T10:05:09.950000+00:00",
+          "use_id": "00000000-0000-4000-9000-000000000001",
+          "use_index": "1",
+          "v": "use-1"
+        }
+      },
+      {
+        "kind": "action",
+        "record": {
+          "action_id": "00000000-0000-4000-8000-000000000001",
+          "agent": "agent",
+          "args_hash": "92ed19f9a12b624d40167ddf2e5f9fac3fff30924add5f244675ed8bf6d28d30",
+          "intent_hash": "",
+          "org_id": "org-vector",
+          "outcome": "ALLOWED",
+          "policy_applied": [
+            "require_grant"
+          ],
+          "public_key": "yV38x5N4n1PvEq7F8dcmoYtfhu4S_8qI9p8e2cRYJeA",
+          "session_id": "",
+          "signature": "kyvxvScG0nklQ9hhSPt0kLk4MK3cp32QQVRxnlDDvo4bHU4n6QsrC_kYfzR-_ODjblhrw7CAJLL4EFG_seV_BA",
+          "timestamp": "2026-10-20T10:05:10.000000+00:00",
+          "tool": "payments.transfer",
+          "v": "action-1"
+        }
+      },
+      {
+        "kind": "action",
+        "record": {
+          "action_id": "00000000-0000-4000-8000-000000000003",
+          "agent": "agent",
+          "args_hash": "d74c1bcbc773ee81a5dbbb2810bbc28cf437c33905ef6003b499db2e1724612e",
+          "intent_hash": "",
+          "org_id": "org-vector",
+          "outcome": "BLOCKED",
+          "policy_applied": [
+            "require_grant"
+          ],
+          "public_key": "yV38x5N4n1PvEq7F8dcmoYtfhu4S_8qI9p8e2cRYJeA",
+          "session_id": "",
+          "signature": "FC3bq4gGpPsPA7ppOYHD3ciDdRWaxtkC1aq4wOjbBRUgE12DDPlm5p4AdXFuISlwPzXfo0OSLhzLYEid429tDw",
+          "timestamp": "2026-10-20T10:41:30.000000+00:00",
+          "tool": "deploy.production",
+          "v": "action-1"
+        }
+      }
+    ],
+    "v": "complete-1"
+  },
+  "executor_keys": [
+    "audODzwnIAgfKxFhj2blR-sdyYQwwv_v8stRrGPc8RI"
+  ],
+  "review_from": "2026-10-20T10:00:00.000000+00:00",
+  "review_to": "2026-10-20T11:00:00.000000+00:00"
+}

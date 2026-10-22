@@ -1,0 +1,67 @@
+{
+  "bundle": {
+    "consistency": [],
+    "head": {
+      "log": "public",
+      "root_hash": "37693d036c792659219748cd8b66f131a44264896f199b6c930665c1b1935de2",
+      "signature": "uEvvV6zYh1gzUnPXuhICSrx-mpc_qBOl--0PULaQimnZwIRj_OWlMbvfkjd49ezdwcgR8KSZtk611c3EZKg0Ag",
+      "timestamp": "2026-10-20T13:20:00Z",
+      "tree_size": 14,
+      "v": 1
+    },
+    "records": [
+      {
+        "kind": "action",
+        "proof": {
+          "audit_path": [
+            "20827b9af54b86ee6d9f8a541172ecb461765fa75076c2b165c87b559eba2f48",
+            "acb5a43d8bfbc8cc377bdd81c84e99a0fcbfc1756c7585eb768167ef1360333a",
+            "077c8b99138535e0c221a469cf38e89388829d30dcdb6700cdaf28b4e19692c0"
+          ],
+          "leaf_hash": "49850bdc4406a44bdbed70a6038bd7b3cc1f1ed6e389b8c36a671ce973fcb206",
+          "leaf_index": 13,
+          "root_hash": "37693d036c792659219748cd8b66f131a44264896f199b6c930665c1b1935de2",
+          "tree_size": 14
+        },
+        "record": {
+          "action_id": "00000000-0000-4000-8000-000000000015",
+          "agent": "agent",
+          "args_hash": "86c592b7899f794807a51df4431f30d37ab649caf070fd0c936a203d60641a83",
+          "intent_hash": "",
+          "org_id": "org-vector",
+          "outcome": "BLOCKED",
+          "policy_applied": [
+            "require_grant"
+          ],
+          "public_key": "yV38x5N4n1PvEq7F8dcmoYtfhu4S_8qI9p8e2cRYJeA",
+          "session_id": "",
+          "signature": "r4iqeiyS_9sfwDreqbYPI6to29S01f9geQG1E0_4h7JriCKWQNMqXII-vsS0g3f3BBRPvMfwhHBpOfbbAyzTAg",
+          "timestamp": "2026-10-20T10:06:00.000000+00:00",
+          "tool": "payments.transfer",
+          "v": "action-1"
+        }
+      }
+    ],
+    "v": "witnessed-1",
+    "witnessed": [
+      {
+        "head_signature": "pGG_Zg0nMBufJrD03-FfSbWutQFLtC_-qQox6eyOBYOXt91YLJh590-rdaVJnBFxWo-TYX1TtqfMaiHlryibBA",
+        "head_timestamp": "2026-10-20T13:17:00Z",
+        "log_public_key": "yV38x5N4n1PvEq7F8dcmoYtfhu4S_8qI9p8e2cRYJeA",
+        "prev_statement_hash": "41d43102344bdc7d15cf72d7be8b4d35e4cca8db687a5efb99b48fca0b9a35cf",
+        "public_key": "1QfKjjEgyJzsREyl34XhIXhDMh5SoEM7T5Sc2eg6-qo",
+        "root_hash": "37693d036c792659219748cd8b66f131a44264896f199b6c930665c1b1935de2",
+        "signature": "rNh7nPv3hBv_Or7UZqevQDwB8CPUBSX1QsUlKeZ3G3sDe88oCDKRP-6pK07K1-3dJHtLfI1FufqhDREffOrDBg",
+        "statement_seq": "4",
+        "tree_size": "14",
+        "v": "witness-1",
+        "witness_id": "seal-log-witness (vector)",
+        "witnessed_at": "2026-10-20T13:17:42.000000+00:00"
+      }
+    ]
+  },
+  "tolerance_seconds": 3600,
+  "witness_keys": [
+    "1QfKjjEgyJzsREyl34XhIXhDMh5SoEM7T5Sc2eg6-qo"
+  ]
+}

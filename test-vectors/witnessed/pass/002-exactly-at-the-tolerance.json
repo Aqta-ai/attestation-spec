@@ -1,0 +1,150 @@
+{
+  "bundle": {
+    "consistency": [
+      {
+        "consistency_path": [
+          "34e144a9f006e1a04f6f7faa12081c0e1cf1103bdf6c290e6b75fb3a3b041323",
+          "9d956ee7f8412ad1a030f0ff56f67e9cbefa2b95d6276bbcc71c0f9e96adcb40",
+          "3299b4595d65e1bce5691755f741f9b87c56b4ee06fe9a0a4ee888246134f210",
+          "d3b12b4cd7f70b504c0bde1408b38246982bc94a75d3df6caa061c00ffa6804b",
+          "52e68f4532522006d8454475cf0785a30260fa66c133c2a7990e26a3bbf97ef4"
+        ],
+        "new_root": "ce5e18773b4bb85c68420128a98ba14bb7ab1482b4fd8b8f7ee50e05a2626046",
+        "new_size": 14,
+        "old_root": "9793ef0182055ae37d14895effc736e977af219f2977ae08c8a0be062ee0c69e",
+        "old_size": 7
+      },
+      {
+        "consistency_path": [
+          "147db5706120851c300e1f2c18d070a1e740b0ccbd67104adf51579fee0f9de5",
+          "fc2a7bfe77dbf7fccb4942211648d3de32fd7ad7e9b013638d56a245f591030e",
+          "9a9169da802972d8f60772012f7ad60a321a423257d39a25d191bbedaa8ac6b7",
+          "abfbda64b572459011712034c585e13460c31afb1f6131d0b6859f59a22760c8",
+          "077c8b99138535e0c221a469cf38e89388829d30dcdb6700cdaf28b4e19692c0"
+        ],
+        "new_root": "ce5e18773b4bb85c68420128a98ba14bb7ab1482b4fd8b8f7ee50e05a2626046",
+        "new_size": 14,
+        "old_root": "7e214852e06bb52910419bccdde23665610e6756938f973136b5f4c64b6ebc3e",
+        "old_size": 9
+      },
+      {
+        "consistency_path": [
+          "d014c4211d51a0015293fa88eb8ae2fd2ad95787d5716d53965ac778fe6f89a6",
+          "3b6ed7a46101ef839646b817125123823c0aeab2adfa4d802821dd956b9b9c05",
+          "7d58d76bd15f58e1751189245115d2d78780b294ffdb6bcaa8b242afcd0f2eb5",
+          "abfbda64b572459011712034c585e13460c31afb1f6131d0b6859f59a22760c8",
+          "077c8b99138535e0c221a469cf38e89388829d30dcdb6700cdaf28b4e19692c0"
+        ],
+        "new_root": "ce5e18773b4bb85c68420128a98ba14bb7ab1482b4fd8b8f7ee50e05a2626046",
+        "new_size": 14,
+        "old_root": "12ca65d67529521a1232fcb62182ae88ce7d7416ff28fd8f3850baa03599f71c",
+        "old_size": 11
+      }
+    ],
+    "head": {
+      "log": "public",
+      "root_hash": "ce5e18773b4bb85c68420128a98ba14bb7ab1482b4fd8b8f7ee50e05a2626046",
+      "signature": "CZZ4BpPGN9ixyhw0CNEA7XCIUTI4_gaJUJs6puMff8hauVyLVcqI_sSWSkdLsXJ8p3953vDhH0iqLrtumm-OBQ",
+      "timestamp": "2026-10-20T13:20:00Z",
+      "tree_size": 14,
+      "v": 1
+    },
+    "records": [
+      {
+        "kind": "action",
+        "proof": {
+          "audit_path": [
+            "147db5706120851c300e1f2c18d070a1e740b0ccbd67104adf51579fee0f9de5",
+            "9a9169da802972d8f60772012f7ad60a321a423257d39a25d191bbedaa8ac6b7",
+            "abfbda64b572459011712034c585e13460c31afb1f6131d0b6859f59a22760c8",
+            "077c8b99138535e0c221a469cf38e89388829d30dcdb6700cdaf28b4e19692c0"
+          ],
+          "leaf_hash": "fc2a7bfe77dbf7fccb4942211648d3de32fd7ad7e9b013638d56a245f591030e",
+          "leaf_index": 9,
+          "root_hash": "ce5e18773b4bb85c68420128a98ba14bb7ab1482b4fd8b8f7ee50e05a2626046",
+          "tree_size": 14
+        },
+        "record": {
+          "action_id": "00000000-0000-4000-8000-000000000014",
+          "agent": "agent",
+          "args_hash": "3c9069846e6cb812ecdb027fa976b7dcca5947906dc3c93fe2e89de5014166df",
+          "intent_hash": "",
+          "org_id": "org-vector",
+          "outcome": "BLOCKED",
+          "policy_applied": [
+            "require_grant"
+          ],
+          "public_key": "yV38x5N4n1PvEq7F8dcmoYtfhu4S_8qI9p8e2cRYJeA",
+          "session_id": "",
+          "signature": "9Np3fiCyghSZlYfT7XO3VztTRm_9YcCc3sg-n8mVChToFtz1fbCGp9aMqAE2_C21i-thlKgTO2O1MoLckxeCBw",
+          "timestamp": "2026-10-20T10:17:42.000000+00:00",
+          "tool": "payments.transfer",
+          "v": "action-1"
+        }
+      }
+    ],
+    "v": "witnessed-1",
+    "witnessed": [
+      {
+        "head_signature": "EjIohGZlg0XrTYU5VzudLx3lDgquCacVrlWLjVnbUtvk0CesELJjmPVtUcAv8m1ij5jijZ8sUiwGyTx9FKQUCg",
+        "head_timestamp": "2026-10-20T10:17:00Z",
+        "log_public_key": "yV38x5N4n1PvEq7F8dcmoYtfhu4S_8qI9p8e2cRYJeA",
+        "prev_statement_hash": "",
+        "public_key": "1QfKjjEgyJzsREyl34XhIXhDMh5SoEM7T5Sc2eg6-qo",
+        "root_hash": "9793ef0182055ae37d14895effc736e977af219f2977ae08c8a0be062ee0c69e",
+        "signature": "lvc5i0yl6tNNID1h2_ex52BqR-S-CVwYaFNjX6eybqf5tWDou2FbC1grCWkxEX07bPnHZIOoNEtEYmHRC7kHAw",
+        "statement_seq": "1",
+        "tree_size": "7",
+        "v": "witness-1",
+        "witness_id": "seal-log-witness (vector)",
+        "witnessed_at": "2026-10-20T10:17:42.000000+00:00"
+      },
+      {
+        "head_signature": "s6qV3UJMj7nhZOk6IGQ1352PEelwWvepZG7LZN_MTD4lnk4CpW1QjUecfDO-9RmRhCl2MjwQMZTbsg9WeEQiDA",
+        "head_timestamp": "2026-10-20T11:17:00Z",
+        "log_public_key": "yV38x5N4n1PvEq7F8dcmoYtfhu4S_8qI9p8e2cRYJeA",
+        "prev_statement_hash": "491a45c2dd3fe01dfd63e28281a0f6ce693d5a158b0ca8f49f6e3f0e96e8d889",
+        "public_key": "1QfKjjEgyJzsREyl34XhIXhDMh5SoEM7T5Sc2eg6-qo",
+        "root_hash": "7e214852e06bb52910419bccdde23665610e6756938f973136b5f4c64b6ebc3e",
+        "signature": "D_qHJldCetaAbErtH299xbydzn3Wq-y4z0RKl4GmUddmwaR6E-ecv2L1WjOYrtoZDA-bCAH3u4ERHH4tG6ANDA",
+        "statement_seq": "2",
+        "tree_size": "9",
+        "v": "witness-1",
+        "witness_id": "seal-log-witness (vector)",
+        "witnessed_at": "2026-10-20T11:17:42.000000+00:00"
+      },
+      {
+        "head_signature": "s5k5jkP13jooqEY7RzHB-EPXyy4jIHREq7PG5SJ1dohMAEAz7uNVXtUUSN0G7Uk6G2KHeIcx2YUh8yAubVcXAQ",
+        "head_timestamp": "2026-10-20T12:17:00Z",
+        "log_public_key": "yV38x5N4n1PvEq7F8dcmoYtfhu4S_8qI9p8e2cRYJeA",
+        "prev_statement_hash": "8e9701a699c4f8bb5c259552224daf1bb342c3664c72137e0b74edd7e00d6573",
+        "public_key": "1QfKjjEgyJzsREyl34XhIXhDMh5SoEM7T5Sc2eg6-qo",
+        "root_hash": "12ca65d67529521a1232fcb62182ae88ce7d7416ff28fd8f3850baa03599f71c",
+        "signature": "WqMTYaDtv1f3MKnqT86sIHlP947SuZ_vqdSfx1tSVWlO4UKp9WPuiqHLXoeaXqarSbqmk7KECejA38BBj7PBCg",
+        "statement_seq": "3",
+        "tree_size": "11",
+        "v": "witness-1",
+        "witness_id": "seal-log-witness (vector)",
+        "witnessed_at": "2026-10-20T12:17:42.000000+00:00"
+      },
+      {
+        "head_signature": "mNJlHJ4EBCy3SL1CZ2kDuW1FxiTzMBAvhpthiTiZ-mC7odEsfCySbOD3IgLUbRR2oiOano2UO4K5Yo1BZFqSDQ",
+        "head_timestamp": "2026-10-20T13:17:00Z",
+        "log_public_key": "yV38x5N4n1PvEq7F8dcmoYtfhu4S_8qI9p8e2cRYJeA",
+        "prev_statement_hash": "93232f7cbff3fd04557247269a9c0bf54a39d6af468f628f42ee678691022200",
+        "public_key": "1QfKjjEgyJzsREyl34XhIXhDMh5SoEM7T5Sc2eg6-qo",
+        "root_hash": "ce5e18773b4bb85c68420128a98ba14bb7ab1482b4fd8b8f7ee50e05a2626046",
+        "signature": "PPHLA6bHklFifD68v0kRU4GaCFG7us61VX5uFQobrpbsF018PC0grPxjc0soz9B5y6eI0l7_ST2HY7ND70SjCw",
+        "statement_seq": "4",
+        "tree_size": "14",
+        "v": "witness-1",
+        "witness_id": "seal-log-witness (vector)",
+        "witnessed_at": "2026-10-20T13:17:42.000000+00:00"
+      }
+    ]
+  },
+  "tolerance_seconds": 3600,
+  "witness_keys": [
+    "1QfKjjEgyJzsREyl34XhIXhDMh5SoEM7T5Sc2eg6-qo"
+  ]
+}

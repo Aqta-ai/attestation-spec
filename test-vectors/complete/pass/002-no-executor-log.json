@@ -1,0 +1,174 @@
+{
+  "bundle": {
+    "checkpoints": [
+      {
+        "checkpoint_seq": "1",
+        "org_id": "org-vector",
+        "period_end": "2026-10-20T11:00:00.000000+00:00",
+        "period_start": "2026-10-20T10:00:00.000000+00:00",
+        "prev_checkpoint_hash": "",
+        "public_key": "yV38x5N4n1PvEq7F8dcmoYtfhu4S_8qI9p8e2cRYJeA",
+        "record_count": "4",
+        "records_hash": "32fda603fd1beda86502a624211c3c4eac792cea4562b5881d5f104a7f984691",
+        "signature": "ZGOPo9pX00zInuokTClVim15-TrjmgXGQWOfUbgSf4JEvCA4-VoX4r1k6fy3Dys4KpcM8zAopqQzqTdrhHDbBQ",
+        "timestamp": "2026-10-20T11:02:00.000000+00:00",
+        "total_count": "4",
+        "v": "checkpoint-1"
+      },
+      {
+        "checkpoint_seq": "2",
+        "org_id": "org-vector",
+        "period_end": "2026-10-20T12:00:00.000000+00:00",
+        "period_start": "2026-10-20T11:00:00.000000+00:00",
+        "prev_checkpoint_hash": "3fc85332bd7c60ebd157efd78cc0a54b2cdc5c07d49f58fdc9c0068ae598fd21",
+        "public_key": "yV38x5N4n1PvEq7F8dcmoYtfhu4S_8qI9p8e2cRYJeA",
+        "record_count": "0",
+        "records_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "signature": "_0-SJi2BU3wkwYvgXobpV15lV1JGBAnX4ZnrptJ7Muj7bYVTuWBjZ5-eWi7ecotqxUswzx0OvbWaJmEdgswxDA",
+        "timestamp": "2026-10-20T12:02:00.000000+00:00",
+        "total_count": "4",
+        "v": "checkpoint-1"
+      },
+      {
+        "checkpoint_seq": "3",
+        "org_id": "org-vector",
+        "period_end": "2026-10-20T13:00:00.000000+00:00",
+        "period_start": "2026-10-20T12:00:00.000000+00:00",
+        "prev_checkpoint_hash": "b6fc8c8d1bf134aed8cde4ccad71c18678823e9e1d8bc9af473c301bcd3471c1",
+        "public_key": "yV38x5N4n1PvEq7F8dcmoYtfhu4S_8qI9p8e2cRYJeA",
+        "record_count": "2",
+        "records_hash": "81b9e4e88980852ea0750d94e4bcc90db2b95ffbab903d4f366b7569ff93cc3d",
+        "signature": "s9oPuHwZ77lmB5JnLAnRklZYTjoP1FY1x5V25hH8JM2KdPSNIMT2gGMnNlJVCgZ8Q0aKFa0OMFJZNljKYPzTCQ",
+        "timestamp": "2026-10-20T13:02:00.000000+00:00",
+        "total_count": "6",
+        "v": "checkpoint-1"
+      }
+    ],
+    "executions": [],
+    "org_id": "org-vector",
+    "records": [
+      {
+        "kind": "use",
+        "record": {
+          "action_id": "00000000-0000-4000-8000-000000000001",
+          "approver_public_key": "nq5MOSpk51B1i-o_Z90Ux6sD-oU9pnAgbavUsqYfxjc",
+          "args_hash": "92ed19f9a12b624d40167ddf2e5f9fac3fff30924add5f244675ed8bf6d28d30",
+          "consumption_key": "org:org-vector|grant:g-1",
+          "grant_hash": "00d1c1c9f0bcc58c43e6d0b1c69ce3c8250dd42a15f9127dc42eb95303c4bec6",
+          "grant_id": "g-1",
+          "max_uses": "1",
+          "org_id": "org-vector",
+          "public_key": "yV38x5N4n1PvEq7F8dcmoYtfhu4S_8qI9p8e2cRYJeA",
+          "signature": "ck6JAccQOiOsm8c34hatiFCLnit2s1XpzJadzNn0vQOniaajkQML0p1bKQajy0hcj_ic5sRo1FItwHgA8BvyCw",
+          "timestamp": "2026-10-20T10:05:09.950000+00:00",
+          "use_id": "00000000-0000-4000-9000-000000000001",
+          "use_index": "1",
+          "v": "use-1"
+        }
+      },
+      {
+        "kind": "action",
+        "record": {
+          "action_id": "00000000-0000-4000-8000-000000000001",
+          "agent": "agent",
+          "args_hash": "92ed19f9a12b624d40167ddf2e5f9fac3fff30924add5f244675ed8bf6d28d30",
+          "intent_hash": "",
+          "org_id": "org-vector",
+          "outcome": "ALLOWED",
+          "policy_applied": [
+            "require_grant"
+          ],
+          "public_key": "yV38x5N4n1PvEq7F8dcmoYtfhu4S_8qI9p8e2cRYJeA",
+          "session_id": "",
+          "signature": "kyvxvScG0nklQ9hhSPt0kLk4MK3cp32QQVRxnlDDvo4bHU4n6QsrC_kYfzR-_ODjblhrw7CAJLL4EFG_seV_BA",
+          "timestamp": "2026-10-20T10:05:10.000000+00:00",
+          "tool": "payments.transfer",
+          "v": "action-1"
+        }
+      },
+      {
+        "kind": "action",
+        "record": {
+          "action_id": "00000000-0000-4000-8000-000000000002",
+          "agent": "agent",
+          "args_hash": "d47f22aab2f2b7343b0c8d374ee4bbfd7fb3820bb1ad0f742dbec8cbbb65fb28",
+          "intent_hash": "",
+          "org_id": "org-vector",
+          "outcome": "BLOCKED",
+          "policy_applied": [
+            "require_grant"
+          ],
+          "public_key": "yV38x5N4n1PvEq7F8dcmoYtfhu4S_8qI9p8e2cRYJeA",
+          "session_id": "",
+          "signature": "srKt4NvqG2ObPun5jw8CpHKPlJMT-K8lyCGVfjgqMJP2rshvsjaBVDRu7MT8qARXrUCaWx7oZFzN7Iw2mf0kAg",
+          "timestamp": "2026-10-20T10:07:40.000000+00:00",
+          "tool": "payments.transfer",
+          "v": "action-1"
+        }
+      },
+      {
+        "kind": "action",
+        "record": {
+          "action_id": "00000000-0000-4000-8000-000000000003",
+          "agent": "agent",
+          "args_hash": "d74c1bcbc773ee81a5dbbb2810bbc28cf437c33905ef6003b499db2e1724612e",
+          "intent_hash": "",
+          "org_id": "org-vector",
+          "outcome": "BLOCKED",
+          "policy_applied": [
+            "require_grant"
+          ],
+          "public_key": "yV38x5N4n1PvEq7F8dcmoYtfhu4S_8qI9p8e2cRYJeA",
+          "session_id": "",
+          "signature": "FC3bq4gGpPsPA7ppOYHD3ciDdRWaxtkC1aq4wOjbBRUgE12DDPlm5p4AdXFuISlwPzXfo0OSLhzLYEid429tDw",
+          "timestamp": "2026-10-20T10:41:30.000000+00:00",
+          "tool": "deploy.production",
+          "v": "action-1"
+        }
+      },
+      {
+        "kind": "use",
+        "record": {
+          "action_id": "00000000-0000-4000-8000-000000000004",
+          "approver_public_key": "nq5MOSpk51B1i-o_Z90Ux6sD-oU9pnAgbavUsqYfxjc",
+          "args_hash": "a7a5cae9d8768ee46e0a92537410c8731cc49d6d15078b101af9e91c2656e720",
+          "consumption_key": "org:org-vector|grant:g-4",
+          "grant_hash": "83ba6b794bfca1ac3e39060f69b992783b72182638073368beb72d4c16985eed",
+          "grant_id": "g-4",
+          "max_uses": "1",
+          "org_id": "org-vector",
+          "public_key": "yV38x5N4n1PvEq7F8dcmoYtfhu4S_8qI9p8e2cRYJeA",
+          "signature": "aiIkm4bYJm0vClZx7DCcgx9lpVxtY5UiGbfRg4S1DubS5AsR2w-oN8a0DoApwZS8TmU8IX0lRqimeknWgKKmAw",
+          "timestamp": "2026-10-20T12:24:14.950000+00:00",
+          "use_id": "00000000-0000-4000-9000-000000000004",
+          "use_index": "1",
+          "v": "use-1"
+        }
+      },
+      {
+        "kind": "action",
+        "record": {
+          "action_id": "00000000-0000-4000-8000-000000000004",
+          "agent": "agent",
+          "args_hash": "a7a5cae9d8768ee46e0a92537410c8731cc49d6d15078b101af9e91c2656e720",
+          "intent_hash": "",
+          "org_id": "org-vector",
+          "outcome": "ALLOWED",
+          "policy_applied": [
+            "require_grant"
+          ],
+          "public_key": "yV38x5N4n1PvEq7F8dcmoYtfhu4S_8qI9p8e2cRYJeA",
+          "session_id": "",
+          "signature": "c0ygh31sVxR1R5paV6383BPKu8v1Jg9ixUa1nEyFXamMsQ2s0jbnp4g4WbkXmy-6IeOSraZt5SekEQ1PPnhTCg",
+          "timestamp": "2026-10-20T12:24:15.000000+00:00",
+          "tool": "deploy.production",
+          "v": "action-1"
+        }
+      }
+    ],
+    "v": "complete-1"
+  },
+  "executor_keys": null,
+  "review_from": "2026-10-20T10:00:00.000000+00:00",
+  "review_to": "2026-10-20T13:00:00.000000+00:00"
+}

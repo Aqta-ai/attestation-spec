@@ -1,0 +1,29 @@
+{
+  "bundle": {
+    "checkpoints": [
+      {
+        "checkpoint_seq": "1",
+        "org_id": "org-vector",
+        "period_end": "2026-10-20T11:00:00.000000+00:00",
+        "period_start": "2026-10-20T11:00:00.000000+00:00",
+        "prev_checkpoint_hash": "",
+        "public_key": "yV38x5N4n1PvEq7F8dcmoYtfhu4S_8qI9p8e2cRYJeA",
+        "record_count": "0",
+        "records_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "signature": "RF0IrmTSmo4JwmHlBnKAC15EvsCD69Uyt0CsBIfMFueEi_SSKTX6ddyOByC22OcsxAjkqZ6kDrWaYQ-_F1n4Dg",
+        "timestamp": "2026-10-20T11:02:00.000000+00:00",
+        "total_count": "0",
+        "v": "checkpoint-1"
+      }
+    ],
+    "executions": [],
+    "org_id": "org-vector",
+    "records": [],
+    "v": "complete-1"
+  },
+  "executor_keys": [
+    "audODzwnIAgfKxFhj2blR-sdyYQwwv_v8stRrGPc8RI"
+  ],
+  "review_from": "2026-10-20T11:00:00.000000+00:00",
+  "review_to": "2026-10-20T11:00:01.000000+00:00"
+}
