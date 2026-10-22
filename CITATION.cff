@@ -4,11 +4,13 @@ message: >-
   repository and credit Aqta Technologies Ltd (CC-BY-4.0 for the spec;
   Apache-2.0 for the code).
 type: software
-title: "ATTESTATION-v1: Seal enforcement receipt format and reference verifiers"
+title: "Seal record formats (ATTESTATION-v1, ACTION-v1) and reference verifiers"
 abstract: >-
-  Open specification and reference verifiers for Ed25519-signed AI gateway
-  enforcement receipts. Offline-verifiable against a published public key
-  without trusting the issuer's servers.
+  Open specification and two separately written reference verifiers
+  (TypeScript and Python) for Ed25519-signed records of AI decisions:
+  ATTESTATION-v1 for model calls and ACTION-v1 for agent actions, with
+  draft GRANT-v1 and USE-v1 profiles. Offline-verifiable against a
+  published public key without trusting the issuer's servers.
 authors:
   - name: Aqta Technologies Ltd
     website: https://aqta.ai
@@ -16,6 +18,10 @@ authors:
     alias: Aqta
 repository-code: https://github.com/Aqta-ai/attestation-spec
 url: https://github.com/Aqta-ai/attestation-spec
+identifiers:
+  - type: url
+    value: https://datatracker.ietf.org/doc/draft-chueayen-attestation-receipts/
+    description: IETF individual Internet-Draft
 license:
   - Apache-2.0
   - CC-BY-4.0
@@ -26,6 +32,7 @@ keywords:
   - seal
   - enforcement
   - offline-verify
+  - ai-agents
 version: "1.3.0"
 date-released: "2026-10-22"
 preferred-citation:
