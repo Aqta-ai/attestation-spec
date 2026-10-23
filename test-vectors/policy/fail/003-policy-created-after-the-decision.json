@@ -1,0 +1,74 @@
+{
+  "bundle": {
+    "decisions": [
+      {
+        "proof": {
+          "audit_path": [
+            "114714ef98adecdd415878fbf9f761ec298f0f16c96edf5b91c4ff0b0310cc96",
+            "7e500e31271eff25cb932b545d6705ade04d1fb102ed7950d89c761e734dd04a",
+            "c374a74ee443b1a0c1f331026c24242f338c8345730067608a261fcf5ffa58de",
+            "8d5cb5dd889c2c00ff782eb1e65e12a312c8d47de41c46404d423ffdea4988fe"
+          ],
+          "leaf_hash": "dbb54b35f90a59228bac657558be68a9a893038c07293b13f8fa4b3230815e44",
+          "leaf_index": 7,
+          "root_hash": "6f17f8c15065f23f58cdf8dcc62837e8d8091042dd73b82d77513f95bdec2230",
+          "tree_size": 14
+        },
+        "record": {
+          "action_id": "00000000-0000-4000-8000-000000000008",
+          "agent": "agent",
+          "args_hash": "09fac2fb8e100bd978abba5920e01f7fefe85be57936b192e997a729e9a4764a",
+          "intent_hash": "",
+          "org_id": "org-vector",
+          "outcome": "ALLOWED",
+          "policy_applied": [
+            "policy_late@sha256:88ca1a4f20afa7495a4faa5f275315ce49c818d5066c7bb8cf8c97fb4980301d"
+          ],
+          "public_key": "7aGZlqLCXVmvZqGkuok0-ODoIrrxp32HcXnLVnYhCw4",
+          "session_id": "",
+          "signature": "INzBrJY__EXxmMEPIftatgFcKmSRexzGmTXnq9i_AO1z471Y9SrrrB9-THqlmTvsZxHBo1DDZZ89HZaNcYenBQ",
+          "timestamp": "2026-10-20T10:05:00.000000+00:00",
+          "tool": "payments.transfer",
+          "v": "action-1"
+        }
+      }
+    ],
+    "head": {
+      "log": "public",
+      "root_hash": "6f17f8c15065f23f58cdf8dcc62837e8d8091042dd73b82d77513f95bdec2230",
+      "signature": "SOGoVcSclzRS7SbZHUDe-5UnBuIVzoHjLJJ0UUt26pAo5kNk4eWD6wLskwGH3MMf7SkPmWrXQMFtpAK40cFQCw",
+      "timestamp": "2026-10-20T13:00:00Z",
+      "tree_size": 14,
+      "v": 1
+    },
+    "policies": [
+      {
+        "proof": {
+          "audit_path": [
+            "5e61c918610609a799cb39b3a9b06c9b89c3f5ab0e68dec16708b89806c2dcf9",
+            "8d82ea2e19aa924a66f6245362d86a00bea4c768394fb7336cc2b757b53a27c5",
+            "7f85f37bcbc597ec85c6e5615d5ddf03f3b143e08fc1efd68cd16b4c022129ab",
+            "a30041c89e915e0c0b15c821ad0ae9631834a79461daeb71d68d1f1efe413587"
+          ],
+          "leaf_hash": "791b8f0424658782c320b2f9d561848d60473be9001d5100d526651945e36311",
+          "leaf_index": 8,
+          "root_hash": "6f17f8c15065f23f58cdf8dcc62837e8d8091042dd73b82d77513f95bdec2230",
+          "tree_size": 14
+        },
+        "statement": {
+          "created_at": "2026-10-20T10:10:00.000000+00:00",
+          "org_id": "org-vector",
+          "policy_hash": "88ca1a4f20afa7495a4faa5f275315ce49c818d5066c7bb8cf8c97fb4980301d",
+          "policy_name": "policy_late",
+          "prev_policy_hash": "",
+          "public_key": "7aGZlqLCXVmvZqGkuok0-ODoIrrxp32HcXnLVnYhCw4",
+          "rules": "[{\"type\":\"require_intent\"}]",
+          "signature": "Fv6QBoMMt_-428WqxyuPAwiRN2MBnAUkK_VXR_PiM2DrOKXFoQkd-tZTxSUuqVkF4lBZHJkyMlr3907KR23ACg",
+          "v": "policy-1",
+          "version": "1"
+        }
+      }
+    ],
+    "v": "policy-1"
+  }
+}

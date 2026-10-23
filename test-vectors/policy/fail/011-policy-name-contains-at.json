@@ -1,0 +1,45 @@
+{
+  "bundle": {
+    "decisions": [
+      {
+        "proof": null,
+        "record": {
+          "action_id": "00000000-0000-4000-8000-000000000002",
+          "agent": "agent",
+          "args_hash": "d47f22aab2f2b7343b0c8d374ee4bbfd7fb3820bb1ad0f742dbec8cbbb65fb28",
+          "intent_hash": "",
+          "org_id": "org-vector",
+          "outcome": "BLOCKED",
+          "policy_applied": [
+            "policy_deploy_gate@sha256:1766ea5aeecd739161a596239ab4d679c7da674ac675ac5166f19104e358b5b9"
+          ],
+          "public_key": "7aGZlqLCXVmvZqGkuok0-ODoIrrxp32HcXnLVnYhCw4",
+          "session_id": "",
+          "signature": "r5pBiw_XLAColgFdhy2q6Id_3QdfR5yb6EsY80o7b84p1cm6Pq4hw3OorwaYsGwLfwWkNfdTYAzF_6xyXm8RDA",
+          "timestamp": "2026-10-20T10:30:00.000000+00:00",
+          "tool": "deploy.production",
+          "v": "action-1"
+        }
+      }
+    ],
+    "head": null,
+    "policies": [
+      {
+        "proof": null,
+        "statement": {
+          "created_at": "2026-10-20T09:00:00.000000+00:00",
+          "org_id": "org-vector",
+          "policy_hash": "a8f39900545973ce456109951306e587a3034be658e36007962e9cc3eaa9ecd4",
+          "policy_name": "policy@payments",
+          "prev_policy_hash": "",
+          "public_key": "7aGZlqLCXVmvZqGkuok0-ODoIrrxp32HcXnLVnYhCw4",
+          "rules": "[{\"type\":\"require_grant\",\"value\":\"payments.*:zWnQLJG0_ASRZslQ3LgODV78XVMSeFBaPe0vtZJSdeM\"}]",
+          "signature": "F0FGV82UY1eOXd-5n3Pl0dP1aXZZEHsV8NM8D7ymrRnMiAHhITaTL-pvzEVUQ7lvKs1G2-MhZ5DUVcftdKEdDg",
+          "v": "policy-1",
+          "version": "1"
+        }
+      }
+    ],
+    "v": "policy-1"
+  }
+}

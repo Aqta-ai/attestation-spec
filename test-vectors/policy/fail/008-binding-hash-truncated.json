@@ -1,0 +1,74 @@
+{
+  "bundle": {
+    "decisions": [
+      {
+        "proof": {
+          "audit_path": [
+            "114714ef98adecdd415878fbf9f761ec298f0f16c96edf5b91c4ff0b0310cc96",
+            "7e500e31271eff25cb932b545d6705ade04d1fb102ed7950d89c761e734dd04a",
+            "c374a74ee443b1a0c1f331026c24242f338c8345730067608a261fcf5ffa58de",
+            "5da8de220176039201c3885af5bd7005f599e8e4d231758fd252e493de411ba8"
+          ],
+          "leaf_hash": "fe6dae5f22617ec2ce356bd316ed098fc3f830a788dfa15d85ee63f02fb2be57",
+          "leaf_index": 7,
+          "root_hash": "df318a20358429392001ec478c5f0b149d4749b52a22813f502ca668c437cc84",
+          "tree_size": 13
+        },
+        "record": {
+          "action_id": "00000000-0000-4000-8000-00000000000d",
+          "agent": "agent",
+          "args_hash": "f2aa006dbd1ec3faee0bbc36b50c1b96f6b5b6888f7f5e65b20f629351121e79",
+          "intent_hash": "",
+          "org_id": "org-vector",
+          "outcome": "ALLOWED",
+          "policy_applied": [
+            "policy_payments_guard@sha256:1d8fc211adb8cd9f"
+          ],
+          "public_key": "7aGZlqLCXVmvZqGkuok0-ODoIrrxp32HcXnLVnYhCw4",
+          "session_id": "",
+          "signature": "zIivUSz-MNdAIJ4BazG1sF3Kh5_gW5zDdJR1M_BSe8zFBGpqGOSpcSl2vkp_FA7L1VoR6bMehFhrqK2Mjdu1Cw",
+          "timestamp": "2026-10-20T10:09:00.000000+00:00",
+          "tool": "payments.transfer",
+          "v": "action-1"
+        }
+      }
+    ],
+    "head": {
+      "log": "public",
+      "root_hash": "df318a20358429392001ec478c5f0b149d4749b52a22813f502ca668c437cc84",
+      "signature": "oIxpxz4lq5prXI2Ez2RrsooWz4vtTC9gl9oOg__q015U0nhd2a7a29cGQOpX7Teq-wQQLnkaLMWchFGb_3QFAg",
+      "timestamp": "2026-10-20T13:00:00Z",
+      "tree_size": 13,
+      "v": 1
+    },
+    "policies": [
+      {
+        "proof": {
+          "audit_path": [
+            "27a3bca207f127a9520c7f380789b483bafa69d9c8655c430850101f3c657bd8",
+            "e69329bb892302e3f2ea7b1767fb41db4d56665a88fdd84d533ded38929bc4ca",
+            "28ed2cf84aa910d0e3d769ad8ba2ab34f4e53d3ec950e1e69cd5d981f1914d40",
+            "5da8de220176039201c3885af5bd7005f599e8e4d231758fd252e493de411ba8"
+          ],
+          "leaf_hash": "fb4067cdbeff0612ab41eedc1c1669c4203817c89cd6080e7c38a8b47e53bf9d",
+          "leaf_index": 2,
+          "root_hash": "df318a20358429392001ec478c5f0b149d4749b52a22813f502ca668c437cc84",
+          "tree_size": 13
+        },
+        "statement": {
+          "created_at": "2026-10-20T09:00:00.000000+00:00",
+          "org_id": "org-vector",
+          "policy_hash": "1d8fc211adb8cd9f2b29f80ca0b683e0ea926a25100608928c948e61ad2f4026",
+          "policy_name": "policy_payments_guard",
+          "prev_policy_hash": "",
+          "public_key": "7aGZlqLCXVmvZqGkuok0-ODoIrrxp32HcXnLVnYhCw4",
+          "rules": "[{\"type\":\"require_grant\",\"value\":\"payments.*:zWnQLJG0_ASRZslQ3LgODV78XVMSeFBaPe0vtZJSdeM\"}]",
+          "signature": "qrBIs0cUO3BOzIm4-VTn57VPVnRUc4uVFnWKPKztwqD4F8MMMfuD2ndtUTLY6_XUVzPiZepDxynzveHM2awIDA",
+          "v": "policy-1",
+          "version": "1"
+        }
+      }
+    ],
+    "v": "policy-1"
+  }
+}

@@ -1,0 +1,127 @@
+{
+  "bundle": {
+    "decisions": [
+      {
+        "proof": {
+          "audit_path": [
+            "5e61c918610609a799cb39b3a9b06c9b89c3f5ab0e68dec16708b89806c2dcf9",
+            "7e500e31271eff25cb932b545d6705ade04d1fb102ed7950d89c761e734dd04a",
+            "c374a74ee443b1a0c1f331026c24242f338c8345730067608a261fcf5ffa58de",
+            "021f0cf4e4f046ba1a94e0ef959e47eea6385e6f96a63f838da5ddbf39b0e2e0"
+          ],
+          "leaf_hash": "114714ef98adecdd415878fbf9f761ec298f0f16c96edf5b91c4ff0b0310cc96",
+          "leaf_index": 6,
+          "root_hash": "6a68a8d4be2de52dc7e1fc0bfef7f978d0ef0da5de442ce72ef804463ce3c292",
+          "tree_size": 13
+        },
+        "record": {
+          "action_id": "00000000-0000-4000-8000-000000000001",
+          "agent": "agent",
+          "args_hash": "92ed19f9a12b624d40167ddf2e5f9fac3fff30924add5f244675ed8bf6d28d30",
+          "intent_hash": "",
+          "org_id": "org-vector",
+          "outcome": "ALLOWED",
+          "policy_applied": [
+            "policy_deploy_gate@sha256:1766ea5aeecd739161a596239ab4d679c7da674ac675ac5166f19104e358b5b9",
+            "policy_payments_guard@sha256:1d8fc211adb8cd9f2b29f80ca0b683e0ea926a25100608928c948e61ad2f4026"
+          ],
+          "public_key": "7aGZlqLCXVmvZqGkuok0-ODoIrrxp32HcXnLVnYhCw4",
+          "session_id": "",
+          "signature": "j9_3y__xUtnYNGrGCTewaRq3eCsjls-rCsZ4GAjUdqLKkQwgvndlwQ7NTdX-bDEStkGV_AMcCYliNJ7aFXuZDg",
+          "timestamp": "2026-10-20T10:00:00.000000+00:00",
+          "tool": "payments.transfer",
+          "v": "action-1"
+        }
+      }
+    ],
+    "head": {
+      "log": "public",
+      "root_hash": "6a68a8d4be2de52dc7e1fc0bfef7f978d0ef0da5de442ce72ef804463ce3c292",
+      "signature": "2tMuUBWr7yXmA3igZl4gxARFLAT8VfS47kijxVz1l21IV2Yvg632YHZw6qZROOUnBVARkoRoeDSfna74E0qOBw",
+      "timestamp": "2026-10-20T13:00:00Z",
+      "tree_size": 13,
+      "v": 1
+    },
+    "policies": [
+      {
+        "proof": {
+          "audit_path": [
+            "27a3bca207f127a9520c7f380789b483bafa69d9c8655c430850101f3c657bd8",
+            "e69329bb892302e3f2ea7b1767fb41db4d56665a88fdd84d533ded38929bc4ca",
+            "3059c18499b64af16331100d4bf295825c7cdc982177edcec10d6cc441aee52d",
+            "021f0cf4e4f046ba1a94e0ef959e47eea6385e6f96a63f838da5ddbf39b0e2e0"
+          ],
+          "leaf_hash": "fb4067cdbeff0612ab41eedc1c1669c4203817c89cd6080e7c38a8b47e53bf9d",
+          "leaf_index": 2,
+          "root_hash": "6a68a8d4be2de52dc7e1fc0bfef7f978d0ef0da5de442ce72ef804463ce3c292",
+          "tree_size": 13
+        },
+        "statement": {
+          "created_at": "2026-10-20T09:00:00.000000+00:00",
+          "org_id": "org-vector",
+          "policy_hash": "1d8fc211adb8cd9f2b29f80ca0b683e0ea926a25100608928c948e61ad2f4026",
+          "policy_name": "policy_payments_guard",
+          "prev_policy_hash": "",
+          "public_key": "7aGZlqLCXVmvZqGkuok0-ODoIrrxp32HcXnLVnYhCw4",
+          "rules": "[{\"type\":\"require_grant\",\"value\":\"payments.*:zWnQLJG0_ASRZslQ3LgODV78XVMSeFBaPe0vtZJSdeM\"}]",
+          "signature": "qrBIs0cUO3BOzIm4-VTn57VPVnRUc4uVFnWKPKztwqD4F8MMMfuD2ndtUTLY6_XUVzPiZepDxynzveHM2awIDA",
+          "v": "policy-1",
+          "version": "1"
+        }
+      },
+      {
+        "proof": {
+          "audit_path": [
+            "54a8552101152a1450cd8480357e1983c24718bee7a4655bd8b2fa88add7da31",
+            "718af8c0fb752191adf95946bf87e8b2f711018a2506a0334121608d03a95c1a",
+            "3771f3b636b56e3c17c5967513f35ddef5e0e481206454fff295c1ce88a53a89",
+            "51568ccc43dd059dd007e922e93a93ab18500f0e290c69abaf041d3716b4858c"
+          ],
+          "leaf_hash": "dc15e5381979102b04569ea3f7b267b581a464564f3f7c330255977599a3fb15",
+          "leaf_index": 9,
+          "root_hash": "6a68a8d4be2de52dc7e1fc0bfef7f978d0ef0da5de442ce72ef804463ce3c292",
+          "tree_size": 13
+        },
+        "statement": {
+          "created_at": "2026-10-20T11:00:00.000000+00:00",
+          "org_id": "org-vector",
+          "policy_hash": "2254743a66aed32c519ce8a24c729a6eee226e0c0b74ae462c3bffd801610ecc",
+          "policy_name": "policy_payments_guard",
+          "prev_policy_hash": "1d8fc211adb8cd9f2b29f80ca0b683e0ea926a25100608928c948e61ad2f4026",
+          "public_key": "7aGZlqLCXVmvZqGkuok0-ODoIrrxp32HcXnLVnYhCw4",
+          "rules": "[{\"type\":\"require_grant\",\"value\":\"payments.*:zWnQLJG0_ASRZslQ3LgODV78XVMSeFBaPe0vtZJSdeM\"},{\"type\":\"require_args\",\"value\":\"payments.*:approval_ticket\"}]",
+          "signature": "-f80nTDWPBqmJpnDzcCEo0oq_b5fG77JT223IMoJh9wDTAAJQyfxmtuiYcR2IyfoVOzRfkCU_CtjdBj7AbiwCw",
+          "v": "policy-1",
+          "version": "2"
+        }
+      },
+      {
+        "proof": {
+          "audit_path": [
+            "59eb63be439081cd86179e1bc51a5d6288f86a1d80da433cb3eed5d2fed09022",
+            "8d82ea2e19aa924a66f6245362d86a00bea4c768394fb7336cc2b757b53a27c5",
+            "3771f3b636b56e3c17c5967513f35ddef5e0e481206454fff295c1ce88a53a89",
+            "51568ccc43dd059dd007e922e93a93ab18500f0e290c69abaf041d3716b4858c"
+          ],
+          "leaf_hash": "3f6603d8251543fbaf06cf544e06de462e43975b35aa64a36884f6b94068f099",
+          "leaf_index": 10,
+          "root_hash": "6a68a8d4be2de52dc7e1fc0bfef7f978d0ef0da5de442ce72ef804463ce3c292",
+          "tree_size": 13
+        },
+        "statement": {
+          "created_at": "2026-10-20T11:00:00.000000+00:00",
+          "org_id": "org-vector",
+          "policy_hash": "8a99ec81cf2133acbae9bc7de088674c41d368e64c9be8d918718a43d54cee87",
+          "policy_name": "policy_payments_guard",
+          "prev_policy_hash": "1d8fc211adb8cd9f2b29f80ca0b683e0ea926a25100608928c948e61ad2f4026",
+          "public_key": "7aGZlqLCXVmvZqGkuok0-ODoIrrxp32HcXnLVnYhCw4",
+          "rules": "[{\"type\":\"block_phrase\",\"value\":\"x\"}]",
+          "signature": "pcieuF_8iEKemlpoZCFWODLLVnYkE06kGhOvUgnx-eqg9pmapQRFLgAOcuK20XE4nqxpB38m1psdRnl8Q7cVCA",
+          "v": "policy-1",
+          "version": "2"
+        }
+      }
+    ],
+    "v": "policy-1"
+  }
+}

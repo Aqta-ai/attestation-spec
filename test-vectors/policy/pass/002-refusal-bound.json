@@ -1,0 +1,74 @@
+{
+  "bundle": {
+    "decisions": [
+      {
+        "proof": {
+          "audit_path": [
+            "114714ef98adecdd415878fbf9f761ec298f0f16c96edf5b91c4ff0b0310cc96",
+            "7e500e31271eff25cb932b545d6705ade04d1fb102ed7950d89c761e734dd04a",
+            "c374a74ee443b1a0c1f331026c24242f338c8345730067608a261fcf5ffa58de",
+            "5cacc79f4e0206a89da8a4a4c8824e58de26351fc798c7b1c628069b6aabc9fd"
+          ],
+          "leaf_hash": "5e61c918610609a799cb39b3a9b06c9b89c3f5ab0e68dec16708b89806c2dcf9",
+          "leaf_index": 7,
+          "root_hash": "fde42218873833f83b18d367942bbc6390f8bad4da925e4acd217149ae7c1043",
+          "tree_size": 12
+        },
+        "record": {
+          "action_id": "00000000-0000-4000-8000-000000000002",
+          "agent": "agent",
+          "args_hash": "d47f22aab2f2b7343b0c8d374ee4bbfd7fb3820bb1ad0f742dbec8cbbb65fb28",
+          "intent_hash": "",
+          "org_id": "org-vector",
+          "outcome": "BLOCKED",
+          "policy_applied": [
+            "policy_deploy_gate@sha256:1766ea5aeecd739161a596239ab4d679c7da674ac675ac5166f19104e358b5b9"
+          ],
+          "public_key": "7aGZlqLCXVmvZqGkuok0-ODoIrrxp32HcXnLVnYhCw4",
+          "session_id": "",
+          "signature": "r5pBiw_XLAColgFdhy2q6Id_3QdfR5yb6EsY80o7b84p1cm6Pq4hw3OorwaYsGwLfwWkNfdTYAzF_6xyXm8RDA",
+          "timestamp": "2026-10-20T10:30:00.000000+00:00",
+          "tool": "deploy.production",
+          "v": "action-1"
+        }
+      }
+    ],
+    "head": {
+      "log": "public",
+      "root_hash": "fde42218873833f83b18d367942bbc6390f8bad4da925e4acd217149ae7c1043",
+      "signature": "oj_YP6cyblah5hul6xDqAgmY751bMGOarCQ88lsA_IbPk6jV7Ehj6TtSzgg7VTPTMtIV0NEHhHygfVxu-EvMDA",
+      "timestamp": "2026-10-20T13:00:00Z",
+      "tree_size": 12,
+      "v": 1
+    },
+    "policies": [
+      {
+        "proof": {
+          "audit_path": [
+            "fb4067cdbeff0612ab41eedc1c1669c4203817c89cd6080e7c38a8b47e53bf9d",
+            "e69329bb892302e3f2ea7b1767fb41db4d56665a88fdd84d533ded38929bc4ca",
+            "3059c18499b64af16331100d4bf295825c7cdc982177edcec10d6cc441aee52d",
+            "5cacc79f4e0206a89da8a4a4c8824e58de26351fc798c7b1c628069b6aabc9fd"
+          ],
+          "leaf_hash": "27a3bca207f127a9520c7f380789b483bafa69d9c8655c430850101f3c657bd8",
+          "leaf_index": 3,
+          "root_hash": "fde42218873833f83b18d367942bbc6390f8bad4da925e4acd217149ae7c1043",
+          "tree_size": 12
+        },
+        "statement": {
+          "created_at": "2026-10-20T09:30:00.000000+00:00",
+          "org_id": "org-vector",
+          "policy_hash": "1766ea5aeecd739161a596239ab4d679c7da674ac675ac5166f19104e358b5b9",
+          "policy_name": "policy_deploy_gate",
+          "prev_policy_hash": "",
+          "public_key": "7aGZlqLCXVmvZqGkuok0-ODoIrrxp32HcXnLVnYhCw4",
+          "rules": "[{\"type\":\"require_args\",\"value\":\"deploy.*:eval_report_sha256,approved_by\"}]",
+          "signature": "F7sro7GLvqs6RNQIwLwNjWnz2zF3ZXrR7yahRS7mQvwV4jvkMBJ5wzjsQtS2_5jDZ_Z7T-cDPz931y8WWr0iBg",
+          "v": "policy-1",
+          "version": "1"
+        }
+      }
+    ],
+    "v": "policy-1"
+  }
+}

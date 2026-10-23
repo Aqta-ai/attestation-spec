@@ -73,3 +73,13 @@ from .complete import (  # noqa: E402,F401
     verify_complete,
 )
 from .witnessed import check_witness_record, statement_hash, verify_witnessed  # noqa: E402,F401
+
+# The policy profile (spec/POLICY-v1.md; draft). Explicit opt-in: call
+# verify_policy, never inferred from a bundle's shape.
+from .policy import (  # noqa: E402,F401
+    check_policy_record,
+    parse_binding,
+    policy_body_hash,
+    policy_leaf,
+    verify_policy,
+)

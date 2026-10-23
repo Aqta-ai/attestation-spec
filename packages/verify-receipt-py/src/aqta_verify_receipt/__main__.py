@@ -22,6 +22,7 @@ import sys
 from .chain import verify_chain
 from .complete import verify_complete
 from .witnessed import verify_witnessed
+from .policy import verify_policy
 from .verifier import verify_receipt
 
 PUB_KEY_HINT = "https://api.aqta.ai/v1/attestation/public-key"
@@ -133,7 +134,8 @@ def main(argv: list[str] | None = None) -> int:
         help="verify under an explicit profile: action-1 (ACTION-v1 action "
         "records), chain (a GRANT-v1, USE-v1 and ACTION-v1 bundle), complete "
         "(records against CHECKPOINT-v1 checkpoints and an EXECUTION-v1 log) or "
-        "witnessed (records against WITNESS-v1 statements); the last three are "
+        "witnessed (records against WITNESS-v1 statements) or policy (ACTION-v1 "
+        "records against the POLICY-v1 versions they bind); the last four are "
         "drafts, exit 0 PASS, 1 FAIL, 3 INCOMPLETE. Cannot be combined with "
         "--envelope",
     )
@@ -198,10 +200,10 @@ def main(argv: list[str] | None = None) -> int:
             file=sys.stderr,
         )
         return 2
-    if args.profile is not None and args.profile not in ("action-1", "chain", "complete", "witnessed"):
+    if args.profile is not None and args.profile not in ("action-1", "chain", "complete", "witnessed", "policy"):
         print(
             f"aqta-verify-receipt: unknown profile: {args.profile} "
-            "(accepted values: action-1, chain, complete, witnessed)",
+            "(accepted values: action-1, chain, complete, witnessed, policy)",
             file=sys.stderr,
         )
         return 2
@@ -212,7 +214,7 @@ def main(argv: list[str] | None = None) -> int:
         if value is not None and args.profile != owner:
             print(f"aqta-verify-receipt: {flag} applies only to --profile {owner}", file=sys.stderr)
             return 2
-    if args.profile in ("complete", "witnessed") and (args.integrity_only or args.no_strict):
+    if args.profile in ("complete", "witnessed", "policy") and (args.integrity_only or args.no_strict):
         print(f"aqta-verify-receipt: --profile {args.profile} needs --key and takes no --integrity-only or --no-strict",
               file=sys.stderr)
         return 2
@@ -289,10 +291,12 @@ def main(argv: list[str] | None = None) -> int:
         print("aqta-verify-receipt: receipt must be a JSON object", file=sys.stderr)
         return 2
 
-    if args.profile in ("complete", "witnessed"):
+    if args.profile in ("complete", "witnessed", "policy"):
         def keys(v):
             return None if v is None else [k.strip() for k in v.split(",") if k.strip()]
-        if args.profile == "complete":
+        if args.profile == "policy":
+            res = verify_policy(receipt, trusted_public_key=args.key)
+        elif args.profile == "complete":
             res = verify_complete(receipt, trusted_public_key=args.key, review_from=args.review_from,
                                   review_to=args.review_to, executor_keys=keys(args.executor_keys))
         else:

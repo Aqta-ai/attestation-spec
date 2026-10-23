@@ -19,6 +19,7 @@ import { verifyReceipt, AttestationReceipt, EnvelopeFormat } from './index';
 import { verifyChain } from './chain';
 import { verifyComplete } from './complete';
 import { verifyWitnessed } from './witnessed';
+import { verifyPolicy } from './policy';
 
 const PUB_KEY_HINT = 'https://api.aqta.ai/v1/attestation/public-key';
 
@@ -62,7 +63,9 @@ Options:
   --approver-keys <k,k>  chain only: approver keys the relying party designates
                      complete (records against CHECKPOINT-v1 checkpoints and an
                      EXECUTION-v1 log, draft), witnessed (records against
-                     WITNESS-v1 statements, draft) are also accepted profiles
+                     WITNESS-v1 statements, draft) and policy (ACTION-v1 records
+                     against the POLICY-v1 versions they bind, draft) are also
+                     accepted profiles
   --review-from <t>  complete only: start of the review window (RFC 3339, offset)
   --review-to <t>    complete only: end of the review window
   --executor-keys <k,k>  complete only: executor keys the relying party designates
@@ -75,7 +78,7 @@ Options:
 
 Contract:
   exit 0 valid · exit 1 invalid · exit 2 usage/IO
-  --profile chain|complete|witnessed: exit 0 PASS · 1 FAIL · 3 INCOMPLETE · 2 usage/IO
+  --profile chain|complete|witnessed|policy: exit 0 PASS · 1 FAIL · 3 INCOMPLETE · 2 usage/IO
   default stdout is one compact line (words carry meaning; colour is optional)
   --pretty never changes the exit code or the verify result
 
@@ -198,8 +201,8 @@ function main(): void {
   }
   // The flag takes the wire tag ("action-1"), the library takes the profile
   // name ("ACTION-v1"); the mapping is fixed here and nowhere else.
-  if (profile !== undefined && !['action-1', 'chain', 'complete', 'witnessed'].includes(profile)) {
-    process.stderr.write(`aqta-verify-receipt: unknown profile ${profile} (only: action-1, chain, complete, witnessed)\n`);
+  if (profile !== undefined && !['action-1', 'chain', 'complete', 'witnessed', 'policy'].includes(profile)) {
+    process.stderr.write(`aqta-verify-receipt: unknown profile ${profile} (only: action-1, chain, complete, witnessed, policy)\n`);
     process.exit(2);
   }
   for (const [flag, owner] of Object.entries(EXTRA_FLAGS)) {
@@ -208,7 +211,7 @@ function main(): void {
       process.exit(2);
     }
   }
-  const draftProfile = profile === 'complete' || profile === 'witnessed';
+  const draftProfile = profile === 'complete' || profile === 'witnessed' || profile === 'policy';
   if (draftProfile && (integrityOnly || !strict)) {
     process.stderr.write(`aqta-verify-receipt: --profile ${profile} needs --key and takes no --integrity-only or --no-strict\n`);
     process.exit(2);
@@ -284,7 +287,9 @@ function main(): void {
   if (draftProfile) {
     const keys = (v: string | undefined) => (v === undefined ? null : v.split(',').map((k) => k.trim()).filter((k) => k !== ''));
     let res;
-    if (profile === 'complete') {
+    if (profile === 'policy') {
+      res = verifyPolicy(receipt, { trustedPublicKey: trustedKey });
+    } else if (profile === 'complete') {
       res = verifyComplete(receipt, { trustedPublicKey: trustedKey, reviewFrom: extra['--review-from'],
         reviewTo: extra['--review-to'], executorKeys: keys(extra['--executor-keys']) });
     } else {

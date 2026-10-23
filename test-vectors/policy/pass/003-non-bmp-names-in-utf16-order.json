@@ -1,0 +1,100 @@
+{
+  "bundle": {
+    "decisions": [
+      {
+        "proof": {
+          "audit_path": [
+            "dc15e5381979102b04569ea3f7b267b581a464564f3f7c330255977599a3fb15",
+            "e24d0383f6f1ce5f97d8e605abadb87519a958f17d51e3a7ed8cb106dda73028",
+            "51568ccc43dd059dd007e922e93a93ab18500f0e290c69abaf041d3716b4858c"
+          ],
+          "leaf_hash": "54a8552101152a1450cd8480357e1983c24718bee7a4655bd8b2fa88add7da31",
+          "leaf_index": 8,
+          "root_hash": "fde42218873833f83b18d367942bbc6390f8bad4da925e4acd217149ae7c1043",
+          "tree_size": 12
+        },
+        "record": {
+          "action_id": "00000000-0000-4000-8000-000000000004",
+          "agent": "agent",
+          "args_hash": "a7a5cae9d8768ee46e0a92537410c8731cc49d6d15078b101af9e91c2656e720",
+          "intent_hash": "",
+          "org_id": "org-vector",
+          "outcome": "BLOCKED",
+          "policy_applied": [
+            "policy_😀@sha256:950222c9a856dc0110007f7d580455023eaa4cea074afd2864dbf0aad6c16ce0",
+            "policy_～@sha256:a8baa92a60a7aa80fca4290548e7ac9ee63270691828fcbce15796ff8f6ffaf3"
+          ],
+          "public_key": "7aGZlqLCXVmvZqGkuok0-ODoIrrxp32HcXnLVnYhCw4",
+          "session_id": "",
+          "signature": "J-71Ul32Sg61-2EWMY55PhLzIclGZg3V5UwRXOSsuTTZJsY4NmsYTcH_csyclxhO7EYNU1ZyygJFNDVzc0JqDQ",
+          "timestamp": "2026-10-20T10:45:00.000000+00:00",
+          "tool": "payments.transfer",
+          "v": "action-1"
+        }
+      }
+    ],
+    "head": {
+      "log": "public",
+      "root_hash": "fde42218873833f83b18d367942bbc6390f8bad4da925e4acd217149ae7c1043",
+      "signature": "oj_YP6cyblah5hul6xDqAgmY751bMGOarCQ88lsA_IbPk6jV7Ehj6TtSzgg7VTPTMtIV0NEHhHygfVxu-EvMDA",
+      "timestamp": "2026-10-20T13:00:00Z",
+      "tree_size": 12,
+      "v": 1
+    },
+    "policies": [
+      {
+        "proof": {
+          "audit_path": [
+            "2ef3407dc8b236e8a29e6aef80dd0667dbff81c37887239fe31b4f6dadba270f",
+            "4c153bbe6162f3eb8815d489f1737d20c6918c581db472fc1950b5de2066b1f8",
+            "c374a74ee443b1a0c1f331026c24242f338c8345730067608a261fcf5ffa58de",
+            "5cacc79f4e0206a89da8a4a4c8824e58de26351fc798c7b1c628069b6aabc9fd"
+          ],
+          "leaf_hash": "60b12b35d0e15d1e096b8720d614c8c1829eeb979a9b45b87e6271bb423f8908",
+          "leaf_index": 4,
+          "root_hash": "fde42218873833f83b18d367942bbc6390f8bad4da925e4acd217149ae7c1043",
+          "tree_size": 12
+        },
+        "statement": {
+          "created_at": "2026-10-20T09:40:00.000000+00:00",
+          "org_id": "org-vector",
+          "policy_hash": "950222c9a856dc0110007f7d580455023eaa4cea074afd2864dbf0aad6c16ce0",
+          "policy_name": "policy_😀",
+          "prev_policy_hash": "",
+          "public_key": "7aGZlqLCXVmvZqGkuok0-ODoIrrxp32HcXnLVnYhCw4",
+          "rules": "[{\"type\":\"block_phrase\",\"value\":\"wire everything\"}]",
+          "signature": "rMqcPhoAFOyNywEWrGEH6i0oTyhS9TE8Mtktj6BkELn9W6Q_VApCR5EE_kDaSBPy660RvcYqSHxHv5I08L2wDQ",
+          "v": "policy-1",
+          "version": "1"
+        }
+      },
+      {
+        "proof": {
+          "audit_path": [
+            "60b12b35d0e15d1e096b8720d614c8c1829eeb979a9b45b87e6271bb423f8908",
+            "4c153bbe6162f3eb8815d489f1737d20c6918c581db472fc1950b5de2066b1f8",
+            "c374a74ee443b1a0c1f331026c24242f338c8345730067608a261fcf5ffa58de",
+            "5cacc79f4e0206a89da8a4a4c8824e58de26351fc798c7b1c628069b6aabc9fd"
+          ],
+          "leaf_hash": "2ef3407dc8b236e8a29e6aef80dd0667dbff81c37887239fe31b4f6dadba270f",
+          "leaf_index": 5,
+          "root_hash": "fde42218873833f83b18d367942bbc6390f8bad4da925e4acd217149ae7c1043",
+          "tree_size": 12
+        },
+        "statement": {
+          "created_at": "2026-10-20T09:41:00.000000+00:00",
+          "org_id": "org-vector",
+          "policy_hash": "a8baa92a60a7aa80fca4290548e7ac9ee63270691828fcbce15796ff8f6ffaf3",
+          "policy_name": "policy_～",
+          "prev_policy_hash": "",
+          "public_key": "7aGZlqLCXVmvZqGkuok0-ODoIrrxp32HcXnLVnYhCw4",
+          "rules": "[{\"type\":\"block_phrase\",\"value\":\"skip review\"}]",
+          "signature": "xnsKCUljnSzBXcjbq945hPr3Z1NQocBByJDw6yYOd6Bp33PHTMdU72tj0UbPd760TU1jLeTsLOVkV9FejGCjAw",
+          "v": "policy-1",
+          "version": "1"
+        }
+      }
+    ],
+    "v": "policy-1"
+  }
+}

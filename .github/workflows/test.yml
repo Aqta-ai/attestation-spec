@@ -190,6 +190,12 @@ jobs:
         # The chain profile and both record formats are drafts.
         run: node scripts/chain-interop-sweep.mjs
 
+      - name: Policy profile cross-implementation sweep
+        # Every POLICY-v1 binding vector through BOTH verifiers, verdict and
+        # reason compared per vector, per mutation and per re-signed binding.
+        # The policy profile and POLICY-v1 are drafts.
+        run: node scripts/policy-interop-sweep.mjs
+
       - name: Transparency proof cross-implementation sweep
         # Every RFC 6962 inclusion and consistency vector through BOTH proof
         # verifiers, verdict compared per file. This subtree of test-vectors is

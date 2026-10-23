@@ -1,0 +1,101 @@
+{
+  "bundle": {
+    "decisions": [
+      {
+        "proof": {
+          "audit_path": [
+            "54a8552101152a1450cd8480357e1983c24718bee7a4655bd8b2fa88add7da31",
+            "a207acbdb2665b9cf256cb7460e2a775b20cd689b8d92cf77196eb47d912e6dd",
+            "3771f3b636b56e3c17c5967513f35ddef5e0e481206454fff295c1ce88a53a89",
+            "51568ccc43dd059dd007e922e93a93ab18500f0e290c69abaf041d3716b4858c"
+          ],
+          "leaf_hash": "478cbbad3cb063bd460b5cfd53633f4659f040fb17544d56631185bcc5f2701e",
+          "leaf_index": 9,
+          "root_hash": "0ae5e65e2b8e746691cf6e0974a32c97a4d012ff9e280234fe094381a62491f6",
+          "tree_size": 13
+        },
+        "record": {
+          "action_id": "00000000-0000-4000-8000-00000000000e",
+          "agent": "agent",
+          "args_hash": "5e7438e2b05ce6720a5349f0f6127db7de29a5b63a01db2c8a5ef21bd7625d54",
+          "intent_hash": "",
+          "org_id": "org-vector",
+          "outcome": "BLOCKED",
+          "policy_applied": [
+            "policy_～@sha256:a8baa92a60a7aa80fca4290548e7ac9ee63270691828fcbce15796ff8f6ffaf3",
+            "policy_😀@sha256:950222c9a856dc0110007f7d580455023eaa4cea074afd2864dbf0aad6c16ce0"
+          ],
+          "public_key": "7aGZlqLCXVmvZqGkuok0-ODoIrrxp32HcXnLVnYhCw4",
+          "session_id": "",
+          "signature": "Gmb3mE67LmZwXYCxcSIK5bie-SZ2ljglFU6GiWMt3crJLnRq45GHAtcWnav---2AcrTc0vABjZBphUtMq1IaAw",
+          "timestamp": "2026-10-20T10:46:00.000000+00:00",
+          "tool": "payments.transfer",
+          "v": "action-1"
+        }
+      }
+    ],
+    "head": {
+      "log": "public",
+      "root_hash": "0ae5e65e2b8e746691cf6e0974a32c97a4d012ff9e280234fe094381a62491f6",
+      "signature": "ZM0jX9JnRXtg4wMqvhk-xdZXiX7eCMqnmFST2wz3Wn2HXy24w57CTvi5csXbzSi19vkK0Esin6sOOyGkcA7DAw",
+      "timestamp": "2026-10-20T13:00:00Z",
+      "tree_size": 13,
+      "v": 1
+    },
+    "policies": [
+      {
+        "proof": {
+          "audit_path": [
+            "2ef3407dc8b236e8a29e6aef80dd0667dbff81c37887239fe31b4f6dadba270f",
+            "4c153bbe6162f3eb8815d489f1737d20c6918c581db472fc1950b5de2066b1f8",
+            "c374a74ee443b1a0c1f331026c24242f338c8345730067608a261fcf5ffa58de",
+            "151833ddaa2acccaada28e9f5847b6997a9cccf0fcf829b95161ddbc8cb7f013"
+          ],
+          "leaf_hash": "60b12b35d0e15d1e096b8720d614c8c1829eeb979a9b45b87e6271bb423f8908",
+          "leaf_index": 4,
+          "root_hash": "0ae5e65e2b8e746691cf6e0974a32c97a4d012ff9e280234fe094381a62491f6",
+          "tree_size": 13
+        },
+        "statement": {
+          "created_at": "2026-10-20T09:40:00.000000+00:00",
+          "org_id": "org-vector",
+          "policy_hash": "950222c9a856dc0110007f7d580455023eaa4cea074afd2864dbf0aad6c16ce0",
+          "policy_name": "policy_😀",
+          "prev_policy_hash": "",
+          "public_key": "7aGZlqLCXVmvZqGkuok0-ODoIrrxp32HcXnLVnYhCw4",
+          "rules": "[{\"type\":\"block_phrase\",\"value\":\"wire everything\"}]",
+          "signature": "rMqcPhoAFOyNywEWrGEH6i0oTyhS9TE8Mtktj6BkELn9W6Q_VApCR5EE_kDaSBPy660RvcYqSHxHv5I08L2wDQ",
+          "v": "policy-1",
+          "version": "1"
+        }
+      },
+      {
+        "proof": {
+          "audit_path": [
+            "60b12b35d0e15d1e096b8720d614c8c1829eeb979a9b45b87e6271bb423f8908",
+            "4c153bbe6162f3eb8815d489f1737d20c6918c581db472fc1950b5de2066b1f8",
+            "c374a74ee443b1a0c1f331026c24242f338c8345730067608a261fcf5ffa58de",
+            "151833ddaa2acccaada28e9f5847b6997a9cccf0fcf829b95161ddbc8cb7f013"
+          ],
+          "leaf_hash": "2ef3407dc8b236e8a29e6aef80dd0667dbff81c37887239fe31b4f6dadba270f",
+          "leaf_index": 5,
+          "root_hash": "0ae5e65e2b8e746691cf6e0974a32c97a4d012ff9e280234fe094381a62491f6",
+          "tree_size": 13
+        },
+        "statement": {
+          "created_at": "2026-10-20T09:41:00.000000+00:00",
+          "org_id": "org-vector",
+          "policy_hash": "a8baa92a60a7aa80fca4290548e7ac9ee63270691828fcbce15796ff8f6ffaf3",
+          "policy_name": "policy_～",
+          "prev_policy_hash": "",
+          "public_key": "7aGZlqLCXVmvZqGkuok0-ODoIrrxp32HcXnLVnYhCw4",
+          "rules": "[{\"type\":\"block_phrase\",\"value\":\"skip review\"}]",
+          "signature": "xnsKCUljnSzBXcjbq945hPr3Z1NQocBByJDw6yYOd6Bp33PHTMdU72tj0UbPd760TU1jLeTsLOVkV9FejGCjAw",
+          "v": "policy-1",
+          "version": "1"
+        }
+      }
+    ],
+    "v": "policy-1"
+  }
+}
