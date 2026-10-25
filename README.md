@@ -19,6 +19,10 @@ No call to the issuer required.
 [ACTION-v1](./spec/ACTION-v1.md) ·
 [5-minute walkthrough](./VERIFY-WALKTHROUGH.md)
 
+The formats are written up for the IETF as an individual Internet-Draft,
+[draft-chueayen-attestation-receipts](https://datatracker.ietf.org/doc/draft-chueayen-attestation-receipts/)
+(revision -05, October 2026). It is a draft, not a standard.
+
 ## What this is
 
 Two record formats in one family, signed by the same key and checked by the
