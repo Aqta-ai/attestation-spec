@@ -9,6 +9,10 @@ own versioning contract described in [CONFORMANCE.md](./CONFORMANCE.md).
 
 ## [Unreleased]
 
+### Fixed
+
+- **ATTESTATION-v1 section 4, `policy_applied`:** the field description called the identifiers "ASCII" and said the ASCII restriction kept code-point and UTF-16 order identical, while `valid/007-non-ascii-policy` carries non-ASCII identifiers and both reference verifiers accept it. The text now allows any Unicode identifier and states UTF-16 code-unit order as the normative requirement. No change to the wire format, the vectors or either verifier: both already behaved this way. Reported by an independent implementer who built a verifier from the specification text alone.
+
 ## [1.4.0] - 2026-10-23
 
 Purely additive: two new opt-in profiles. CHECKPOINT-v1, EXECUTION-v1 and WITNESS-v1 ship as
