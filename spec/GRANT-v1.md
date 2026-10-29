@@ -2,7 +2,7 @@
 
 **Status:** DRAFT. Not frozen. The wire format may change before it is frozen; a frozen version will say so here.
 **Version:** 1.0-draft
-**Last updated:** 2026-10-21
+**Last updated:** 2026-10-29
 **Sibling specifications:** [ACTION-v1](./ACTION-v1.md) (what the boundary allowed or refused), [USE-v1](./USE-v1.md) (which use of a grant an action consumed, and the `chain` profile that checks all three together).
 **Conformance vectors:** [test-vectors/chain/](../test-vectors/chain/)
 
@@ -64,6 +64,7 @@ about canonical bytes, so `max_uses` is a decimal string.
 | `signature` | yes | Ed25519 signature over the canonical bytes, base64url without padding |
 | `scope_args` | no | non-empty array of `"name=value"` strings fixing exact argument values. Names match `^[A-Za-z0-9_.-]{1,64}$`, are distinct, and are not `aqta_grant`, `aqta_grant_id` or `aqta_grant_hash`; values are non-empty. Sorted. Absent means no values are fixed |
 | `agent_key_id` | no | the id of the one API key the grant is issued to, matching `^[A-Za-z0-9_.:-]{1,128}$`. Absent means any key of the organisation |
+| `approver_policy_sha256` | no | lowercase hex SHA-256 (64 characters) of the canonical bytes (RFC 8785) of the approver trust policy under which the signer acts as an approver (section 7.2). Absent means the grant names no policy |
 
 Any other member is refused. A boundary that ignored a member it did not recognise would enforce less than the
 approver signed.
@@ -125,7 +126,7 @@ A verifier checks, in this order, and the first failure is the result:
    timestamp grammar).
 9. `require_args` holds only strings, in UTF-16 code-unit order.
 10. `scope_args`, if present, is well formed (section 4).
-11. `agent_key_id`, if present, is well formed.
+11. `agent_key_id`, if present, is well formed; `approver_policy_sha256`, if present, matches `^[0-9a-f]{64}$`.
 12. The payload canonicalises; `signature` and `public_key` are strict base64url (`^[A-Za-z0-9_-]+$`, no padding,
     no line feed); they decode to 64 and 32 bytes; the signature verifies under `public_key`.
 
@@ -142,6 +143,12 @@ which, and the `chain` profile returns `INCOMPLETE` rather than guess (USE-v1 se
 A signed, published approver set rooted in an organisation key, with rotation and revocation, is future work and
 is not defined here.
 
+**Binding the policy.** When a grant carries `approver_policy_sha256`, the approver has signed which trust policy
+it claims to act under. A relying party that holds a policy document computes the SHA-256 of its canonical bytes
+and compares. Equal: the grant was signed under the policy the relying party holds. Different: the approver
+claims a different policy, and the grant is not treated as designated by the relying party's policy, even if
+the key appears in it. The digest does not make a key an approver; only the relying party's own policy does.
+
 ## 8. Assertion Provenance (normative)
 
 | Member | Provenance | What the signature establishes |
@@ -152,6 +159,7 @@ is not defined here.
 | `signing_mode` | **Approver-attested** | Which signing mode produced the grant. Only `approver-signed` exists; a grant without it is refused, never downgraded. |
 | `grant_id`, `org_id` | **Approver-assigned** | Identifiers the signer chose. |
 | `agent_key_id` | **Approver-attested, boundary-enforced** | The approver bound the grant to one API key. Only the boundary can check that binding; a relying party cannot, because no signed record carries the key a request used. |
+| `approver_policy_sha256` | **Approver-attested** | The approver signed which trust policy it acts under. A relying party compares it with the policy it holds (7.2); the record cannot make a key an approver. |
 
 ## 9. Example
 
@@ -192,3 +200,7 @@ The full signed form is `test-vectors/chain/pass/006-live-grant-shape.json`.
 
 - 2026-10-21: first draft, matching the boundary's GRANT-v1 records field for field (`grants.py`, including the
   optional `scope_args` and `agent_key_id`).
+- 2026-10-29: optional `approver_policy_sha256`, so an approval can name, inside the signed payload, the trust
+  policy that designated its approver. Prompted by the approval-record interoperability example built against
+  ACTION-v1 section 8.3. Not yet issued by the boundary; aqta-verify-receipt 1.4.0 refuses the member until the
+  next release adds it, with conformance vectors for a matching, a mismatching and a malformed digest.
