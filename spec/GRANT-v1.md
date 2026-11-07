@@ -64,7 +64,7 @@ about canonical bytes, so `max_uses` is a decimal string.
 | `signature` | yes | Ed25519 signature over the canonical bytes, base64url without padding |
 | `scope_args` | no | non-empty array of `"name=value"` strings fixing exact argument values. Names match `^[A-Za-z0-9_.-]{1,64}$`, are distinct, and are not `aqta_grant`, `aqta_grant_id` or `aqta_grant_hash`; values are non-empty. Sorted. Absent means no values are fixed |
 | `agent_key_id` | no | the id of the one API key the grant is issued to, matching `^[A-Za-z0-9_.:-]{1,128}$`. Absent means any key of the organisation |
-| `approver_policy_sha256` | no | lowercase hex SHA-256 (64 characters) of the canonical bytes (RFC 8785) of the approver trust policy under which the signer acts as an approver (section 7.2). Absent means the grant names no policy |
+| `approver_policy_sha256` | no | lowercase hex SHA-256 (64 characters) of the canonical bytes (RFC 8785) of the designating policy under which the signer acts as an approver: the document that says which keys may approve which operations for which targets (section 7.2). Absent means the grant names no policy |
 
 Any other member is refused. A boundary that ignored a member it did not recognise would enforce less than the
 approver signed.
@@ -143,11 +143,17 @@ which, and the `chain` profile returns `INCOMPLETE` rather than guess (USE-v1 se
 A signed, published approver set rooted in an organisation key, with rotation and revocation, is future work and
 is not defined here.
 
-**Binding the policy.** When a grant carries `approver_policy_sha256`, the approver has signed which trust policy
-it claims to act under. A relying party that holds a policy document computes the SHA-256 of its canonical bytes
-and compares. Equal: the grant was signed under the policy the relying party holds. Different: the approver
-claims a different policy, and the grant is not treated as designated by the relying party's policy, even if
-the key appears in it. The digest does not make a key an approver; only the relying party's own policy does.
+**Binding the policy.** When a grant carries `approver_policy_sha256`, the approver has signed which designating
+policy it claims to act under. A designating policy says which keys may approve which operations for which
+targets. Who wrote it does not matter: it is often the issuer's or the organisation's policy. What matters is
+that the relying party has chosen to rely on it. A relying party that holds that document computes the SHA-256
+of its canonical bytes and compares. Equal: the grant was signed under the designating policy the relying party
+relies on. Different: the approver claims another policy, and the grant is not treated as designated by the
+policy the relying party relies on, even if the key appears in it. The digest does not make a key an approver;
+only a designating policy the relying party has chosen to rely on does.
+
+A document that only maps keys to people or organisations designates nobody, so it is not what this member
+names. Such a mapping answers a different question (who holds this key) and stays outside the record.
 
 ## 8. Assertion Provenance (normative)
 
@@ -159,7 +165,7 @@ the key appears in it. The digest does not make a key an approver; only the rely
 | `signing_mode` | **Approver-attested** | Which signing mode produced the grant. Only `approver-signed` exists; a grant without it is refused, never downgraded. |
 | `grant_id`, `org_id` | **Approver-assigned** | Identifiers the signer chose. |
 | `agent_key_id` | **Approver-attested, boundary-enforced** | The approver bound the grant to one API key. Only the boundary can check that binding; a relying party cannot, because no signed record carries the key a request used. |
-| `approver_policy_sha256` | **Approver-attested** | The approver signed which trust policy it acts under. A relying party compares it with the policy it holds (7.2); the record cannot make a key an approver. |
+| `approver_policy_sha256` | **Approver-attested** | The approver signed which designating policy it acts under. A relying party compares it with the designating policy it relies on (7.2); the record cannot make a key an approver. |
 
 ## 9. Example
 
@@ -204,3 +210,7 @@ The full signed form is `test-vectors/chain/pass/006-live-grant-shape.json`.
   policy that designated its approver. Prompted by the approval-record interoperability example built against
   ACTION-v1 section 8.3. Not yet issued by the boundary; aqta-verify-receipt 1.4.0 refuses the member until the
   next release adds it, with conformance vectors for a matching, a mismatching and a malformed digest.
+- 2026-11-07: section 7.2 and the member's definition now say the digest names the designating policy (which keys
+  may approve which operations for which targets), whoever wrote it, and that a key-to-person mapping is not
+  what it names. Clarified after a question from Laurent Lemonnier (iSoluce). No change to the wire format or
+  to verification step 11.
