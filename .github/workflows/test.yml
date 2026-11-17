@@ -184,6 +184,13 @@ jobs:
         # that were never signed, while Python rejected the same file.
         run: node scripts/bytes-interop-sweep.mjs
 
+      - name: Pretty output cross-implementation sweep
+        # Both CLIs as processes on every vector, under a UTF-8 and a C locale:
+        # the --pretty card and --help must match byte for byte, the first
+        # --pretty line must be the default compact line, and no line may
+        # exceed 78 columns or carry ANSI on a pipe.
+        run: node scripts/pretty-interop-sweep.mjs
+
       - name: Chain profile cross-implementation sweep
         # Every GRANT-v1, USE-v1 and ACTION-v1 chain vector through BOTH
         # verifiers, verdict and reason compared per vector and per mutation.

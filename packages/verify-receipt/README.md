@@ -51,13 +51,45 @@ Invalid:
 ✕ invalid  signature mismatch  2d41…871e94c
 ```
 
-Optional human-readable summary (the compact line and exit code are the result):
+Optional human-readable card (the compact line and exit code are the result;
+`--pretty` prints that same line first, so `head -1` still gives it, then the
+card, which says what the signature proves and what it does not):
 
 ```bash
 npx aqta-verify-receipt receipt.json --key <pinned> --pretty
-# …
-◈ seal intact · verified offline
 ```
+
+```
+✓ valid  BLOCKED  0000…000002  pinned issuer key
+
+   .-""-.     ____             _
+  / .--. \   / ___|  ___  __ _| |
+ | ( <> ) |  \___ \ / _ \/ _` | |
+  \ '--' /    ___) |  __/ (_| | |
+   '-..-'    |____/ \___|\__,_|_|
+             offline receipt check · by Aqta
+
+.--------------------------------------------------------------------------.
+| Seal receipt                                                       VALID |
+|--------------------------------------------------------------------------|
+| Decision         | BLOCKED                                               |
+| Issued           | 2026-04-23T10:15:30.000000+00:00                      |
+| Issuer key       | alWz…7oix4E (pinned)                                  |
+| Record           | 0000…000002                                           |
+| Format           | ATTESTATION-v1                                        |
+|--------------------------------------------------------------------------|
+| What this proves | seal intact: the issuer signed these exact bytes and  |
+|                  | no one has altered them since. Checked offline,       |
+|                  | nothing was sent to Aqta.                             |
+| What it does not | which model actually ran, that an invoice is genuine, |
+|                  | that a payment settled, or that the issuer is honest. |
+'--------------------------------------------------------------------------'
+```
+
+The card is plain ASCII apart from the marks the compact line already uses,
+fits an 80-column terminal, carries no colour when piped or under `NO_COLOR`,
+and never changes the exit code. `scripts/pretty-interop-sweep.mjs` compares it
+across both reference CLIs on every vector.
 
 Automation:
 
@@ -131,7 +163,7 @@ aqta-verify-receipt <file|-> --integrity-only [options]
 | `--integrity-only` | Signature vs embedded key only; returns untrusted. Anyone can self-sign. |
 | `--no-strict` | Allow unknown top-level fields |
 | `--json` | One JSON object on stdout |
-| `--pretty` | Optional human-readable summary after the compact line |
+| `--pretty` | Optional human-readable card after the compact line |
 | `-q` | Silent; exit code only |
 
 `NO_COLOR=1` disables colour. Meaning never depends on colour alone.

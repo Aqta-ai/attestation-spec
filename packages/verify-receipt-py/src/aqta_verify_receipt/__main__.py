@@ -4,8 +4,9 @@ Offline check of an ATTESTATION-v1 (Seal) receipt. No account. No network by
 default. Exit 0 if valid, 1 if not, 2 on usage or IO errors.
 
 Default output is one compact, scriptable line on stdout. Colour is
-presentation only (NO_COLOR / non-TTY disables it). --pretty adds a short
-human-readable summary; it is never the verification contract.
+presentation only (NO_COLOR / non-TTY disables it). --pretty prints that same
+line first, then a boxed human-readable card; it is never the verification
+contract.
 
     aqta-verify-receipt receipt.json --key <base64url>
     curl -sS https://api.aqta.ai/v1/receipts/ID/public | aqta-verify-receipt - --key <base64url>
@@ -61,33 +62,280 @@ def _compact_line(valid: bool, outcome: str, rid: str, detail: str) -> str:
     return f"{_paint('31', no + ' invalid')}  {detail}  {_mid(rid)}"
 
 
-def _pretty_extra(valid: bool, key_source: str | None = None) -> str:
-    """The optional human lines under the compact verdict.
+# The wordmark and help text are shared with the TypeScript CLI byte for byte
+# (scripts/pretty-interop-sweep.mjs compares them). Pure ASCII apart from the
+# middle dot, which falls back to '-' outside a UTF-8 locale, as the compact
+# line's marks do.
+WORDMARK = "\n".join([
+    '   .-""-.     ____             _',
+    "  / .--. \\   / ___|  ___  __ _| |",
+    " | ( <> ) |  \\___ \\ / _ \\/ _` | |",
+    "  \\ '--' /    ___) |  __/ (_| | |",
+    "   '-..-'    |____/ \\___|\\__,_|_|",
+    "             offline receipt check · by Aqta",
+])
 
-    Says what was established and what was not, because a receipt that verifies
-    still does not prove which model ran, and someone reading this at the end of
-    an audit should not have to already know that. Never changes the exit code.
+HELP = f"""
+Checks Seal records offline: ATTESTATION-v1 receipts for what an AI decided,
+ACTION-v1 records for what an agent was allowed to do. No account, no network.
 
-    Must stay word-for-word identical to prettyExtra in the TypeScript CLI.
-    """
-    mark = "◈" if _utf8() else "*"
-    dot = "·" if _utf8() else "-"
+Usage
+  aqta-verify-receipt <receipt.json | -> --key <base64url> [options]
+  aqta-verify-receipt <receipt.json | -> --integrity-only [options]
+
+Trust
+  --key <key>            pin the issuer public key (required unless
+                         --integrity-only)
+  --integrity-only       check signature vs embedded key only (anyone can
+                         self-sign)
+  --no-strict            allow unknown top-level fields
+
+Record type
+  --envelope <name>      opt in to a non-ATTESTATION-v1 envelope (e.g.
+                         anchor-v1); ATTESTATION-v1 rules do not apply to it
+  --profile <name>       verify under a named profile: action-1 (ACTION-v1
+                         records), chain (GRANT-v1 + USE-v1 + ACTION-v1
+                         bundle, draft), complete (records against
+                         CHECKPOINT-v1 checkpoints and an EXECUTION-v1 log,
+                         draft) or witnessed (records against WITNESS-v1
+                         statements, draft); not with --envelope
+
+Profile options
+  --approver-keys <k,k>  chain only: approver keys the relying party
+                         designates; without it an authorised action is
+                         INCOMPLETE, never PASS
+  --review-from <t>      complete only: start of the review window (RFC 3339,
+                         with an offset)
+  --review-to <t>        complete only: end of the review window
+  --executor-keys <k,k>  complete only: executor keys the relying party
+                         designates
+  --witness-keys <k,k>   witnessed only: time-authority keys the relying
+                         party designates
+  --tolerance <s>        witnessed only: seconds an honest record may lag
+                         (default 3600)
+
+Output
+  (default)              one compact line on stdout
+  --json                 machine JSON on stdout (one object)
+  --pretty               the compact line, then a human-readable card
+  -q, --quiet            exit code only
+  -h, --help             this help
+
+Contract
+  exit 0 valid · exit 1 invalid · exit 2 usage/IO
+  --profile chain|complete|witnessed:
+    exit 0 PASS · 1 FAIL · 3 INCOMPLETE · 2 usage/IO
+  default stdout is one compact line (words carry meaning; colour is optional)
+  --pretty never changes the exit code or the verify result
+
+Pin the production key once from
+  {PUB_KEY_HINT}
+(field public_key). Do not re-fetch on every verify.
+"""
+
+
+def _local_dots(s: str) -> str:
+    """Replace the middle dot when the terminal is not UTF-8, as the marks do."""
+    return s if _utf8() else s.replace("·", "-")
+
+
+def _help_text() -> str:
+    return _local_dots(f"{WORDMARK}\n{HELP}")
+
+
+# The --pretty card. Presentation only: it is printed after the compact line,
+# never instead of it, and never changes the exit code or the verify result.
+#
+# Must stay byte-identical to the card in the TypeScript CLI; the comparison
+# runs in scripts/pretty-interop-sweep.mjs over every vector. Widths are
+# counted in code points (wide East Asian and non-BMP characters count as
+# two), so both implementations wrap and pad at the same places. The frame is
+# plain ASCII.
+CARD_WIDTH = 76  # outer width; every line fits an 80-column terminal
+LABEL_WIDTH = 16
+VALUE_WIDTH = CARD_WIDTH - 4 - LABEL_WIDTH - 3
+
+NOT_PROVEN = "that an invoice is genuine, that a payment settled, or that the issuer is honest."
+
+
+def _cp_width(cp: int) -> int:
+    if (
+        cp >= 0x10000
+        or 0x1100 <= cp <= 0x115F
+        or 0x2E80 <= cp <= 0xA4CF
+        or 0xAC00 <= cp <= 0xD7A3
+        or 0xF900 <= cp <= 0xFAFF
+        or 0xFE30 <= cp <= 0xFE4F
+        or 0xFF00 <= cp <= 0xFF60
+        or 0xFFE0 <= cp <= 0xFFE6
+    ):
+        return 2
+    return 1
+
+
+def _text_width(s: str) -> int:
+    return sum(_cp_width(ord(ch)) for ch in s)
+
+
+def _safe_text(s: str) -> str:
+    """Receipt values are untrusted. Control characters (which could move the
+    cursor or recolour the terminal) and lone surrogates become '?', and so
+    does anything outside ASCII when the terminal is not UTF-8."""
+    utf8 = _utf8()
+    out = []
+    for ch in s:
+        cp = ord(ch)
+        bad = cp < 0x20 or 0x7F <= cp <= 0x9F or 0xD800 <= cp <= 0xDFFF or (not utf8 and cp > 0x7E)
+        out.append("?" if bad else ch)
+    return "".join(out)
+
+
+def _fit_text(s: str, width: int) -> str:
+    if _text_width(s) <= width:
+        return s
+    ell = "…" if _utf8() else "..."
+    room = width - _text_width(ell)
+    out = ""
+    w = 0
+    for ch in s:
+        cw = _cp_width(ord(ch))
+        if w + cw > room:
+            break
+        out += ch
+        w += cw
+    return out + ell
+
+
+def _wrap_text(s: str, width: int) -> list[str]:
+    lines: list[str] = []
+    line = ""
+    for word in [x for x in s.split(" ") if x != ""]:
+        while _text_width(word) > width:
+            if line != "":
+                lines.append(line)
+                line = ""
+            head = ""
+            w = 0
+            i = 0
+            while i < len(word) and w + _cp_width(ord(word[i])) <= width:
+                w += _cp_width(ord(word[i]))
+                head += word[i]
+                i += 1
+            lines.append(head)
+            word = word[i:]
+        if word == "":
+            continue
+        if line == "":
+            line = word
+        elif _text_width(line) + 1 + _text_width(word) <= width:
+            line += " " + word
+        else:
+            lines.append(line)
+            line = word
+    if line != "" or not lines:
+        lines.append(line)
+    return lines
+
+
+def _pad(s: str, width: int) -> str:
+    return s + " " * max(0, width - _text_width(s))
+
+
+def _card_rows(rows: list) -> list[str]:
+    out = []
+    for row in rows:
+        label, value = row[0], row[1]
+        wrap = len(row) > 2 and row[2]
+        text = _safe_text(value)
+        parts = _wrap_text(text, VALUE_WIDTH) if wrap else [_fit_text(text, VALUE_WIDTH)]
+        for i, part in enumerate(parts):
+            out.append(f"| {_pad(label if i == 0 else '', LABEL_WIDTH)} | {_pad(part, VALUE_WIDTH)} |")
+    return out
+
+
+def _render_card(title: str, verdict: str, colour: str, facts: list, meaning: list) -> str:
+    dash = "-" * (CARD_WIDTH - 2)
+    inner = CARD_WIDTH - 4
+    gap = " " * max(1, inner - _text_width(title) - _text_width(verdict))
+    lines = [
+        "",
+        WORDMARK,
+        "",
+        f".{dash}.",
+        f"| {title}{gap}{_paint(colour, verdict)} |",
+        f"|{dash}|",
+        *_card_rows(facts),
+        f"|{dash}|",
+        *_card_rows(meaning),
+        f"'{dash}'",
+    ]
+    return _local_dots("\n".join(lines))
+
+
+def _key_count(keys) -> str:
+    if not keys:
+        return "none given"
+    return "1 designated" if len(keys) == 1 else f"{len(keys)} designated"
+
+
+def _record_card(receipt: dict, valid: bool, key_source, reason: str, fmt: str, trusted_key) -> str:
+    """Card for an ATTESTATION-v1 receipt or an ACTION-v1 record."""
+    def s(v):
+        return v if isinstance(v, str) else "?"
+
+    is_action = fmt == "ACTION-v1"
+    rid = s(receipt.get("action_id" if is_action else "attestation_id"))
+    title = "Seal action record" if is_action else "Seal receipt"
+    if trusted_key is not None:
+        key_row = ["Issuer key", f"{_mid(trusted_key)} (pinned)"]
+    else:
+        key_row = ["Issuer key", f"{_mid(s(receipt.get('public_key')))} (embedded, untrusted)"]
     if not valid:
-        return (
-            f"{mark} seal broken {dot} do not rely on this receipt\n"
-            "  these bytes are not what the issuer signed"
+        return _render_card(
+            title, "INVALID", "31",
+            [["Reason", reason, True], ["Record", _mid(rid)], ["Format", fmt], ["Checked against", key_row[1]]],
+            [["What this means",
+              "seal broken: do not rely on this receipt. These bytes are not what the issuer signed.", True]],
         )
-    if key_source != "pinned":
-        return (
-            f"{mark} signature checks out, against a key this receipt supplied itself\n"
-            "  anyone can self-sign, so this shows only that the file is internally consistent\n"
-            "  pin the issuer key with --key before you rely on it"
-        )
-    return (
-        f"{mark} seal intact {dot} checked offline, nothing was sent to Aqta\n"
-        "  the issuer signed these exact bytes and no one has altered them since\n"
-        "  it does not prove which model actually ran"
-    )
+    facts = [["Decision", s(receipt.get("outcome"))]]
+    if is_action:
+        facts.append(["Tool", s(receipt.get("tool"))])
+    facts += [["Issued", s(receipt.get("timestamp"))], key_row, ["Record", _mid(rid)], ["Format", fmt]]
+    limits = NOT_PROVEN if is_action else f"which model actually ran, {NOT_PROVEN}"
+    if key_source == "pinned":
+        meaning = [
+            ["What this proves",
+             "seal intact: the issuer signed these exact bytes and no one has altered them since. "
+             "Checked offline, nothing was sent to Aqta.", True],
+            ["What it does not", limits, True],
+        ]
+    else:
+        meaning = [
+            ["What this proves",
+             "the signature checks out against a key this receipt supplied itself, "
+             "so the file is only internally consistent.", True],
+            ["Warning", "anyone can self-sign. Pin the issuer key with --key before you rely on it.", True],
+            ["What it does not", f"who signed it, {limits}", True],
+        ]
+    return _render_card(title, "VALID", "32", facts, meaning)
+
+
+def _profile_card(profile: str, verdict: str, reason, trusted_key, extra_rows: list) -> str:
+    """Card for the chain, complete and witnessed profiles (drafts)."""
+    facts = [["Profile", f"{profile} (draft)"],
+             ["Issuer key", f"{_mid(trusted_key if trusted_key is not None else '?')} (pinned)"], *extra_rows]
+    if reason:
+        facts.append(["Reason", reason, True])
+    if verdict == "PASS":
+        meaning = [["What this proves",
+                    "every check this draft profile defines passed against the pinned issuer key, offline.", True]]
+    elif verdict == "FAIL":
+        meaning = [["What this means", "a check failed: do not rely on this bundle.", True]]
+    else:
+        meaning = [["What this means", "the bundle could not be fully checked. INCOMPLETE is never a pass.", True]]
+    meaning.append(["What it does not", NOT_PROVEN, True])
+    colour = "32" if verdict == "PASS" else "31" if verdict == "FAIL" else "33"
+    return _render_card(f"Seal {profile} bundle", verdict, colour, facts, meaning)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -102,7 +350,18 @@ def main(argv: list[str] | None = None) -> int:
             "Default stdout is one compact line. Words carry meaning; "
             "colour is optional. --pretty never changes the exit code."
         ),
+        add_help=False,
     )
+
+    class _Help(argparse.Action):
+        # The help text is shared with the TypeScript CLI byte for byte, so it
+        # is printed from HELP rather than generated by argparse. Same stream
+        # and exit code as argparse's own --help: stdout, exit 0.
+        def __call__(self, parser, namespace, values, option_string=None):
+            sys.stdout.write(_help_text())
+            parser.exit(0)
+
+    parser.add_argument("-h", "--help", action=_Help, nargs=0, help="show this help and exit")
     parser.add_argument("file", help="receipt JSON file, or - for stdin")
     parser.add_argument(
         "--key",
@@ -308,6 +567,16 @@ def main(argv: list[str] | None = None) -> int:
                 print(json.dumps({"verdict": res.verdict, "profile": args.profile, "reason": res.reason}))
             else:
                 print(f"{res.verdict} {args.profile}" + (f" ({res.reason})" if res.reason else ", pinned issuer key"))
+                if args.pretty:
+                    if args.profile == "complete":
+                        frm = args.review_from if args.review_from is not None else "not given"
+                        to = args.review_to if args.review_to is not None else "not given"
+                        rows = [["Review window", f"{frm} to {to}", True],
+                                ["Executor keys", _key_count(keys(args.executor_keys))]]
+                    else:
+                        tol = "3600 seconds (default)" if args.tolerance is None else f"{args.tolerance} seconds"
+                        rows = [["Witness keys", _key_count(keys(args.witness_keys))], ["Tolerance", tol]]
+                    print(_profile_card(args.profile, res.verdict, res.reason, args.key, rows))
         return {"PASS": 0, "FAIL": 1, "INCOMPLETE": 3}[res.verdict]
 
     if chain_profile:
@@ -320,6 +589,9 @@ def main(argv: list[str] | None = None) -> int:
                 print(json.dumps({"verdict": res.verdict, "profile": "chain", "reason": res.reason}))
             else:
                 print(f"{res.verdict} chain" + (f" ({res.reason})" if res.reason else ", pinned issuer key"))
+                if args.pretty:
+                    print(_profile_card("chain", res.verdict, res.reason, args.key,
+                                        [["Approver keys", _key_count(approvers)]]))
         return {"PASS": 0, "FAIL": 1, "INCOMPLETE": 3}[res.verdict]
 
     action_profile = args.profile == "action-1"
@@ -380,7 +652,9 @@ def main(argv: list[str] | None = None) -> int:
                 detail = f"{detail}, envelope {result.envelope}"
             print(_compact_line(result.valid, outcome, rid, detail))
             if args.pretty:
-                print(_pretty_extra(result.valid, result.key_source))
+                fmt = "ACTION-v1" if action_profile else (args.envelope if args.envelope is not None else "ATTESTATION-v1")
+                print(_record_card(receipt, result.valid, result.key_source,
+                                   result.reason or "verification failed", fmt, args.key))
     return 0 if result.valid else 1
 
 

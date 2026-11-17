@@ -6,8 +6,9 @@
  * default. Exit 0 if the signature verifies, 1 if not, 2 on usage/IO errors.
  *
  * Default output is one compact, scriptable line on stdout. Colour is
- * presentation only (NO_COLOR / non-TTY disables it). --pretty adds a short
- * human-readable summary; it is never the verification contract.
+ * presentation only (NO_COLOR / non-TTY disables it). --pretty prints that
+ * same line first, then a boxed human-readable card; it is never the
+ * verification contract.
  *
  *   npx aqta-verify-receipt receipt.json --key <base64url-ed25519-key>
  *   curl -sS https://api.aqta.ai/v1/receipts/REC_ID/public | npx aqta-verify-receipt - --key <key>
@@ -46,42 +47,88 @@ function mid(s: string, head = 4, tail = 6): string {
   return s.length > head + tail + 1 ? `${s.slice(0, head)}${ell}${s.slice(-tail)}` : s;
 }
 
-function usage(): never {
-  process.stderr.write(`aqta-verify-receipt - offline check for ATTESTATION-v1 (Seal)
+// The wordmark and help text are shared with the Python CLI byte for byte
+// (scripts/pretty-interop-sweep.mjs compares them). Pure ASCII apart from the
+// middle dot, which falls back to '-' outside a UTF-8 locale, as the compact
+// line's marks do.
+const WORDMARK = [
+  '   .-""-.     ____             _',
+  '  / .--. \\   / ___|  ___  __ _| |',
+  ' | ( <> ) |  \\___ \\ / _ \\/ _` | |',
+  "  \\ '--' /    ___) |  __/ (_| | |",
+  "   '-..-'    |____/ \\___|\\__,_|_|",
+  '             offline receipt check · by Aqta',
+].join('\n');
 
-Usage:
+const HELP = `
+Checks Seal records offline: ATTESTATION-v1 receipts for what an AI decided,
+ACTION-v1 records for what an agent was allowed to do. No account, no network.
+
+Usage
   aqta-verify-receipt <receipt.json | -> --key <base64url> [options]
   aqta-verify-receipt <receipt.json | -> --integrity-only [options]
 
-Options:
-  --key <key>        pin the issuer public key (required unless --integrity-only)
-  --integrity-only   check signature vs embedded key only (anyone can self-sign)
-  --envelope <name>  opt in to a non-ATTESTATION-v1 envelope (e.g. anchor-v1)
-  --profile <name>   verify under a named profile: action-1 (ACTION-v1 records) or
-                     chain (GRANT-v1 + USE-v1 + ACTION-v1 bundle, draft)
-  --approver-keys <k,k>  chain only: approver keys the relying party designates
-                     complete (records against CHECKPOINT-v1 checkpoints and an
-                     EXECUTION-v1 log, draft), witnessed (records against
-                     WITNESS-v1 statements, draft) are also accepted profiles
-  --review-from <t>  complete only: start of the review window (RFC 3339, offset)
-  --review-to <t>    complete only: end of the review window
-  --executor-keys <k,k>  complete only: executor keys the relying party designates
-  --witness-keys <k,k>   witnessed only: time-authority keys the relying party designates
-  --tolerance <s>    witnessed only: seconds an honest record may lag (default 3600)
-  --no-strict        allow unknown top-level fields
-  --json             machine JSON on stdout (one object)
-  --pretty           optional human-readable summary after the compact line
-  -q, --quiet        exit code only
+Trust
+  --key <key>            pin the issuer public key (required unless
+                         --integrity-only)
+  --integrity-only       check signature vs embedded key only (anyone can
+                         self-sign)
+  --no-strict            allow unknown top-level fields
 
-Contract:
+Record type
+  --envelope <name>      opt in to a non-ATTESTATION-v1 envelope (e.g.
+                         anchor-v1); ATTESTATION-v1 rules do not apply to it
+  --profile <name>       verify under a named profile: action-1 (ACTION-v1
+                         records), chain (GRANT-v1 + USE-v1 + ACTION-v1
+                         bundle, draft), complete (records against
+                         CHECKPOINT-v1 checkpoints and an EXECUTION-v1 log,
+                         draft) or witnessed (records against WITNESS-v1
+                         statements, draft); not with --envelope
+
+Profile options
+  --approver-keys <k,k>  chain only: approver keys the relying party
+                         designates; without it an authorised action is
+                         INCOMPLETE, never PASS
+  --review-from <t>      complete only: start of the review window (RFC 3339,
+                         with an offset)
+  --review-to <t>        complete only: end of the review window
+  --executor-keys <k,k>  complete only: executor keys the relying party
+                         designates
+  --witness-keys <k,k>   witnessed only: time-authority keys the relying
+                         party designates
+  --tolerance <s>        witnessed only: seconds an honest record may lag
+                         (default 3600)
+
+Output
+  (default)              one compact line on stdout
+  --json                 machine JSON on stdout (one object)
+  --pretty               the compact line, then a human-readable card
+  -q, --quiet            exit code only
+  -h, --help             this help
+
+Contract
   exit 0 valid · exit 1 invalid · exit 2 usage/IO
-  --profile chain|complete|witnessed: exit 0 PASS · 1 FAIL · 3 INCOMPLETE · 2 usage/IO
+  --profile chain|complete|witnessed:
+    exit 0 PASS · 1 FAIL · 3 INCOMPLETE · 2 usage/IO
   default stdout is one compact line (words carry meaning; colour is optional)
   --pretty never changes the exit code or the verify result
 
-Pin the production key once from ${PUB_KEY_HINT}
+Pin the production key once from
+  ${PUB_KEY_HINT}
 (field public_key). Do not re-fetch on every verify.
-`);
+`;
+
+/** Replace the middle dot when the terminal is not UTF-8, as the marks do. */
+function localDots(s: string): string {
+  return useUtf8() ? s : s.split('·').join('-');
+}
+
+function helpText(): string {
+  return localDots(`${WORDMARK}\n${HELP}`);
+}
+
+function usage(): never {
+  process.stderr.write(helpText());
   process.exit(2);
 }
 
@@ -100,37 +147,216 @@ function compactLine(
   return `${paint('31', `${no} invalid`)}  ${trustOrReason}  ${mid(id)}`;
 }
 
-/**
- * The optional human lines under the compact verdict.
+/*
+ * The --pretty card. Presentation only: it is printed after the compact line,
+ * never instead of it, and never changes the exit code or the verify result.
  *
- * Says what was established and what was not, because a receipt that verifies
- * still does not prove which model ran, and someone reading this at the end of
- * an audit should not have to already know that. Never changes the exit code.
- *
- * Must stay word-for-word identical to _pretty_extra in the Python CLI.
+ * Must stay byte-identical to the card in the Python CLI; the comparison runs
+ * in scripts/pretty-interop-sweep.mjs over every vector. Widths are counted in
+ * code points (wide East Asian and non-BMP characters count as two), so both
+ * implementations wrap and pad at the same places. The frame is plain ASCII.
  */
-function prettyExtra(valid: boolean, keySource?: string): string {
+const CARD_WIDTH = 76; // outer width; every line fits an 80-column terminal
+const LABEL_WIDTH = 16;
+const VALUE_WIDTH = CARD_WIDTH - 4 - LABEL_WIDTH - 3;
+
+const NOT_PROVEN = 'that an invoice is genuine, that a payment settled, or that the issuer is honest.';
+
+type Row = [string, string, boolean?]; // label, value, wrap (else truncate)
+type Card = { title: string; verdict: string; colour: string; facts: Row[]; meaning: Row[] };
+
+function cpWidth(cp: number): number {
+  if (
+    cp >= 0x10000 ||
+    (cp >= 0x1100 && cp <= 0x115f) ||
+    (cp >= 0x2e80 && cp <= 0xa4cf) ||
+    (cp >= 0xac00 && cp <= 0xd7a3) ||
+    (cp >= 0xf900 && cp <= 0xfaff) ||
+    (cp >= 0xfe30 && cp <= 0xfe4f) ||
+    (cp >= 0xff00 && cp <= 0xff60) ||
+    (cp >= 0xffe0 && cp <= 0xffe6)
+  ) {
+    return 2;
+  }
+  return 1;
+}
+
+function textWidth(s: string): number {
+  let w = 0;
+  for (const ch of s) w += cpWidth(ch.codePointAt(0) as number);
+  return w;
+}
+
+/**
+ * Receipt values are untrusted. Control characters (which could move the
+ * cursor or recolour the terminal) and lone surrogates become '?', and so does
+ * anything outside ASCII when the terminal is not UTF-8.
+ */
+function safeText(s: string): string {
   const utf8 = useUtf8();
-  const mark = utf8 ? '◈' : '*';
-  const dot = utf8 ? '·' : '-';
+  let out = '';
+  for (const ch of s) {
+    const cp = ch.codePointAt(0) as number;
+    const bad =
+      cp < 0x20 ||
+      (cp >= 0x7f && cp <= 0x9f) ||
+      (cp >= 0xd800 && cp <= 0xdfff) ||
+      (!utf8 && cp > 0x7e);
+    out += bad ? '?' : ch;
+  }
+  return out;
+}
+
+function fitText(s: string, width: number): string {
+  if (textWidth(s) <= width) return s;
+  const ell = useUtf8() ? '…' : '...';
+  const room = width - textWidth(ell);
+  let out = '';
+  let w = 0;
+  for (const ch of s) {
+    const cw = cpWidth(ch.codePointAt(0) as number);
+    if (w + cw > room) break;
+    out += ch;
+    w += cw;
+  }
+  return out + ell;
+}
+
+function wrapText(s: string, width: number): string[] {
+  const lines: string[] = [];
+  let line = '';
+  for (let word of s.split(' ').filter((x) => x !== '')) {
+    while (textWidth(word) > width) {
+      if (line !== '') {
+        lines.push(line);
+        line = '';
+      }
+      let head = '';
+      let w = 0;
+      const chars = Array.from(word);
+      let i = 0;
+      while (i < chars.length && w + cpWidth(chars[i].codePointAt(0) as number) <= width) {
+        w += cpWidth(chars[i].codePointAt(0) as number);
+        head += chars[i];
+        i += 1;
+      }
+      lines.push(head);
+      word = chars.slice(i).join('');
+    }
+    if (word === '') continue;
+    if (line === '') line = word;
+    else if (textWidth(line) + 1 + textWidth(word) <= width) line += ' ' + word;
+    else {
+      lines.push(line);
+      line = word;
+    }
+  }
+  if (line !== '' || lines.length === 0) lines.push(line);
+  return lines;
+}
+
+function pad(s: string, width: number): string {
+  return s + ' '.repeat(Math.max(0, width - textWidth(s)));
+}
+
+function cardRows(rows: Row[]): string[] {
+  const out: string[] = [];
+  for (const [label, value, wrap] of rows) {
+    const text = safeText(value);
+    const parts = wrap ? wrapText(text, VALUE_WIDTH) : [fitText(text, VALUE_WIDTH)];
+    parts.forEach((part, i) => {
+      out.push(`| ${pad(i === 0 ? label : '', LABEL_WIDTH)} | ${pad(part, VALUE_WIDTH)} |`);
+    });
+  }
+  return out;
+}
+
+function renderCard(card: Card): string {
+  const dash = '-'.repeat(CARD_WIDTH - 2);
+  const inner = CARD_WIDTH - 4;
+  const gap = ' '.repeat(Math.max(1, inner - textWidth(card.title) - textWidth(card.verdict)));
+  const lines = [
+    '',
+    WORDMARK,
+    '',
+    `.${dash}.`,
+    `| ${card.title}${gap}${paint(card.colour, card.verdict)} |`,
+    `|${dash}|`,
+    ...cardRows(card.facts),
+    `|${dash}|`,
+    ...cardRows(card.meaning),
+    `'${dash}'`,
+  ];
+  return localDots(lines.join('\n'));
+}
+
+function keyCount(keys: string[] | null): string {
+  if (keys === null || keys.length === 0) return 'none given';
+  return keys.length === 1 ? '1 designated' : `${keys.length} designated`;
+}
+
+/** Card for an ATTESTATION-v1 receipt or an ACTION-v1 record. */
+function recordCard(
+  receipt: Record<string, unknown>,
+  valid: boolean,
+  keySource: string | undefined,
+  reason: string,
+  format: string,
+  trustedKey: string | undefined
+): string {
+  const str = (v: unknown): string => (typeof v === 'string' ? v : '?');
+  const isAction = format === 'ACTION-v1';
+  const id = str(isAction ? receipt.action_id : receipt.attestation_id);
+  const keyRow: Row = trustedKey !== undefined
+    ? ['Issuer key', `${mid(trustedKey)} (pinned)`]
+    : ['Issuer key', `${mid(str(receipt.public_key))} (embedded, untrusted)`];
   if (!valid) {
-    return (
-      `${mark} seal broken ${dot} do not rely on this receipt\n` +
-      '  these bytes are not what the issuer signed'
-    );
+    return renderCard({
+      title: isAction ? 'Seal action record' : 'Seal receipt',
+      verdict: 'INVALID',
+      colour: '31',
+      facts: [['Reason', reason, true], ['Record', mid(id)], ['Format', format], ['Checked against', keyRow[1]]],
+      meaning: [
+        ['What this means', 'seal broken: do not rely on this receipt. These bytes are not what the issuer signed.', true],
+      ],
+    });
   }
-  if (keySource !== 'pinned') {
-    return (
-      `${mark} signature checks out, against a key this receipt supplied itself\n` +
-      '  anyone can self-sign, so this shows only that the file is internally consistent\n' +
-      '  pin the issuer key with --key before you rely on it'
-    );
-  }
-  return (
-    `${mark} seal intact ${dot} checked offline, nothing was sent to Aqta\n` +
-    '  the issuer signed these exact bytes and no one has altered them since\n' +
-    '  it does not prove which model actually ran'
-  );
+  const facts: Row[] = [['Decision', str(receipt.outcome)]];
+  if (isAction) facts.push(['Tool', str(receipt.tool)]);
+  facts.push(['Issued', str(receipt.timestamp)], keyRow, ['Record', mid(id)], ['Format', format]);
+  const limits = isAction ? NOT_PROVEN : `which model actually ran, ${NOT_PROVEN}`;
+  const meaning: Row[] = keySource === 'pinned'
+    ? [
+        ['What this proves', 'seal intact: the issuer signed these exact bytes and no one has altered them since. Checked offline, nothing was sent to Aqta.', true],
+        ['What it does not', limits, true],
+      ]
+    : [
+        ['What this proves', 'the signature checks out against a key this receipt supplied itself, so the file is only internally consistent.', true],
+        ['Warning', 'anyone can self-sign. Pin the issuer key with --key before you rely on it.', true],
+        ['What it does not', `who signed it, ${limits}`, true],
+      ];
+  return renderCard({ title: isAction ? 'Seal action record' : 'Seal receipt', verdict: 'VALID', colour: '32', facts, meaning });
+}
+
+/** Card for the chain, complete and witnessed profiles (drafts). */
+function profileCard(
+  profile: string,
+  verdict: string,
+  reason: string | null,
+  trustedKey: string | undefined,
+  extraRows: Row[]
+): string {
+  const facts: Row[] = [['Profile', `${profile} (draft)`], ['Issuer key', `${mid(trustedKey ?? '?')} (pinned)`], ...extraRows];
+  if (reason) facts.push(['Reason', reason, true]);
+  const meaning: Row[] =
+    verdict === 'PASS'
+      ? [['What this proves', 'every check this draft profile defines passed against the pinned issuer key, offline.', true]]
+      : verdict === 'FAIL'
+        ? [['What this means', 'a check failed: do not rely on this bundle.', true]]
+        : [['What this means', 'the bundle could not be fully checked. INCOMPLETE is never a pass.', true]];
+  meaning.push(['What it does not', NOT_PROVEN, true]);
+  const colour = verdict === 'PASS' ? '32' : verdict === 'FAIL' ? '31' : '33';
+  return renderCard({ title: `Seal ${profile} bundle`, verdict, colour, facts, meaning });
 }
 
 function main(): void {
@@ -301,6 +527,18 @@ function main(): void {
         process.stdout.write(JSON.stringify({ verdict: res.verdict, profile, reason: res.reason }) + '\n');
       } else {
         process.stdout.write(`${res.verdict} ${profile}` + (res.reason ? ` (${res.reason})` : ', pinned issuer key') + '\n');
+        if (pretty) {
+          const rows: Row[] = profile === 'complete'
+            ? [
+                ['Review window', `${extra['--review-from'] ?? 'not given'} to ${extra['--review-to'] ?? 'not given'}`, true],
+                ['Executor keys', keyCount(keys(extra['--executor-keys']))],
+              ]
+            : [
+                ['Witness keys', keyCount(keys(extra['--witness-keys']))],
+                ['Tolerance', extra['--tolerance'] === undefined ? '3600 seconds (default)' : `${extra['--tolerance']} seconds`],
+              ];
+          process.stdout.write(profileCard(profile as string, res.verdict, res.reason, trustedKey, rows) + '\n');
+        }
       }
     }
     process.exit(res.verdict === 'PASS' ? 0 : res.verdict === 'FAIL' ? 1 : 3);
@@ -316,6 +554,9 @@ function main(): void {
         process.stdout.write(JSON.stringify({ verdict: res.verdict, profile: 'chain', reason: res.reason }) + '\n');
       } else {
         process.stdout.write(`${res.verdict} chain` + (res.reason ? ` (${res.reason})` : ', pinned issuer key') + '\n');
+        if (pretty) {
+          process.stdout.write(profileCard('chain', res.verdict, res.reason, trustedKey, [['Approver keys', keyCount(approvers)]]) + '\n');
+        }
       }
     }
     process.exit(res.verdict === 'PASS' ? 0 : res.verdict === 'FAIL' ? 1 : 3);
@@ -375,7 +616,17 @@ function main(): void {
       }
       process.stdout.write(compactLine(result.valid, outcome, id, detail) + '\n');
       if (pretty) {
-        process.stdout.write(prettyExtra(result.valid, result.keySource) + '\n');
+        const format = actionProfile ? 'ACTION-v1' : envelope ?? 'ATTESTATION-v1';
+        process.stdout.write(
+          recordCard(
+            receipt as unknown as Record<string, unknown>,
+            result.valid,
+            result.keySource,
+            result.reason ?? 'verification failed',
+            format,
+            trustedKey
+          ) + '\n'
+        );
       }
     }
   }
