@@ -9,6 +9,25 @@ own versioning contract described in [CONFORMANCE.md](./CONFORMANCE.md).
 
 ## [Unreleased]
 
+## [1.4.1] - 2026-11-17
+
+Presentation only. Verdicts, exit codes, the default one-line output, `--json` and `-q` are
+byte-identical to 1.4.0 on every conformance vector.
+
+### Changed
+
+- **`--pretty` shows a boxed receipt card in both reference verifiers.** After the unchanged compact
+  line comes a small Seal wordmark and a card: decision, issue time, issuer key (pinned or embedded),
+  record id and format, then what a valid seal proves and what it does not (which model ran, that an
+  invoice is genuine, that a payment settled, or that the issuer is honest). Invalid receipts show the
+  reason and "do not rely on this receipt" without repeating the claimed decision. The chain, complete
+  and witnessed profiles show PASS, FAIL or INCOMPLETE with their key rows. Plain ASCII frame, at most
+  78 columns, colour only on a terminal and never under `NO_COLOR`, control characters in receipt
+  values shown as `?`.
+- **`--help` is grouped into sections under the wordmark.** Same options and contract text.
+- **The two implementations print the same card.** `scripts/pretty-interop-sweep.mjs` compares
+  them on every vector in UTF-8 and C locales and runs in CI.
+
 ### Fixed
 
 - **ATTESTATION-v1 section 4, `policy_applied`:** the field description called the identifiers "ASCII" and said the ASCII restriction kept code-point and UTF-16 order identical, while `valid/007-non-ascii-policy` carries non-ASCII identifiers and both reference verifiers accept it. The text now allows any Unicode identifier and states UTF-16 code-unit order as the normative requirement. No change to the wire format, the vectors or either verifier: both already behaved this way. Non-ASCII identifiers are covered by `valid/007-non-ascii-policy`; the order rule across the Basic Multilingual Plane boundary by `action/valid/006-policy-non-bmp-sorted` and `action/invalid/016-policy-code-point-order`. Reported by Laurent Lemonnier (iSoluce), who built an independent verifier from the specification text alone; his interoperability report is at https://github.com/Laurent-Lemonnier/dps-scitt-decision-layer/tree/main/interop/aqta .
