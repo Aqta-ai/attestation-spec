@@ -33,14 +33,17 @@ jobs:
     environment: npm
     permissions:
       contents: read
-      id-token: write   # for npm provenance attestation
+      id-token: write   # npm Trusted Publishing and provenance
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22"
           registry-url: "https://registry.npmjs.org"
+
+      - name: Use npm with Trusted Publishing support
+        run: npm install -g npm@latest
 
       - name: Install and build
         working-directory: packages/verify-receipt
@@ -54,6 +57,4 @@ jobs:
 
       - name: Publish to npm with provenance
         working-directory: packages/verify-receipt
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: npm publish --provenance --access public
