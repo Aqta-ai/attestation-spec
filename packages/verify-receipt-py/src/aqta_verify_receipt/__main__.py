@@ -12,10 +12,12 @@ contract.
     curl -sS https://api.aqta.ai/v1/receipts/ID/public | aqta-verify-receipt - --key <base64url>
     aqta-verify-receipt receipt.json --key <base64url> --json
     aqta-verify-receipt receipt.json --key <base64url> --pretty
+    aqta-verify-receipt receipt.json --key <base64url> --pretty --ascii
 """
 from __future__ import annotations
 
 import argparse
+import codecs
 import json
 import os
 import sys
@@ -28,9 +30,21 @@ from .verifier import verify_receipt
 PUB_KEY_HINT = "https://api.aqta.ai/v1/attestation/public-key"
 
 
+# --ascii, set from the raw arguments before anything is printed (so it also
+# covers --help, which argparse handles while it parses).
+_ASCII_ONLY = False
+
+
 def _utf8() -> bool:
-    enc = (sys.stdout.encoding or "").lower()
-    return "utf" in enc
+    """True when output may use characters outside ASCII: stdout encodes UTF-8,
+    no NO_UNICODE in the environment and no --ascii. Otherwise every mark, the
+    header and the card fall back to plain ASCII."""
+    if _ASCII_ONLY or os.environ.get("NO_UNICODE") is not None:
+        return False
+    try:
+        return codecs.lookup(sys.stdout.encoding or "").name == "utf-8"
+    except LookupError:
+        return False
 
 
 def _colour() -> bool:
@@ -62,18 +76,33 @@ def _compact_line(valid: bool, outcome: str, rid: str, detail: str) -> str:
     return f"{_paint('31', no + ' invalid')}  {detail}  {_mid(rid)}"
 
 
-# The wordmark and help text are shared with the TypeScript CLI byte for byte
-# (scripts/pretty-interop-sweep.mjs compares them). Pure ASCII apart from the
-# middle dot, which falls back to '-' outside a UTF-8 locale, as the compact
-# line's marks do.
-WORDMARK = "\n".join([
-    '   .-""-.     ____             _',
-    "  / .--. \\   / ___|  ___  __ _| |",
-    " | ( <> ) |  \\___ \\ / _ \\/ _` | |",
-    "  \\ '--' /    ___) |  __/ (_| | |",
-    "   '-..-'    |____/ \\___|\\__,_|_|",
-    "             offline receipt check · by Aqta",
+# The header and help text are shared with the TypeScript CLI byte for byte
+# (scripts/pretty-interop-sweep.mjs compares them). With UTF-8 output the
+# header is block letters; otherwise it is the plain ASCII letters. The middle
+# dot falls back to '-' outside UTF-8, as the compact line's marks do.
+BLOCK_HEADER = "\n".join([
+    "███████╗███████╗ █████╗ ██╗",
+    "██╔════╝██╔════╝██╔══██╗██║",
+    "███████╗█████╗  ███████║██║",
+    "╚════██║██╔══╝  ██╔══██║██║",
+    "███████║███████╗██║  ██║███████╗",
+    "╚══════╝╚══════╝╚═╝  ╚═╝╚══════╝",
+    "  offline receipt check · by Aqta",
 ])
+
+ASCII_HEADER = "\n".join([
+    " ____             _",
+    "/ ___|  ___  __ _| |",
+    "\\___ \\ / _ \\/ _` | |",
+    " ___) |  __/ (_| | |",
+    "|____/ \\___|\\__,_|_|",
+    "offline receipt check · by Aqta",
+])
+
+
+def _header() -> str:
+    return BLOCK_HEADER if _utf8() else ASCII_HEADER
+
 
 HELP = f"""
 Checks Seal records offline: ATTESTATION-v1 receipts for what an AI decided,
@@ -118,6 +147,8 @@ Output
   (default)              one compact line on stdout
   --json                 machine JSON on stdout (one object)
   --pretty               the compact line, then a human-readable card
+  --ascii                plain ASCII output (also when the terminal is not
+                         UTF-8, or NO_UNICODE is set)
   -q, --quiet            exit code only
   -h, --help             this help
 
@@ -140,7 +171,7 @@ def _local_dots(s: str) -> str:
 
 
 def _help_text() -> str:
-    return _local_dots(f"{WORDMARK}\n{HELP}")
+    return _local_dots(f"{_header()}\n{HELP}")
 
 
 # The --pretty card. Presentation only: it is printed after the compact line,
@@ -259,7 +290,7 @@ def _render_card(title: str, verdict: str, colour: str, facts: list, meaning: li
     gap = " " * max(1, inner - _text_width(title) - _text_width(verdict))
     lines = [
         "",
-        WORDMARK,
+        _header(),
         "",
         f".{dash}.",
         f"| {title}{gap}{_paint(colour, verdict)} |",
@@ -339,6 +370,10 @@ def _profile_card(profile: str, verdict: str, reason, trusted_key, extra_rows: l
 
 
 def main(argv: list[str] | None = None) -> int:
+    global _ASCII_ONLY
+    if argv is None:
+        argv = sys.argv[1:]
+    _ASCII_ONLY = "--ascii" in argv
     parser = argparse.ArgumentParser(
         prog="aqta-verify-receipt",
         description=(
@@ -423,6 +458,11 @@ def main(argv: list[str] | None = None) -> int:
         "--pretty",
         action="store_true",
         help="optional human-readable summary after the compact line",
+    )
+    parser.add_argument(
+        "--ascii",
+        action="store_true",
+        help="plain ASCII output (also when stdout is not UTF-8, or NO_UNICODE is set)",
     )
     parser.add_argument(
         "-q",

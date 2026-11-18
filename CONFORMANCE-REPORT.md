@@ -4,8 +4,8 @@
 
 | | |
 |---|---|
-| Release | 1.4.0 |
-| Generated | 2026-10-23 |
+| Release | 1.4.2 |
+| Generated | 2026-11-18 |
 | Vectors | 33 (10 valid, 23 adversarial) |
 | Implementations agree | **33/33** |
 | Verdicts match specification | **33/33** |

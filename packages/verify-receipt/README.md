@@ -77,12 +77,13 @@ npx aqta-verify-receipt receipt.json --key <pinned> --pretty
 ```
 ✓ valid  BLOCKED  0000…000002  pinned issuer key
 
-   .-""-.     ____             _
-  / .--. \   / ___|  ___  __ _| |
- | ( <> ) |  \___ \ / _ \/ _` | |
-  \ '--' /    ___) |  __/ (_| | |
-   '-..-'    |____/ \___|\__,_|_|
-             offline receipt check · by Aqta
+███████╗███████╗ █████╗ ██╗
+██╔════╝██╔════╝██╔══██╗██║
+███████╗█████╗  ███████║██║
+╚════██║██╔══╝  ██╔══██║██║
+███████║███████╗██║  ██║███████╗
+╚══════╝╚══════╝╚═╝  ╚═╝╚══════╝
+  offline receipt check · by Aqta
 
 .--------------------------------------------------------------------------.
 | Seal receipt                                                       VALID |
@@ -101,9 +102,11 @@ npx aqta-verify-receipt receipt.json --key <pinned> --pretty
 '--------------------------------------------------------------------------'
 ```
 
-The card is plain ASCII apart from the marks the compact line already uses,
-fits an 80-column terminal, carries no colour when piped or under `NO_COLOR`,
-and never changes the exit code. `scripts/pretty-interop-sweep.mjs` compares it
+The header is block letters and the card frame is plain ASCII. When the
+terminal is not UTF-8, when `NO_UNICODE` is set, or with `--ascii`, the header
+becomes plain ASCII letters and so does every mark. The card fits an 80-column
+terminal, carries no colour when piped or under `NO_COLOR`, and never changes
+the exit code or the verdict. `scripts/pretty-interop-sweep.mjs` compares it
 across both reference CLIs on every vector.
 
 Automation:
@@ -179,9 +182,10 @@ aqta-verify-receipt <file|-> --integrity-only [options]
 | `--no-strict` | Allow unknown top-level fields |
 | `--json` | One JSON object on stdout |
 | `--pretty` | Optional human-readable card after the compact line |
+| `--ascii` | Plain ASCII output: no block letters or Unicode marks |
 | `-q` | Silent; exit code only |
 
-`NO_COLOR=1` disables colour. Meaning never depends on colour alone.
+`NO_COLOR=1` disables colour and `NO_UNICODE=1` gives plain ASCII output. Meaning never depends on colour alone.
 
 ## API
 

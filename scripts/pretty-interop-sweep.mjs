@@ -4,14 +4,17 @@
 // (ATTESTATION-v1 valid and invalid, pinned and --integrity-only; ACTION-v1
 // under --profile action-1; ACCEPT-v1 records offered as receipts; chain,
 // complete and witnessed bundles with their parameters; the byte-level files),
-// under a UTF-8 locale and under a plain C locale, and requires:
+// in four output modes (a UTF-8 locale; a plain C locale; a UTF-8 locale with
+// --ascii; a UTF-8 locale with NO_UNICODE set), and requires:
 //
 //   - the same card, byte for byte, and the same exit code from both;
 //   - the first --pretty line equal to that CLI's own default compact line,
 //     so `head -1` keeps working and --pretty never changes the verdict;
 //   - the same exit code with and without --pretty;
 //   - no line wider than 78 columns and no ANSI escape when piped;
-//   - pure ASCII output under the C locale.
+//   - pure ASCII output in the three fallback modes;
+//   - the block-letter header in UTF-8 mode, the plain ASCII letters in the
+//     fallback modes, and in no mode the old emblem.
 //
 // The compact line itself is compared with each CLI's own default output, not
 // across implementations: on ACTION-v1 records the TypeScript line names the
@@ -51,10 +54,19 @@ const BASE_ENV = Object.fromEntries(
 // PYTHONHASHSEED is fixed because the Python library names the first missing
 // field in set order, which otherwise changes from run to run on records with
 // several missing fields (the ACCEPT-v1 vectors).
-const ENVS = {
-  utf8: { ...BASE_ENV, LANG: 'en_US.UTF-8', LC_ALL: 'en_US.UTF-8', PYTHONIOENCODING: 'utf-8', PYTHONPATH: PY_SRC, PYTHONHASHSEED: '0' },
-  ascii: { ...BASE_ENV, LANG: 'C', LC_ALL: 'C', PYTHONIOENCODING: 'ascii', PYTHONPATH: PY_SRC, PYTHONHASHSEED: '0' },
+const UTF8_ENV = { ...BASE_ENV, LANG: 'en_US.UTF-8', LC_ALL: 'en_US.UTF-8', PYTHONIOENCODING: 'utf-8', PYTHONPATH: PY_SRC, PYTHONHASHSEED: '0' };
+delete UTF8_ENV.NO_UNICODE;
+// Each mode is an environment plus extra arguments; every mode but utf8 must
+// fall back to plain ASCII.
+const MODES = {
+  utf8: { env: UTF8_ENV, extra: [] },
+  ascii: { env: { ...UTF8_ENV, LANG: 'C', LC_ALL: 'C', PYTHONIOENCODING: 'ascii' }, extra: [] },
+  'ascii-flag': { env: UTF8_ENV, extra: ['--ascii'] },
+  'no-unicode': { env: { ...UTF8_ENV, NO_UNICODE: '1' }, extra: [] },
 };
+const BLOCK_TOP = '███████╗███████╗ █████╗ ██╗';
+const ASCII_TOP = '|____/ \\___|\\__,_|_|';
+const EMBLEM = '( <> )';
 
 const TMP = mkdtempSync(join(tmpdir(), 'pretty-sweep-'));
 const jsonFiles = (d) => (existsSync(join(TV, d)) ? readdirSync(join(TV, d)).filter((f) => f.endsWith('.json')).sort() : []);
@@ -152,15 +164,20 @@ function shape(label, envName, text, { card }) {
   }
   if (text.includes('\x1b')) problems.push(`${label} [${envName}]: ANSI escape on a pipe`);
   if (/[\u2013\u2014]/.test(text)) problems.push(`${label} [${envName}]: en or em dash in output`);
-  if (envName === 'ascii' && /[^\x00-\x7f]/.test(text)) problems.push(`${label} [${envName}]: non-ASCII under the C locale`);
+  if (envName !== 'utf8' && /[^\x00-\x7f]/.test(text)) problems.push(`${label} [${envName}]: non-ASCII in a fallback mode`);
+  if (text.includes(EMBLEM)) problems.push(`${label} [${envName}]: the old emblem is back`);
+  const want = envName === 'utf8' ? BLOCK_TOP : ASCII_TOP;
+  const avoid = envName === 'utf8' ? ASCII_TOP : BLOCK_TOP;
+  if (!text.includes(want) || text.includes(avoid)) problems.push(`${label} [${envName}]: wrong header for this mode`);
 }
 
 const jobs = [];
-for (const envName of Object.keys(ENVS)) for (const c of cases) jobs.push([envName, ...c]);
+for (const envName of Object.keys(MODES)) for (const c of cases) jobs.push([envName, ...c]);
 
 let compared = 0;
-await pool(jobs, 4, async ([envName, label, file, args]) => {
-  const env = ENVS[envName];
+await pool(jobs, 4, async ([envName, label, file, baseArgs]) => {
+  const { env, extra } = MODES[envName];
+  const args = [...baseArgs, ...extra];
   const [tsPretty, pyPretty, tsPlain, pyPlain, tsJson, pyJson] = await Promise.all([
     ts([file, ...args, '--pretty'], env), py([file, ...args, '--pretty'], env),
     ts([file, ...args], env), py([file, ...args], env),
@@ -187,10 +204,10 @@ await pool(jobs, 4, async ([envName, label, file, args]) => {
   if (tsPretty.code !== 2) shape(where, envName, tsPretty.out, { card: true });
 });
 
-for (const envName of Object.keys(ENVS)) {
-  const env = ENVS[envName];
-  const tsHelp = await ts(['--help'], env);
-  const pyHelp = await py(['--help'], env);
+for (const envName of Object.keys(MODES)) {
+  const { env, extra } = MODES[envName];
+  const tsHelp = await ts(['--help', ...extra], env);
+  const pyHelp = await py(['--help', ...extra], env);
   compared++;
   if (tsHelp.err !== pyHelp.out) problems.push(`--help [${envName}]: text differs\n--- ts\n${tsHelp.err}--- py\n${pyHelp.out}`);
   if (tsHelp.code !== 2 || pyHelp.code !== 0) problems.push(`--help [${envName}]: exit ts=${tsHelp.code} py=${pyHelp.code}`);
@@ -198,7 +215,7 @@ for (const envName of Object.keys(ENVS)) {
 }
 
 for (const p of problems) console.log(`  ${p}`);
-console.log(`\n${cases.length} vectors x ${Object.keys(ENVS).length} locales, ${compared} comparisons` +
+console.log(`\n${cases.length} vectors x ${Object.keys(MODES).length} output modes, ${compared} comparisons` +
   ` (${tolerated} cards differ only in a Reason row the libraries already word differently)`);
 console.log(problems.length === 0
   ? 'PRETTY SWEEP CLEAN: both CLIs print the same --pretty card and --help, byte for byte, apart from the reasons counted above'

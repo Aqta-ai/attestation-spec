@@ -9,6 +9,21 @@ own versioning contract described in [CONFORMANCE.md](./CONFORMANCE.md).
 
 ## [Unreleased]
 
+## [1.4.2] - 2026-11-18
+
+Presentation only. Verdicts, exit codes, the default one-line output, `--json` and `-q` are
+byte-identical to 1.4.1 on every conformance vector.
+
+### Changed
+
+- **pretty card: block-letter header, emblem removed, --ascii fallback.** `--pretty` and `--help`
+  open with "SEAL" in block letters and the line "offline receipt check · by Aqta"; the round
+  ASCII emblem is gone from both reference verifiers. When output is not UTF-8 (Python: stdout
+  does not encode UTF-8; Node: no UTF-8 locale), when `NO_UNICODE` is set, or with the new
+  `--ascii` flag, both print the plain ASCII "Seal" letters instead, and all other marks fall back
+  to ASCII as before. `NO_COLOR` is respected as before. `scripts/pretty-interop-sweep.mjs` now
+  compares the two CLIs byte for byte in four modes (UTF-8, C locale, `--ascii`, `NO_UNICODE`).
+
 ## [1.4.1] - 2026-11-17
 
 Presentation only. Verdicts, exit codes, the default one-line output, `--json` and `-q` are

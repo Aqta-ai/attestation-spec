@@ -30,7 +30,7 @@ npx aqta-verify-receipt receipt.json --key <issuer key> --pretty
 pipx run aqta-verify-receipt receipt.json --key <issuer key> --pretty
 ```
 
-Both commands run the published 1.4.1 verifiers and print the same card. The
+Both commands run the published 1.4.2 verifiers and print the same card. The
 key is required: the verifier checks a receipt against a key you pin, never
 one it guesses. To try it on a public sample receipt signed with the current
 production key:

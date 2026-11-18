@@ -97,3 +97,65 @@ test('receipt values cannot inject terminal control sequences into the card', ()
   assert.ok(!card.includes('\x1b'));
   assert.equal(r.status, 1);
 });
+
+const BLOCK_HEADER = [
+  '███████╗███████╗ █████╗ ██╗',
+  '██╔════╝██╔════╝██╔══██╗██║',
+  '███████╗█████╗  ███████║██║',
+  '╚════██║██╔══╝  ██╔══██║██║',
+  '███████║███████╗██║  ██║███████╗',
+  '╚══════╝╚══════╝╚═╝  ╚═╝╚══════╝',
+  '  offline receipt check · by Aqta',
+].join('\n');
+const ASCII_HEADER = [
+  ' ____             _',
+  '/ ___|  ___  __ _| |',
+  '\\___ \\ / _ \\/ _` | |',
+  ' ___) |  __/ (_| | |',
+  '|____/ \\___|\\__,_|_|',
+  'offline receipt check - by Aqta',
+].join('\n');
+
+test('UTF-8 output carries the block-letter header and no emblem', () => {
+  const out = cli([join(TV, 'valid/002-blocked.json'), '--key', KEY, '--pretty']).out;
+  assert.ok(out.includes(`\n\n${BLOCK_HEADER}\n\n.`), 'block header between the compact line and the card');
+  assert.ok(!out.includes('( <> )'), 'old emblem');
+  const help = cli(['--help']).err;
+  assert.ok(help.startsWith(`${BLOCK_HEADER}\n`));
+});
+
+test('the block letters are aligned: every glyph column is one cell', () => {
+  const rows = BLOCK_HEADER.split('\n').slice(0, 6);
+  assert.deepEqual(rows.map((r) => Array.from(r).length), [27, 27, 27, 27, 32, 32]);
+  // S, E, A and L are 8 cells each; the shadow row closes every letter.
+  assert.equal(rows[5], '╚══════╝╚══════╝╚═╝  ╚═╝╚══════╝');
+});
+
+test('--ascii, NO_UNICODE and a C locale fall back to the plain ASCII letters', () => {
+  const file = join(TV, 'valid/007-non-ascii-policy.json');
+  for (const [args, env] of [
+    [['--ascii'], UTF8],
+    [[], { ...UTF8, NO_UNICODE: '1' }],
+    [[], ASCII],
+  ] as const) {
+    const r = cli([file, '--key', KEY, '--pretty', ...args], env);
+    assert.equal(r.code, 0);
+    assert.ok(/^[\x00-\x7f]*$/.test(r.out), 'pure ASCII');
+    assert.ok(r.out.includes(`\n\n${ASCII_HEADER}\n\n.`), 'ASCII header');
+    assert.ok(!r.out.includes('( <> )'), 'old emblem');
+    const help = cli(['--help', ...args], env);
+    assert.ok(help.err.startsWith(`${ASCII_HEADER}\n`));
+  }
+});
+
+test('--ascii never changes the exit code or the verdict', () => {
+  for (const [file, code] of [['valid/002-blocked.json', 0], ['invalid/002-tampered-outcome.json', 1]] as const) {
+    const plain = cli([join(TV, file), '--key', KEY, '--json']);
+    const ascii = cli([join(TV, file), '--key', KEY, '--json', '--ascii']);
+    const pretty = cli([join(TV, file), '--key', KEY, '--pretty', '--ascii']);
+    assert.equal(plain.code, code);
+    assert.equal(ascii.code, code);
+    assert.equal(pretty.code, code);
+    assert.equal(ascii.out, plain.out);
+  }
+});

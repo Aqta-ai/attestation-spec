@@ -14,6 +14,7 @@
  *   curl -sS https://api.aqta.ai/v1/receipts/REC_ID/public | npx aqta-verify-receipt - --key <key>
  *   npx aqta-verify-receipt receipt.json --key <key> --json
  *   npx aqta-verify-receipt receipt.json --key <key> --pretty
+ *   npx aqta-verify-receipt receipt.json --key <key> --pretty --ascii
  */
 import { readFileSync } from 'fs';
 import { verifyReceipt, AttestationReceipt, EnvelopeFormat } from './index';
@@ -23,7 +24,17 @@ import { verifyWitnessed } from './witnessed';
 
 const PUB_KEY_HINT = 'https://api.aqta.ai/v1/attestation/public-key';
 
+// --ascii, set from the raw arguments before anything is printed (so it also
+// covers --help, which is handled before the arguments are parsed).
+let asciiOnly = false;
+
+/**
+ * True when output may use characters outside ASCII: a UTF-8 locale, no
+ * NO_UNICODE in the environment and no --ascii. Otherwise every mark, the
+ * header and the card fall back to plain ASCII.
+ */
 function useUtf8(): boolean {
+  if (asciiOnly || process.env.NO_UNICODE !== undefined) return false;
   return /UTF-?8/i.test(
     process.env.LC_ALL || process.env.LC_CTYPE || process.env.LANG || ''
   );
@@ -47,18 +58,32 @@ function mid(s: string, head = 4, tail = 6): string {
   return s.length > head + tail + 1 ? `${s.slice(0, head)}${ell}${s.slice(-tail)}` : s;
 }
 
-// The wordmark and help text are shared with the Python CLI byte for byte
-// (scripts/pretty-interop-sweep.mjs compares them). Pure ASCII apart from the
-// middle dot, which falls back to '-' outside a UTF-8 locale, as the compact
-// line's marks do.
-const WORDMARK = [
-  '   .-""-.     ____             _',
-  '  / .--. \\   / ___|  ___  __ _| |',
-  ' | ( <> ) |  \\___ \\ / _ \\/ _` | |',
-  "  \\ '--' /    ___) |  __/ (_| | |",
-  "   '-..-'    |____/ \\___|\\__,_|_|",
-  '             offline receipt check · by Aqta',
+// The header and help text are shared with the Python CLI byte for byte
+// (scripts/pretty-interop-sweep.mjs compares them). With UTF-8 output the
+// header is block letters; otherwise it is the plain ASCII letters. The middle
+// dot falls back to '-' outside UTF-8, as the compact line's marks do.
+const BLOCK_HEADER = [
+  '███████╗███████╗ █████╗ ██╗',
+  '██╔════╝██╔════╝██╔══██╗██║',
+  '███████╗█████╗  ███████║██║',
+  '╚════██║██╔══╝  ██╔══██║██║',
+  '███████║███████╗██║  ██║███████╗',
+  '╚══════╝╚══════╝╚═╝  ╚═╝╚══════╝',
+  '  offline receipt check · by Aqta',
 ].join('\n');
+
+const ASCII_HEADER = [
+  ' ____             _',
+  '/ ___|  ___  __ _| |',
+  '\\___ \\ / _ \\/ _` | |',
+  ' ___) |  __/ (_| | |',
+  '|____/ \\___|\\__,_|_|',
+  'offline receipt check · by Aqta',
+].join('\n');
+
+function header(): string {
+  return useUtf8() ? BLOCK_HEADER : ASCII_HEADER;
+}
 
 const HELP = `
 Checks Seal records offline: ATTESTATION-v1 receipts for what an AI decided,
@@ -103,6 +128,8 @@ Output
   (default)              one compact line on stdout
   --json                 machine JSON on stdout (one object)
   --pretty               the compact line, then a human-readable card
+  --ascii                plain ASCII output (also when the terminal is not
+                         UTF-8, or NO_UNICODE is set)
   -q, --quiet            exit code only
   -h, --help             this help
 
@@ -124,7 +151,7 @@ function localDots(s: string): string {
 }
 
 function helpText(): string {
-  return localDots(`${WORDMARK}\n${HELP}`);
+  return localDots(`${header()}\n${HELP}`);
 }
 
 function usage(): never {
@@ -277,7 +304,7 @@ function renderCard(card: Card): string {
   const gap = ' '.repeat(Math.max(1, inner - textWidth(card.title) - textWidth(card.verdict)));
   const lines = [
     '',
-    WORDMARK,
+    header(),
     '',
     `.${dash}.`,
     `| ${card.title}${gap}${paint(card.colour, card.verdict)} |`,
@@ -361,6 +388,7 @@ function profileCard(
 
 function main(): void {
   const args = process.argv.slice(2);
+  asciiOnly = args.includes('--ascii');
   if (args.length === 0 || args.includes('--help') || args.includes('-h')) usage();
 
   let file = '';
@@ -405,6 +433,8 @@ function main(): void {
       asJson = true;
     } else if (a === '--pretty') {
       pretty = true;
+    } else if (a === '--ascii') {
+      // read before parsing, see asciiOnly
     } else if (!file) {
       file = a;
     } else {
