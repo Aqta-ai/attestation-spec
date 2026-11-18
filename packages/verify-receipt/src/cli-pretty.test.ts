@@ -12,11 +12,11 @@ import { join } from 'node:path';
 const CLI = join(__dirname, 'cli.js');
 const TV = join(__dirname, '..', '..', '..', 'test-vectors');
 const KEY = 'alWzEnrA_z9McN9z_MFfQCnH9mVgOwRZ26wrI7oix4E';
-const UTF8 = { ...process.env, LANG: 'en_US.UTF-8', LC_ALL: 'en_US.UTF-8' };
-const ASCII = { ...process.env, LANG: 'C', LC_ALL: 'C' };
+const UTF8: NodeJS.ProcessEnv = { ...process.env, LANG: 'en_US.UTF-8', LC_ALL: 'en_US.UTF-8' };
+const ASCII: NodeJS.ProcessEnv = { ...process.env, LANG: 'C', LC_ALL: 'C' };
 delete (UTF8 as Record<string, string | undefined>).NO_COLOR;
 
-function cli(args: string[], env = UTF8) {
+function cli(args: string[], env: NodeJS.ProcessEnv = UTF8) {
   const r = spawnSync('node', [CLI, ...args], { env, encoding: 'utf8' });
   return { code: r.status, out: r.stdout, err: r.stderr };
 }
