@@ -27,6 +27,21 @@ Now change `"outcome"` in the file and run it again:
 ✕ invalid  signature check failed  520a…853a94
 ```
 
+## Try it in one line
+
+```bash
+npx aqta-verify-receipt receipt.json --key <issuer key> --pretty
+pipx run aqta-verify-receipt receipt.json --key <issuer key> --pretty
+```
+
+`--pretty` prints the compact line, then a card that says what the check proves and what it does not. It never changes the verdict or the exit code. On the sample receipt above:
+
+<img src="https://raw.githubusercontent.com/Aqta-ai/attestation-spec/main/docs/images/verify-receipt-pretty-valid.png" alt="Terminal output of aqta-verify-receipt --pretty on the sample receipt: valid, decision ALLOWED, issuer key pinned" width="600" />
+
+And on a copy with `"outcome"` changed:
+
+<img src="https://raw.githubusercontent.com/Aqta-ai/attestation-spec/main/docs/images/verify-receipt-pretty-invalid.png" alt="Terminal output of aqta-verify-receipt --pretty on the altered receipt: invalid, signature check failed" width="600" />
+
 ## Why it exists
 
 - A log is kept by whoever runs the system. A signed record can be checked by anyone else, offline, against a published key.

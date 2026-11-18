@@ -23,6 +23,31 @@ The formats are written up for the IETF as an individual Internet-Draft,
 [draft-chueayen-attestation-receipts](https://datatracker.ietf.org/doc/draft-chueayen-attestation-receipts/)
 (revision -05, October 2026). It is a draft, not a standard.
 
+## Try it in one line
+
+```bash
+npx aqta-verify-receipt receipt.json --key <issuer key> --pretty
+pipx run aqta-verify-receipt receipt.json --key <issuer key> --pretty
+```
+
+Both commands run the published 1.4.1 verifiers and print the same card. The
+key is required: the verifier checks a receipt against a key you pin, never
+one it guesses. To try it on a public sample receipt signed with the current
+production key:
+
+```bash
+curl -sO https://app.aqta.ai/samples/sample-receipt.json
+npx aqta-verify-receipt sample-receipt.json \
+  --key 9Y3Eiq6V8QjRDUM5nPqSwKIOPQaoEU4SbagfYFdvWa4 --pretty
+```
+
+<img src="./docs/images/verify-receipt-pretty-valid.png" alt="Terminal output of aqta-verify-receipt --pretty on the sample receipt: valid, decision ALLOWED, issuer key pinned, with what the check proves and what it does not" width="600" />
+
+Change `"outcome"` to `"BLOCKED"` and run it again. The signature no longer
+matches and the card says so:
+
+<img src="./docs/images/verify-receipt-pretty-invalid.png" alt="Terminal output of aqta-verify-receipt --pretty on the altered receipt: invalid, signature check failed" width="600" />
+
 ## What this is
 
 Two record formats in one family, signed by the same key and checked by the
@@ -120,7 +145,8 @@ $ aqta-verify-receipt test-vectors/invalid/001-tampered-signature.json --integri
 ```
 
 Exit `0` valid, `1` invalid, `2` usage/IO. `--json` for automation. `--pretty`
-adds a short flourish (`seal intact · verified offline`); it is never the proof.
+prints the compact line and then the card shown above; it never changes the
+verdict or the exit code.
 
 `--integrity-only` checks the receipt against the key embedded in it, which
 proves internal consistency but not who issued it. Pass `--key` with the
